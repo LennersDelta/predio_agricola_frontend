@@ -6,9 +6,16 @@ import { usePathname } from 'next/navigation';
 // Rutas estáticas
 const breadcrumbs: Record<string, string> = {
   '/dashboard':          'Dashboard',
-  '/bienes':             'Listado de Bienes',
-  '/bienes/crear':       'Ingreso de Bienes',
-  '/reportes/region':    'Reportes por Región',
+  
+  '/predio/insumosproductos':             'Adquisición de insumos y productos',
+  '/predio/insumosproductos/crear':       'Ingreso de insumos y productos',
+
+  '/predio/parquevehicular':    'Parque Vehicular',
+  '/predio/parquevehicular/crear': 'Ingreso parque vehicular', 
+  
+  '/predio/recursoshumanos': 'Recursos humanos',
+ 
+  
   '/reportes/provincia': 'Reportes por Provincia',
   '/reportes/comuna':    'Reportes por Comuna',
   '/usuarios':           'Usuarios',
@@ -60,7 +67,7 @@ export default function Topbar() {
       {/* Breadcrumb */}
       <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.72rem' }}>
         <span style={{ color: '#6b8f75', fontFamily: 'monospace', fontSize: '.65rem', letterSpacing: '.08em' }}>
-          SIGBI
+          SIGPA
         </span>
         <svg style={{ width: 10, height: 10, color: '#9ab8a2' }} fill="none" viewBox="0 0 24 24"
           stroke="currentColor" strokeWidth={2.5}>

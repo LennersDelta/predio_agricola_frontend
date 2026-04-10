@@ -247,13 +247,27 @@ export default function DocumentosAdjuntos({
 
   // ── Tipos desde BD ────────────────────────────────────────────────────────
   const { tipoDocumento, loading: loadingTipos } = useTipoDocumento();
-  const tiposDoc: TipoDoc[] = tipoDocumento.map(t => ({
+
+  /* SE COMENTA PARA MANEJAR DOS TIPOS DIFERENTES DE CARGA */
+  /*const tiposDoc: TipoDoc[] = tipoDocumento.map(t => ({
     id:          String(t.id),
     label:       t.label || t.descripcion,
     descripcion: t.descripcion,
     icono:       inferirIcono(t.label || t.descripcion),
-  }));
+  }));*/
 
+const tiposDoc: TipoDoc[] =
+  tipoDocumento.length > 0
+    ? tipoDocumento.map(t => ({
+        id: String(t.id),
+        label: t.label || t.descripcion,
+        descripcion: t.descripcion,
+        icono: inferirIcono(t.label || t.descripcion),
+      }))
+    : [
+        { id: '1', label: 'Permiso Circulación', descripcion: '', icono: 'legal' },
+        { id: '2', label: 'Seguro Obligatorio', descripcion: '', icono: 'legal' },
+      ];
   // ── Modo CREAR — archivos locales ─────────────────────────────────────────
   const adjuntarLocal = (tipoId: string, files: FileList) => {
     const nuevos: DocAdjunto[] = Array.from(files).map(file => ({

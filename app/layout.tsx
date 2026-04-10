@@ -4,7 +4,7 @@ import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SIGBI — Bienes Raíces | Carabineros de Chile',
+  title: 'SIGPA — Predio Agrícola | Carabineros de Chile',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -169,7 +169,7 @@ export default function ReporteRegiones() {
                   </div>`).join('')}
               </div>
             </div>` : `<div style="font-family:monospace;font-size:.65rem;color:#6b8f75">${nombre}<br>Sin datos</div>`,
-            {sticky:true,className:'sigbi-tooltip',offset:[12,0]});
+            {sticky:true,className:'sigpa-tooltip',offset:[12,0]});
 
           layer.on('mouseover', () => {
             if (selRef.current !== nombreToId[nombre]) layer.setStyle({fillColor:'rgba(76,202,132,.78)',color:'#fff',weight:2});
@@ -233,8 +233,8 @@ export default function ReporteRegiones() {
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
       <style>{`
-        .sigbi-tooltip{background:#fff!important;border:1px solid rgba(0,0,0,.1)!important;border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,.15)!important;padding:11px 14px!important;}
-        .sigbi-tooltip::before,.leaflet-tooltip-left::before,.leaflet-tooltip-right::before{display:none!important;border:none!important;}
+        .sigpa-tooltip{background:#fff!important;border:1px solid rgba(0,0,0,.1)!important;border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,.15)!important;padding:11px 14px!important;}
+        .sigpa-tooltip::before,.leaflet-tooltip-left::before,.leaflet-tooltip-right::before{display:none!important;border:none!important;}
         .hbar{height:7px;background:rgba(0,0,0,.07);border-radius:999px;overflow:hidden;}
         .hbar-fill{height:100%;border-radius:999px;}
         .trow{border-bottom:1px solid rgba(0,0,0,.06);transition:background .12s;}

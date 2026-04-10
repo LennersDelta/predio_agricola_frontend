@@ -150,15 +150,15 @@ export default function LoginForm() {
         <div className="relative animate-fade-up-d2 space-y-6">
           <div className="border-l-2 border-dorado-base pl-4">
             <h2 className="font-heading font-bold text-white text-2xl uppercase tracking-widest leading-tight">
-              SIGBI
+              SIGPA
             </h2>
             <p className="text-verde-acento text-sm font-body tracking-wider mt-1">
-              Sistema de Gestión de Bienes Inmuebles
+              Sistema de Gestión Predio Agrícola
             </p>
           </div>
           <p className="text-gris-claro/80 text-sm font-body leading-relaxed">
             Plataforma centralizada para la gestión, control y administración del
-            patrimonio inmobiliario institucional DIBICAR.
+            predio agrícola institucional DIBICAR.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-verde-oscuro/60 border border-verde-base/30 rounded-lg p-3 text-center">

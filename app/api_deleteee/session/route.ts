@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({ ok: true });
 
-  response.cookies.set('session_bienes_raices', '1', {
+  response.cookies.set('session_predio_agricola', '1', {
     httpOnly: false,   // false para que el cliente también pueda leerla
     sameSite: 'lax',
     path: '/',
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   const response = NextResponse.json({ ok: true });
 
-  response.cookies.set('session_bienes_raices', '', {
+  response.cookies.set('session_predio_agricola', '', {
     path: '/',
     maxAge: 0,
   });

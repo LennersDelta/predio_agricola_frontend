@@ -389,7 +389,7 @@ export default function UsuariosPage() {
                       flexWrap: 'wrap', gap: 8, padding: '10px 20px',
                       borderTop: '1px solid rgba(0,0,0,.06)', background: 'rgba(0,0,0,.02)' }}>
           <p style={{ fontFamily: 'monospace', fontSize: '.6rem', color: '#9ab8a2' }}>
-            Sistema de Gestión de Bienes Raíces
+            Sistema de Gestión Predio Agrícola
           </p>
           <p style={{ fontFamily: 'monospace', fontSize: '.6rem', color: '#9ab8a2' }}>
             {usuarios.length} usuarios registrados

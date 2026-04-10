@@ -8,10 +8,13 @@ import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/lib/auth';
 import api from '@/lib/axios';
+import { group } from 'console';
 
 // ─────────────────────────────────────────────
 // NAVEGACIÓN — filtrada por rol en el render
 // ─────────────────────────────────────────────
+
+
 const navGroups = [
   {
     group: 'Principal',
@@ -21,18 +24,20 @@ const navGroups = [
     ],
   },
   {
-    group: 'Gestión de Bienes',
+    group: 'Gestión de Predio Agrícola',
     adminOnly: false,
     items: [
-      { href: '/bienes',       label: 'Listado de Bienes', icon: 'building' },
+      { href: '/predio/insumosproductos',       label: 'Adquisición de insumos y productos', icon: 'building' },
+      { href: '/predio/parquevehicular',       label: 'Parque  Vehicular', icon: 'car' },
+      { href: '/predio/recursoshumanos',  label:'Recursos Humano', icon: 'users'},
     ],
   },
   {
     group: 'Reportes',
     adminOnly: false,
     items: [
-      { href: '/reportes/region', label: 'Por Región', icon: 'report' },
-      { href: '/reportes/comuna', label: 'Por Comuna', icon: 'report' },
+      { href: '/reportes/Definir', label: 'Por Definir', icon: 'report' },
+
     ],
   },
   {
@@ -59,6 +64,13 @@ const icons: Record<string, React.ReactNode> = {
   logout:   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>,
   shield:   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>,
   draft:    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>,
+car: 
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M3 13l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5M5 13h14M5 13v5a1 1 0 001 1h1m10-6v5a1 1 0 01-1 1h-1m-8 0h8"
+  />
+
 };
 
 function NavIcon({ name }: { name: string }) {
@@ -109,7 +121,7 @@ export default function Sidebar() {
     if (saved === 'collapsed') setCollapsed(true);
   }, []);
 
-  const cargarBorradores = useCallback(async () => {
+  /*const cargarBorradores = useCallback(async () => {
     try {
       const { data } = await api.get('/api/bienes-borradores');
       setBorradoresCount((data.data ?? data).length);
@@ -120,7 +132,7 @@ export default function Sidebar() {
     cargarBorradores();
     const interval = setInterval(cargarBorradores, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [cargarBorradores]);
+  }, [cargarBorradores]);*/
 
   const toggle = () => {
     const next = !collapsed;
@@ -141,7 +153,7 @@ export default function Sidebar() {
     : '?';
 
   const sbW = collapsed ? 64 : 256;
-  const isBorradoresActive = pathname === '/bienes' && typeof window !== 'undefined' && window.location.search.includes('tab=borradores');
+ // const isBorradoresActive = pathname === '/bienes' && typeof window !== 'undefined' && window.location.search.includes('tab=borradores');
 
   return (
     <>
@@ -188,8 +200,8 @@ export default function Sidebar() {
           {!collapsed && (
             <div style={{ overflow: 'hidden' }}>
               <p style={{ color: 'rgba(255,255,255,.5)', fontFamily: 'monospace', fontSize: '.54rem', letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 500, lineHeight: 1, marginBottom: 3 }}>Carabineros de Chile</p>
-              <h1 style={{ color: '#fff', fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', lineHeight: 1 }}>SIGBI</h1>
-              <p style={{ color: 'rgba(255,255,255,.4)', fontSize: '.54rem', letterSpacing: '.12em', textTransform: 'uppercase', marginTop: 2, fontFamily: 'monospace' }}>Sistema de Gestión</p>
+              <h1 style={{ color: '#fff', fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', lineHeight: 1 }}>SIGPA</h1>
+              <p style={{ color: 'rgba(255,255,255,.4)', fontSize: '.54rem', letterSpacing: '.12em', textTransform: 'uppercase', marginTop: 2, fontFamily: 'monospace' }}>Sistema de Gestión Predio Agrícola</p>
             </div>
           )}
         </div>
@@ -241,7 +253,7 @@ export default function Sidebar() {
                   </p>
                 )}
                 {items.map((item) => {
-                  const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                  const isActive = pathname === item.href; // determino que menu esta activo
                   return (
                     <Link key={item.href} href={item.href}
                       title={collapsed ? item.label : undefined}
@@ -268,62 +280,7 @@ export default function Sidebar() {
                   );
                 })}
 
-                {/* ── Botón Borradores — solo bajo "Gestión de Bienes" ── */}
-                {group.group === 'Gestión de Bienes' && (
-                  <Link href="/bienes?tab=borradores"
-                    title={collapsed ? `${borradoresCount} borradores pendientes` : undefined}
-                    style={{
-                      display: 'flex', alignItems: 'center',
-                      gap: collapsed ? 0 : 10,
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      padding: collapsed ? '9px 0' : '8px 12px',
-                      margin: '1px 8px', borderRadius: 7,
-                      textDecoration: 'none', position: 'relative',
-                      width: 'calc(100% - 16px)',
-                      background: borradoresCount > 0 ? 'rgba(212,168,50,.1)' : 'transparent',
-                      border: borradoresCount > 0 ? '1px solid rgba(212,168,50,.25)' : '1px solid transparent',
-                      transition: 'background .15s',
-                    }}>
-                    {/* Ícono borrador */}
-                    <svg style={{ width: 16, height: 16, flexShrink: 0, opacity: borradoresCount > 0 ? 1 : 0.5,
-                                   color: borradoresCount > 0 ? '#d4a832' : 'rgba(255,255,255,.75)' }}
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                      {icons.draft}
-                    </svg>
-
-                    {/* Label + badge (sidebar expandido) */}
-                    {!collapsed && (
-                      <>
-                        <span style={{ flex: 1, fontSize: '.8rem',
-                                        color: borradoresCount > 0 ? '#d4a832' : 'rgba(255,255,255,.75)',
-                                        fontWeight: borradoresCount > 0 ? 600 : 400,
-                                        letterSpacing: '.02em' }}>
-                          Borradores
-                        </span>
-                        {borradoresCount > 0 && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                          minWidth: 20, height: 20, borderRadius: 999, padding: '0 5px',
-                                          background: '#d4a832', color: '#0d2318',
-                                          fontFamily: 'monospace', fontSize: '.62rem', fontWeight: 800 }}>
-                            {borradoresCount}
-                          </span>
-                        )}
-                      </>
-                    )}
-
-                    {/* Badge compacto (sidebar colapsado) */}
-                    {collapsed && borradoresCount > 0 && (
-                      <span style={{ position: 'absolute', top: 3, right: 3,
-                                      minWidth: 15, height: 15, borderRadius: 999, padding: '0 3px',
-                                      background: '#d4a832', color: '#0d2318',
-                                      fontFamily: 'monospace', fontSize: '.5rem', fontWeight: 800,
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {borradoresCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
-
+        
               </div>
             );
           })}
@@ -347,7 +304,7 @@ export default function Sidebar() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px 0' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }}/>
               <p style={{ color: 'rgba(255,255,255,.3)', fontSize: '.54rem', letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>
-                SIGBI v1.0 · {new Date().getFullYear()}
+                SIGPA v1.0 · {new Date().getFullYear()}
               </p>
             </div>
           )}

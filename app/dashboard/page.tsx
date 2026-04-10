@@ -157,7 +157,7 @@ export default function DashboardPage() {
             Dashboard
           </h2>
           <p style={{ fontSize: '.78rem', color: '#6b8f75', fontFamily: 'monospace' }}>
-            Patrimonio inmobiliario — {fecha}
+            Predio Agricola — {fecha}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
@@ -172,14 +172,14 @@ export default function DashboardPage() {
       {/* STAT CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 16, marginBottom: 24 }}>
         <StatCard
-          title="Total Viviendas" value={data.totalViviendas} pct={100}
+          title="Total Predio" value={data.totalViviendas} pct={100}
           badge={`+${data.variacionMes}%`}
           badgeColor="rgba(58,153,86,.12)" accentColor="linear-gradient(90deg,#3aaf64,#7dd494)"
           barColor="linear-gradient(90deg,#3a9956,#3aaf64)"
           icon={<svg style={{ width: 18, height: 18, color: '#2e7d46' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
         />
         <StatCard
-          title="Ingresadas este mes" value={data.viviendasMes}
+          title="Cotizaciones este mes" value={data.viviendasMes}
           pct={Math.min(Math.round((data.viviendasMes / Math.max(data.totalViviendas, 1)) * 800), 100)}
           badge="Último mes"
           badgeColor="rgba(201,168,76,.15)" accentColor="linear-gradient(90deg,#8a6a18,#ecc84a)"
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           icon={<svg style={{ width: 18, height: 18, color: '#93c5fd' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
         />
         <StatCard
-          title="Regiones con Registros" value={data.porRegion.length}
+          title="Facturas" value={data.porRegion.length}
           pct={Math.round((data.porRegion.length / 16) * 100)}
           badge={`${Math.round((data.porRegion.length / 16) * 100)}% cobertura`}
           badgeColor="rgba(167,139,250,.15)" accentColor="linear-gradient(90deg,#6d28d9,#a78bfa)"

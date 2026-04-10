@@ -10,7 +10,7 @@ const ADMIN_ROUTES = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const hasSession = request.cookies.has('session_bienes_raices');
+  const hasSession = request.cookies.has('session_predio_agricola');
   const userRole   = request.cookies.get('user_role')?.value ?? 'usuario';
 
   // ── /login ────────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ export const config = {
   matcher: [
     '/login',
     '/dashboard/:path*',
-    '/bienes/:path*',
+    '/predio/:path*',
     '/reportes/:path*',
     '/usuarios/:path*',
   ],
