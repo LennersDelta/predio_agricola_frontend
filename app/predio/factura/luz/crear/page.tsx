@@ -1,4 +1,4 @@
-// app/parquevehicular/crear/page.tsx
+// app/predio/factura/luz/crear/page.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
-import DocumentosAdjuntos, { DocAdjunto } from '@/components/DocumentosAdjuntos';
+
 
 
 // ESTILOS REUTILIZABLES
@@ -129,7 +129,7 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
 
 // COMPONENTE PRINCIPAL
 
-export default function CrearParqueVehicularPage() {
+export default function CrearFacturaLuzPage() {
   const router      = useRouter();
   const mapRef       = useRef<HTMLDivElement>(null);
   const leaflet      = useRef<any>(null);
@@ -139,19 +139,16 @@ export default function CrearParqueVehicularPage() {
 
   const [form, setForm] = useState({
 
+    id: '',
     orden: '',
     predio: '',
-    tipo_vehiculo: '',
-    ppu: '',
-    sigla_institucional: '',
-    marca: '',
-    modelo: '',
-    anio: '',
-    fecha_adquisicion: '',
-    fondos_adquisicion: '',
-    vencimiento_permiso: '',
-    vencimiento_seguro: '',
-    ultima_mantencion: '',
+    nroFactura: '',
+    mesConsumo: '',
+    valorTotal: '',
+    proveedor: '',
+    estadoFactura: '',
+    doeRespuestaB5: '',
+    cantidadConsumoKilos: '',
 
   });
 
@@ -161,28 +158,25 @@ export default function CrearParqueVehicularPage() {
   const { uso, loading: loadingUso } = useUso();
   const [errors,  setErrors]  = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  
-  // DATA PARA ADJUNTAR ARCHIVOS //
-  const [docsPermiso, setDocsPermiso] = useState<DocAdjunto[]>([]);
-  const [docsSeguro, setDocsSeguro] = useState<DocAdjunto[]>([]);
 
-//  Submit 
+  //  Submit 
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errsFront: Record<string, string> = {};
 
-    // ─────  VEHÍCULO ─────
-    if (!form.tipo_vehiculo) errsFront.tipo_vehiculo = 'Debe seleccionar tipo de vehículo.';
-    if (!form.ppu) errsFront.ppu = 'La PPU es obligatoria.';
-    if (!form.marca) errsFront.marca = 'La marca es obligatoria.';
-    if (!form.modelo) errsFront.modelo = 'El modelo es obligatorio.';
-    if (!form.anio) errsFront.anio = 'El año es obligatorio.';
+// ─────  PERSONAL ─────
+    if (!form.orden) errsFront.orden = 'El orden es obligatorio.';
+    if (!form.predio) errsFront.predio = 'Debe seleccionar un predio.';
+    if (!form.nroFactura) errsFront.nroFactura = 'El número de factura es obligatorio.';
+    if (!form.mesConsumo) errsFront.mesConsumo = 'El mes de consumo es obligatorio.';
+    if (!form.valorTotal) errsFront.valorTotal = 'El valor total es obligatorio.';
+    if (!form.proveedor) errsFront.proveedor = 'El proveedor es obligatorio.';
+    if (!form.estadoFactura) errsFront.estadoFactura = 'Debe seleccionar el estado de la factura.';
+    if (!form.doeRespuestaB5) errsFront.doeRespuestaB5 = 'Debe ingresar el DOE de respuesta B.5.';
+    if (!form.cantidadConsumoKilos) errsFront.cantidadConsumoKilos = 'La cantidad de consumo en kilos es obligatoria.';
 
-    // ─────  DOCUMENTOS ─────
-    if (!docsPermiso.length) errsFront.docsPermiso = 'Debe adjuntar permiso de circulación.';
-    if (!docsSeguro.length) errsFront.docsSeguro = 'Debe adjuntar seguro obligatorio.';
-
+   
     // ───── VALIDACIÓN FINAL ─────
     if (Object.keys(errsFront).length > 0) {
         setErrors(errsFront);
@@ -216,19 +210,19 @@ return (
                               background: '#3a9956', flexShrink: 0 }} />
               <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500,
                               color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>
-                Gestión Predio Agrícola
+                Gestión Predio Agricola
               </span>
             </div>
             <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem',
                           fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase',
                           letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-              Nuevo Parque Vehicular
+              Nueva Factura Luz
             </h2>
             <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>
-              Complete la información de la ficha de parque vehicular
+              Complete la información de la ficha de factura luz
             </p>
           </div>
-          <Link href="/predio/parquevehicular"
+          <Link href="/predio/factura/luz"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px',
                       borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem',
                       fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase',
@@ -247,6 +241,8 @@ return (
         </div>
 
         {/* FORMULARIO */}
+
+        {/* FORMULARIO */}
         <form onSubmit={handleSubmit}>
             <div style={{
                 background: '#fff',
@@ -256,126 +252,77 @@ return (
                 boxShadow: '0 4px 24px rgba(0,0,0,.1)'
             }}>
 
-           
             {/* SECCIÓN 1 — GENERAL */}
-     
             <Section>
-            <SecTitle label="Información General" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    
-                    <Field label="Orden" error={errors.orden}>
-                    <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
-                    </Field>
-
-                    <Field label="Predio" error={errors.predio}>
-                        <FSelect value={form.predio} onChange={e => set('predio', e.target.value)} >
-                            <option value="">Seleccione predio</option>
-                            <option value="centinela">Centinela</option>
-                            <option value="curacavi">Curacaví</option>
-                            <option value="san_simon">San Simón</option>
-                        </FSelect>
-                    </Field>
-                </div>
-            </Section>
-
-        
-            {/* VEHÍCULO */}        
-            <Section>
-                <SecTitle label="Parque Vehicular" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="Tipo Vehículo" error={errors.tipo_vehiculo}>
-                        <FSelect value={form.tipo_vehiculo} onChange={e => set('tipo_vehiculo', e.target.value)}>
-                            <option value="">Seleccione</option>
-                            <option value="auto">Automóvil</option>
-                            <option value="camioneta">Camioneta</option>
-                            <option value="camion">Camión</option>
-                            <option value="moto">Motocicleta</option>
-                        </FSelect>
-                    </Field>
-
-                    <Field label="PPU" error={errors.ppu}>
-                        <FInput
-                        value={form.ppu}
-                        onChange={e =>
-                            set('ppu', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
-                        }
-                        />
-                    </Field>
-
-                    <Field label="Sigla Institucional">
-                        <FInput
-                        value={form.sigla_institucional}
-                        onChange={e => set('sigla_institucional', e.target.value)}
-                        />
-                    </Field>
-
-                    <Field label="Marca" error={errors.marca}>
-                        <FInput value={form.marca} onChange={e => set('marca', e.target.value)} />
-                    </Field>
-
-                    <Field label="Modelo" error={errors.modelo}>
-                        <FInput value={form.modelo} onChange={e => set('modelo', e.target.value)} />
-                    </Field>    
-
-                    <Field label="Año" error={errors.anio}>
-                        <FInput type="number" value={form.anio} onChange={e => set('anio', e.target.value)} />
-                    </Field>
-
-                    <Field label="Fecha Adquisición">
-                        <FInput type="date" value={form.fecha_adquisicion} onChange={e => set('fecha_adquisicion', e.target.value)} />
-                    </Field>
-
-                    <Field label="Fondos Adquisición">
-                        <FInput value={form.fondos_adquisicion} onChange={e => set('fondos_adquisicion', e.target.value)} />
-                    </Field>
-                </div>
-            </Section>
-
-            {/* PERMISO */}
-            <Section>
-                <SecTitle label="Permiso Circulación / Seguro Obligatorio" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+              <SecTitle label="Información General" />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
                 
-                    <Field label="Venc. Permiso Circulación">
-                        <FInput
-                        type="date"
-                        value={form.vencimiento_permiso}
-                        onChange={e => set('vencimiento_permiso', e.target.value)}
-                        />
-                    </Field>
-                    <Field label="Venc. Seguro Obligatorio">
-                        <FInput
-                        type="date"
-                        value={form.vencimiento_seguro}
-                        onChange={e => set('vencimiento_seguro', e.target.value)}
-                        />
-                    </Field>
-                    <div style={{ gridColumn: '1 / -1' }} data-field="docsPermiso">
-                        <DocumentosAdjuntos
-                            docs={docsPermiso}
-                            onChange={setDocsPermiso} 
-                        />
-                    </div>
+                <Field label="Orden" error={errors.orden}>
+                  <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
+                </Field>
 
-            {/* SEGURO */}
-           
+                <Field label="Predio" error={errors.predio}>
+                  <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
+                    <option value="">Seleccione predio</option>
+                    <option value="centinela">Centinela</option>
+                    <option value="curacavi">Curacaví</option>
+                    <option value="san_simon">San Simón</option>
+                  </FSelect>
+                </Field>
 
+                <Field label="N° de Factura" error={errors.nroFactura}>
+                  <FInput value={form.nroFactura} onChange={e => set('nroFactura', e.target.value)} />
+                </Field>
 
-            <Field label="Última Mantención">
-                <FInput
-                type="date"
-                value={form.ultima_mantencion}
-                onChange={e => set('ultima_mantencion', e.target.value)}
-                />
-            </Field>
-                </div>
+                <Field label="Mes de Consumo" error={errors.mesConsumo}>
+                  <FInput 
+                    type="month"
+                    value={form.mesConsumo}
+                    onChange={e => set('mesConsumo', e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Valor Total ($)" error={errors.valorTotal}>
+                  <FInput 
+                    type="number"
+                    value={form.valorTotal}
+                    onChange={e => set('valorTotal', e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Proveedor" error={errors.proveedor}>
+                  <FInput value={form.proveedor} onChange={e => set('proveedor', e.target.value)} />
+                </Field>
+
+                <Field label="Estado Factura" error={errors.estadoFactura}>
+                  <FSelect
+                    value={form.estadoFactura}
+                    onChange={e => set('estadoFactura', e.target.value)}
+                  >
+                    <option value="">Seleccione</option>
+                    <option value="pagada">Pagada</option>
+                    <option value="impaga">Impaga</option>
+                  </FSelect>
+                </Field>
+
+                <Field label="DOE Respuesta B.5" error={errors.doeRespuestaB5}>
+                  <FInput 
+                    value={form.doeRespuestaB5}
+                    onChange={e => set('doeRespuestaB5', e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Consumo (Kilos)" error={errors.cantidadConsumoKilos}>
+                  <FInput 
+                    type="number"
+                    value={form.cantidadConsumoKilos}
+                    onChange={e => set('cantidadConsumoKilos', e.target.value)}
+                  />
+                </Field>
+
+              </div>
             </Section>
-
-
-
-
-
-             
+            
 
             {/* BOTÓN GUARDAR (DERECHA) */}
             <div style={{
@@ -413,7 +360,7 @@ return (
                 e.currentTarget.style.filter = '';
                 }}
             >
-                {loading ? 'Guardando...' : 'Guardar parque vehicular'}
+                {loading ? 'Guardando...' : 'Guardar factura luz'}
             </button>
             </div>
 

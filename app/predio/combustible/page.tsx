@@ -1,4 +1,4 @@
-// app/predio/parquevehicular/page.tsx
+// app/predio/combustible/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
@@ -7,32 +7,22 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-
 // TIPOS — alineados con campos del backend
 
-interface ParqueVehicular{
+interface Combustible{
   
   id: number;
   orden: string;
   predio: string;
-  tipoVehicular: string;
-  ppu: string;
-  siglaInstitucional: string;
-  marca: string;
-  modelo: string;
-  annio: number;
-  fechaAdquisicion: string; 
-  fondoAdquisicion: string;
-
-  // Fechas
-  vencimientoPermisoCirculacion: string; 
-  vencimientoSeguroObligatorio: string; 
-  ultimaMantencion: string; 
-
-  // Archivos (imágenes)
-  permisoCirculacionImg?: File;
-  seguroObligatorioImg?: File;
-
+  nroFactura: string;
+  mesConsumo: string;
+  valorTotal: number;
+  proveedor: string;
+  estadoFactura: string;
+  doeRespuestaB5: string;
+  cantidadConsumoLitros: number;
+  
+  comprobante: File | null;
 }
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
@@ -63,7 +53,6 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
     </div>
   );
 }
-
 // FILTROS
 const siStyle: React.CSSProperties = {
   appearance: 'none', width: '100%', background: '#fff',
@@ -99,82 +88,72 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
 }
 const PAGE_SIZES = [10, 25, 50, 100];
 
-
 // COMPONENTE PRINCIPAL
- 
-function ParqueVehicularPageInner() {
+function CombustiblePageInner() {
   const searchParams = useSearchParams();
   const [tab,          setTab]          = useState<'predio'|'borradores'>(searchParams.get('tab') === 'borradores' ? 'borradores' : 'predio');
-  const [data,         setData]         = useState<ParqueVehicular[]>([]);
+  const [data,         setData]         = useState<Combustible[]>([]);
   const [borradores,   setBorradores]   = useState<any[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [loadingBorr,  setLoadingBorr]  = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // Filtros
+// Filtros
   const [fOrden, setFOrden] = useState('');
   const [fPredio, setFPredio] = useState('');
-  const [fSiglaInstitucional, setSiglaInstitucional] = useState('');
-  const [fAnnio, setAnnio] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  siglaInstitucional: '',  annio: ''});
+  const [fmesConsumo, setFMesConsumo] = useState('');
+  const [applied, setApplied] = useState({ orden: '',  predio: '',  mesConsumo: ''});
 
-  // Tabla
+// Tabla
   const [search,   setSearch]   = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [page,     setPage]     = useState(1);
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  // ── Cargar datos ──────────────────────────────────────────────────────────
-  const cargaParqueVehicular = useCallback(() => {
+  //  Cargar datos 
+  const cargaCombustible = useCallback(() => {
     setLoading(true);
     api.get('/api/predio')
       .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar parque vehicular'))
+      .catch(() => toast.error('Error al cargar combustible'))
       .finally(() => setLoading(false));
   }, []);  
 
   useEffect(() => {
-    cargaParqueVehicular();
+    cargaCombustible();
   }, []);
 
-  // ── Opciones dinámicas para filtros ──────────────────────────────────────
+  //  Opciones dinámicas para filtros 
   const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opSiglas = [...new Set(data.map(b => b.siglaInstitucional).filter(Boolean))].sort();
-  const opAnnio = [...new Set(data.map(b => b.annio).filter(a => a != null))].sort((a, b) => a - b);
+  const opMesConsumo = [...new Set(data.map(b => b.mesConsumo).filter(Boolean))].sort();
 
-  // ── Aplicar filtros ───────────────────────────────────────────────────────
+    //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, siglaInstitucional: fSiglaInstitucional, annio: fAnnio});
+    setApplied({orden: fOrden, predio: fPredio, mesConsumo: fmesConsumo});
     setPage(1);
   };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setSiglaInstitucional(''); setAnnio('');
-    setApplied({orden: '', predio: '', siglaInstitucional: '',annio: '' });
+    const limpiar = () => {setFOrden(''); setFPredio(''); setFMesConsumo(''); 
+    setApplied({orden: '', predio: '', mesConsumo: '' });
 
     setSearch('');
     setPage(1);
   };
+   const filtrosActivos = Object.values(applied).filter(Boolean).length;
 
-    const filtrosActivos = Object.values(applied).filter(Boolean).length;
-
-    // ── Filtrar + buscar + ordenar ────────────────────────────────────────────
-    const filtered = useMemo(() => {
+       const filtered = useMemo(() => {
   return data
     .filter(b => {
       const orden = b.orden ?? '';
       const predio = b.predio ?? '';
-      const sigla = b.siglaInstitucional ?? '';
-      const annio = b.annio ?? 0;
+      const mesConsumo = b.mesConsumo ?? '';
+      //const annio = b.annio ?? 0;
 
       return (
         (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
         (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.siglaInstitucional || sigla === applied.siglaInstitucional) &&
-        (!applied.annio || annio === Number(applied.annio)) &&
-
-        (!search || [orden, predio, sigla, String(annio)]
-          .some(v => v.toLowerCase().includes(search.toLowerCase())))
+        (!applied.mesConsumo || predio.toLowerCase().includes(applied.mesConsumo.toLowerCase())) 
       );
     })
     .sort((a, b) => {
@@ -193,8 +172,7 @@ function ParqueVehicularPageInner() {
       else { setSortCol(col); setSortDir('asc'); }
     };
 
-
-    // ── Eliminar ──────────────────────────────────────────────────────────────
+    // ── Eliminar 
     const handleDelete = async () => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
@@ -209,7 +187,6 @@ function ParqueVehicularPageInner() {
       }
     };
 
-
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
         {sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
@@ -223,23 +200,22 @@ function ParqueVehicularPageInner() {
       background: 'rgba(0,0,0,.03)', cursor: 'pointer', userSelect: 'none',
     });
 
-// ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
   return (
     <div style={{ fontFamily: '"Barlow",sans-serif' }}>
 
-      {/* PAGE HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24, padding: '0 4px' }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: '3px 10px 3px 8px', borderRadius: 999, background: 'rgba(58,153,86,.1)', border: '1px solid rgba(58,153,86,.25)' }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Parque Vehicular</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Combustible</span>
           </div>
           <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-            Parque Vehicular
+            Combustible
           </h2>
-          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Parque Vehicular</p>
+          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Combustible</p>
         </div>
-        <Link href="/predio/parquevehicular/crear"
+        <Link href="/predio/combustible/crear"
           style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
           onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
           onMouseLeave={e => (e.currentTarget.style.filter = '')}
@@ -247,7 +223,7 @@ function ParqueVehicularPageInner() {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo parque vehicular
+          Nuevo combustible
         </Link>
       </div>    
 
@@ -289,17 +265,10 @@ function ParqueVehicularPageInner() {
               />
 
               <FS 
-                label="Sigla Institucional"
-                options={opSiglas}
-                value={fSiglaInstitucional}
-                onChange={e => { setSiglaInstitucional(e.target.value); aplicar(); }}
-              />
-
-              <FS 
-                label="Año"
-                options={opAnnio.map(String)} // 👈 importante
-                value={fAnnio}
-                onChange={e => { setAnnio(e.target.value); aplicar(); }}
+                label="Mes Consumo"
+                options={opMesConsumo}
+                value={fmesConsumo}
+                onChange={e => { setFMesConsumo(e.target.value); aplicar(); }}
               />
             
 
@@ -403,19 +372,16 @@ function ParqueVehicularPageInner() {
                   <thead>
                     <tr>
                       {([
-                          ['orden', 'N° Orden', 'left'],
-                          ['predio', 'Predio', 'left'],
-                          ['tipoVehicular', 'Tipo Vehicular', 'left'],
-                          ['ppu', 'PPU', 'left'],
-                          ['siglaInstitucional', 'Sigla', 'left'],
-                          ['marca', 'Marca', 'left'],
-                          ['modelo', 'Modelo', 'left'],
-                          ['annio', 'Año', 'center'],
-                          ['fechaAdquisicion', 'Fecha Adq.', 'center'],
-                          ['fondoAdquisicion', 'Fondo', 'left'],
-                          ['vencimientoPermisoCirculacion', 'Venc. Permiso', 'center'],
-                          ['vencimientoSeguroObligatorio', 'Venc. Seguro', 'center'],
-                          ['ultimaMantencion', 'Últ. Mantención', 'center'],
+                        ['id', 'ID', 'left'],
+                        ['orden', 'N° Orden', 'left'],
+                        ['predio', 'Predio', 'left'],
+                        ['nroFactura', 'N° de Factura', 'left'],
+                        ['mesConsumo', 'Mes de Consumo', 'center'],
+                        ['valorTotal', 'Valor Total $', 'right'],
+                        ['proveedor', 'Proveedor', 'left'],
+                        ['estadoFactura', 'Estado Factura', 'center'],
+                        ['doeRespuestaB5', 'DOE Resp. B.5 Pago Factura', 'center'],
+                        ['cantidadConsumoLitros', 'Consumo (Litros)', 'right'],
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                           {label}
@@ -444,11 +410,8 @@ function ParqueVehicularPageInner() {
                           <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.siglaInstitucional}</span>
-                        </td>
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '.8rem', color: '#1a2e22' }}> {b.annio}</span>
-                        </td>        
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.mesConsumo}</span>
+                        </td> 
                       </tr>
                     ))}
                   </tbody>
@@ -496,7 +459,7 @@ function ParqueVehicularPageInner() {
 export default function PredioPage() {
   return (
     <Suspense>
-      <ParqueVehicularPageInner />
+      <CombustiblePageInner />
     </Suspense>
   );
 }

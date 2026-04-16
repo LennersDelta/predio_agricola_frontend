@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 // TIPOS — alineados con campos del backend
 
-interface RecursosHumanos{
+interface RecursoHumano{
   
   id: number;
   orden: string;
@@ -214,14 +214,14 @@ function RecursoHumanoPageInner() {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: '3px 10px 3px 8px', borderRadius: 999, background: 'rgba(58,153,86,.1)', border: '1px solid rgba(58,153,86,.25)' }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Parque Vehicular</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Recurso Humano</span>
           </div>
           <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-            Parque Vehicular
+            Recurso Humano
           </h2>
-          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Parque Vehicular</p>
+          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Recurso Humano</p>
         </div>
-        <Link href="/predio/recursohumano/crear"
+        <Link href="/predio/recursoshumanos/crear"
           style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
           onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
           onMouseLeave={e => (e.currentTarget.style.filter = '')}
@@ -229,7 +229,7 @@ function RecursoHumanoPageInner() {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo Recurso humano
+          Nuevo recurso humano
         </Link>
       </div>    
 
@@ -339,7 +339,7 @@ function RecursoHumanoPageInner() {
             {/* Header tabla */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '13px 20px', borderBottom: '1px solid rgba(0,0,0,.06)', background: 'rgba(0,0,0,.02)' }}>
               <div>
-                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Bienes</p>
+                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Predio</p>
                 <p style={{ fontSize: '.65rem', color: '#6b8f75', marginTop: 2, fontFamily: 'monospace' }}>
                   <span style={{ fontWeight: 600, color: '#2e7d46' }}>{filtered.length.toLocaleString('es-CL')}</span> registros encontrados
                 </p>

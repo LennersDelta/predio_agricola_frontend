@@ -14,8 +14,30 @@ const breadcrumbs: Record<string, string> = {
   '/predio/parquevehicular/crear': 'Ingreso parque vehicular', 
   
   '/predio/recursoshumanos': 'Recursos humanos',
+  '/predio/recursoshumanos/crear': 'Ingreso recurso humano',
  
+  '/predio/factura/luz': 'Factura Luz',
+  '/predio/factura/luz/crear': 'Ingreso factura luz', 
+  '/predio/factura/agua': 'Factura Agua',
+  '/predio/factura/agua/crear': 'Ingreso factura agua', 
   
+
+  '/predio/anticipo': 'Anticipo rendir cuenta',
+  '/predio/anticipo/crear': 'Ingreso anticipo rendir cuenta',
+
+  '/predio/combustible': 'Combustible',
+  '/predio/combustible/crear': 'Ingreso combustible',
+
+
+'/predio/contratos' : 'Contratos efectuados',
+'/predio/contratos/crear' : 'Ingreso contratos efectuados',
+
+
+
+
+
+
+
   '/reportes/provincia': 'Reportes por Provincia',
   '/reportes/comuna':    'Reportes por Comuna',
   '/usuarios':           'Usuarios',

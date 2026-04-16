@@ -30,6 +30,12 @@ const navGroups = [
       { href: '/predio/insumosproductos',       label: 'Adquisición de insumos y productos', icon: 'building' },
       { href: '/predio/parquevehicular',       label: 'Parque  Vehicular', icon: 'car' },
       { href: '/predio/recursoshumanos',  label:'Recursos Humano', icon: 'users'},
+      { href: '/predio/factura/luz',  label:'Factura Luz', icon: 'FileText'},
+      { href: '/predio/factura/agua',  label:'Factura Agua', icon: 'FileText'},
+      { href: '/predio/anticipo',  label:'Anticipo Rendir Cuenta', icon: 'report'},
+      { href: '/predio/combustible',  label:'Combustible', icon: 'gas'},
+      { href: '/predio/contratos',  label:'Contratos efectuados', icon: 'report'},
+      
     ],
   },
   {

@@ -322,10 +322,6 @@ export default function CrearBienPage() {
             <SecTitle label="Información General" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
                 
-                <Field label="Orden" error={errors.orden}>
-                <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
-                </Field>
-
                 <Field label="Predio" error={errors.predio}>
                     <FSelect value={form.predio} onChange={e => set('predio', e.target.value)} >
                         <option value="">Seleccione predio</option>

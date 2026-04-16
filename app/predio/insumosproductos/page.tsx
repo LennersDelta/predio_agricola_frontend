@@ -12,32 +12,41 @@ import { toast } from 'sonner';
 interface InsumosProductos {
   // INFORMACIÓN GENERAL
   id: number;
-  orden: string;
-  predio: string;
-  producto_servicio: string;
-  // COTIZACIÓN
-  empresa: string;
+  orden: number;
+  predio: number;
   fecha_cotizacion: string; // formato dd-mm-aaaa
   valor_cotizacion: number;
-  // COMPRA
-  tipo_compra: string;
-  etapa: string;
-  // ORDEN DE COMPRA
+  etapa: string;  
   numero_orden: string;
-  estado_orden: string;
   fecha_orden: string;
   valor_total: number;
-  // FACTURA
   numero_factura: string;
   fecha_factura: string;
-  proveedor: string;
-  estado_factura: string;
-  // OTROS
+  proveedor: string; 
   observaciones: string;
+  predio_nombre: string;
+  producto_servicio: string;
+  empresa: string;
+  tipo_compra: number;
+  tipo_compra_nombre: string;
+  estado_orden: number;
+  estado_orden_nombre: string;
+  estado_factura: number;
+  estado_factura_nombre: string;
+
+
+
 }
 
-// MODAL ELIMINAR
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
 
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
+
+// MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
@@ -52,7 +61,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />El adquisión de insumos y productos será eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -90,17 +99,48 @@ function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLI
     </div>
   );
 }
-function FS({ label, options, ...p }: { label: string; options: string[] } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+/* FUNCION */
+function FS({
+  label,
+  options,
+  ...p
+}: {
+  label: string;
+  options: { id: number; nombre: string }[];
+} & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div>
       <label style={lblStyle}>{label}</label>
-      <select {...p} style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+
+      <select
+        {...p}
+        style={{
+          ...siStyle,
+          paddingRight: 32,
+          cursor: 'pointer',
+          appearance: 'none',
+
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 10px center',
+          backgroundColor: '#fff'
+        }}
+      >
         <option value="">Todos</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+
+        {options.map(o => (
+          <option key={o.id} value={o.id}>
+            {o.nombre}
+          </option>
+        ))}
       </select>
     </div>
   );
 }
+
+
 const PAGE_SIZES = [10, 25, 50, 100];
 
 
@@ -116,11 +156,11 @@ function InsumosProductoPageInner() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Filtros
-const [fOrden, setFOrden] = useState('');
-const [fPredio, setFPredio] = useState('');
-const [fTipoCompra, setFTipoCompra] = useState('');
-const [fEstadoOC, setFEstadoOC] = useState('');
-const [fEstadoFactura, setFEstadoFactura] = useState('');
+  const [fOrden, setFOrden] = useState('');
+  const [fPredio, setFPredio] = useState('');
+  const [fTipoCompra, setFTipoCompra] = useState('');
+  const [fEstadoOC, setFEstadoOC] = useState('');
+  const [fEstadoFactura, setFEstadoFactura] = useState('');
   const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoCompra: '',  estadoOrdenCompra: '',  estadoFactura: ''});
 
   // Tabla
@@ -130,20 +170,75 @@ const [fEstadoFactura, setFEstadoFactura] = useState('');
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  // ── Cargar datos ──────────────────────────────────────────────────────────
-  const cargaInsumosProducto = useCallback(() => {
-    setLoading(true);
-    api.get('/api/predio')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar insumos y productos'))
-      .finally(() => setLoading(false));
-  }, []);
 
-  
+  //const [tiposCompra, setTiposCompra] = useState<{id:number,nombre:string}[]>([]);
+  //const [estadosOC, setEstadosOC] = useState<{id:number,nombre:string}[]>([]);
+  //const [estadosFactura, setEstadosFactura] = useState<{id:number,nombre:string}[]>([]);
 
-  useEffect(() => {
-    cargaInsumosProducto();
-  }, []);
+  const [tiposCompra, setTiposCompra] = useState([]);
+  const [estadosOC, setEstadosOC] = useState([]);
+  const [estadosFactura, setEstadosFactura] = useState([]);
+  const [predios, setPredios] = useState([]);
+
+
+const cargaInsumosProducto = useCallback(() => {
+  setLoading(true);
+
+  api.get('/api/listaInsumosProductos')
+    .then(({ data }) => {
+
+      let datos = [];
+
+      if (Array.isArray(data)) {
+        datos = data;
+      } else if (Array.isArray(data?.data)) {
+        datos = data.data;
+      } else {
+        console.warn('Formato inesperado del backend:', data);
+      }
+
+      setData(datos);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error('Error al cargar insumos y productos');
+      setData([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+
+}, []);
+
+useEffect(() => {
+  cargaInsumosProducto();
+}, [cargaInsumosProducto]);
+
+/* CARGA COMBOX TIPO COMPRA - ESTADO O.C - ESTADO FACTURA - LISTADO PREDIO */
+useEffect(() => {
+  const cargarCombos = async () => {
+    try {
+      const [tc, oc, ef, pr] = await Promise.all([
+        api.get('/api/estados/tipoCompra'),
+        api.get('/api/estados/estadoOC'),
+        api.get('/api/estados/estadoFactura'),
+        api.get('/api/listaPredio'),
+      ]);
+
+      setTiposCompra(tc.data);
+      setEstadosOC(oc.data);
+      setEstadosFactura(ef.data);
+      setPredios(pr.data);
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  cargarCombos();
+}, []);
+
+
+
 
 // ── Opciones dinámicas para filtros ──────────────────────────────────────
 const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
@@ -167,33 +262,41 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
   const filtrosActivos = Object.values(applied).filter(Boolean).length;
 
   // ── Filtrar + buscar + ordenar ────────────────────────────────────────────
-const filtered = useMemo(() => {
-  return data
-    .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const tipoCompra = b.tipo_compra ?? '';
-      const estadoOC = b.estado_orden ?? '';
-      const estadoFactura = b.estado_factura ?? '';
 
-      return (
-        (!applied.orden || String(orden).toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.tipoCompra || tipoCompra === applied.tipoCompra) &&
-        (!applied.estadoOrdenCompra || estadoOC === applied.estadoOrdenCompra) &&
-        (!applied.estadoFactura || estadoFactura === applied.estadoFactura) &&
+  const filtered = useMemo(() => {
+    return data
+      .filter(b => {
+        return (
+          (!applied.predio || String(b.predio) === String(applied.predio)) &&
+          (!applied.tipoCompra || String(b.tipo_compra) === String(applied.tipoCompra)) &&
+          (!applied.estadoOrdenCompra || String(b.estado_orden) === String(applied.estadoOrdenCompra)) &&
+          (!applied.estadoFactura || String(b.estado_factura) === String(applied.estadoFactura)) &&
 
-        (!search || [orden, predio, tipoCompra, estadoOC, estadoFactura]
-          .some(v => String(v).toLowerCase().includes(search.toLowerCase())))
-      );
-    })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-}, [data, applied, search, sortCol, sortDir]);
+          (!search ||
+            [
+              b.predio_nombre,
+              b.producto_servicio,
+              b.empresa,
+              b.tipo_compra_nombre,
+              b.estado_orden_nombre,
+              b.estado_factura_nombre
+            ]
+              .join(' ')
+              .toLowerCase()
+              .includes(search.toLowerCase()))
+        );
+      })
+      .sort((a, b) => {
+        const av = String((a as any)[sortCol] ?? '');
+        const bv = String((b as any)[sortCol] ?? '');
+        return sortDir === 'asc'
+          ? av.localeCompare(bv, 'es', { numeric: true })
+          : bv.localeCompare(av, 'es', { numeric: true });
+      });
+  }, [data, applied, search, sortCol, sortDir]);
+
+
+
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -203,28 +306,29 @@ const filtered = useMemo(() => {
     else { setSortCol(col); setSortDir('asc'); }
   };
   
-  // ── Eliminar ──────────────────────────────────────────────────────────────
+
+
+
+
+  //  Eliminar //
   const handleDelete = async () => {
-    if (deleteId === null) return;
+    if (deleteId  === null) return;
     const toastId = toast.loading('Eliminando...');
     try {
-      await api.delete(`/api/bienes/${deleteId}`);
-      setData(prev => prev.filter(b => b.id !== deleteId));
-      toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
+      await api.delete(`/api/deleteInsumosProductos/${deleteId }`);
+      setData(prev => prev.filter(b => b.orden !== deleteId ));
+      toast.success('Adquisición de insumos y productos eliminado correctamente', { id: toastId, duration: 3000 });
     } catch (err: any) {
       toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
     } finally {
       setDeleteId(null);
     }
   };
-
-
   const SortIcon = ({ col }: { col: string }) => (
     <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
       {sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
     </span>
   );
-
   const thS = (align = 'left'): React.CSSProperties => ({
     padding: '9px 14px', fontSize: '.56rem', fontWeight: 600, letterSpacing: '.16em',
     textTransform: 'uppercase', color: '#9ab8a2', borderBottom: '1px solid rgba(0,0,0,.1)',
@@ -282,50 +386,33 @@ const filtered = useMemo(() => {
       <div style={{ padding: '16px 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-          <FI 
-            label="Orden"
-            placeholder="111125"
-            value={fOrden}
-            onChange={e => setFOrden(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && aplicar()}
-          />
-
-
-
-         {/* <FI 
+          <FS
             label="Predio"
-            placeholder="Centinela"
+            options={predios} 
             value={fPredio}
             onChange={e => setFPredio(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && aplicar()}
-          /> */} 
+          /> 
 
-          <FS             
-          label="Predio"
-            options={opPredios}
-            value={fPredio}
-            onChange={e => { setFPredio(e.target.value); aplicar(); }}
-          />
-              
-          <FS 
+
+          <FS
             label="Tipo de Compra"
-            options={opTiposCompra}
+            options={tiposCompra}
             value={fTipoCompra}
-            onChange={e => { setFTipoCompra(e.target.value); aplicar(); }}
+            onChange={e => setFTipoCompra(e.target.value)}
           />
 
-          <FS 
+          <FS
             label="Estado OC"
-            options={opEstadosOC}
+            options={estadosOC}
             value={fEstadoOC}
-            onChange={e => { setFEstadoOC(e.target.value); aplicar(); }}
+            onChange={e => setFEstadoOC(e.target.value)}
           />
 
-          <FS 
+          <FS
             label="Estado Factura"
-            options={opEstadosFactura}
+            options={estadosFactura}
             value={fEstadoFactura}
-            onChange={e => { setFEstadoFactura(e.target.value); aplicar(); }}
+            onChange={e => setFEstadoFactura(e.target.value)}
           />
 
           <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
@@ -389,7 +476,7 @@ const filtered = useMemo(() => {
         {/* Header tabla */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '13px 20px', borderBottom: '1px solid rgba(0,0,0,.06)', background: 'rgba(0,0,0,.02)' }}>
           <div>
-            <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Bienes</p>
+            <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Predio</p>
             <p style={{ fontSize: '.65rem', color: '#6b8f75', marginTop: 2, fontFamily: 'monospace' }}>
               <span style={{ fontWeight: 600, color: '#2e7d46' }}>{filtered.length.toLocaleString('es-CL')}</span> registros encontrados
             </p>
@@ -428,24 +515,24 @@ const filtered = useMemo(() => {
               <thead>
                 <tr>
                   {([
-                    ['orden', 'N° Orden', 'left'],
-                    ['predio', 'Predio', 'left'],
-                    ['producto_o_servicio', 'Producto o Servicio', 'left'],
-                    ['empresa', 'Empresa', 'left'],
-                    ['fecha', 'Fecha', 'left'],
-                    ['valor', 'Valor', 'left'],
-                    ['tipo_de_compra', 'Tipo Compra', 'left'],
-                    ['etapa_de_compra', 'Etapa O.C', 'right'],
-                    ['orden_de_compra', 'Orden O.C', 'center'],
-                    ['estado_de_compra', 'Estado O.C', 'center'],
-                    ['fecha_oc', 'Fecha O.C', 'center'],        // corregido
-                    ['valor_total', 'Valor Total', 'center'],
-                    ['factura', 'Factura', 'center'],
-                    ['fecha_factura', 'Fecha', 'center'],       // corregido
-                    ['proveedor', 'Proveedor', 'center'],
-                    ['estado_factura', 'Estado Factura', 'center'],
-                    ['doe_respuesta_b5', 'Doe de respuesta B.5', 'center'],
-                    ['observacion', 'Observación', 'center'],
+                    ['orden', 'N° Orden' , 'left'],
+                    ['predio_nombre', 'Predio' , 'center'],
+                    ['producto_servicio', 'Producto o Servicio' , 'center'],
+                    ['empresa', 'Empresa' , 'center'],
+                    ['fecha_cotizacion', 'Fecha' , 'center'],
+                    ['valor_cotizacion', 'Valor' , 'center'],
+                    ['tipo_compra_nombre', 'Tipo Compra' , 'center'],
+                    ['etapa', 'Etapa O.C' , 'center'],
+                    ['numero_orden', 'Orden O.C' , 'center'],
+                    ['estado_orden_nombre', 'Estado O.C' , 'center'],
+                    ['fecha_orden', 'Fecha O.C' , 'center'],
+                    ['valor_total', 'Valor Total' , 'center'],
+                    ['numero_factura', 'Factura' , 'center'],
+                    ['fecha_factura', 'Fecha Factura' , 'center'],
+                    ['proveedor', 'Proveedor' , 'center'],
+                    ['estado_factura_nombre', 'Estado Factura' , 'center'],
+                    ['observaciones', 'Observación' , 'center'],
+
                   ] as [string, string, string][]).map(([col, label, align]) => (
                     <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                       {label}
@@ -470,21 +557,127 @@ const filtered = useMemo(() => {
                     onMouseEnter={e => (e.currentTarget.style.background = '#f5faf6')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>
+                        {b.orden}
+                      </span>
                     </td>
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.producto_servicio}</span>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontSize: '.8rem' }}>{b.predio_nombre}</span>
                     </td>
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontSize: '.8rem', color: '#1a2e22' }}> {b.empresa}</span>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                        {b.producto_servicio}
+                      </span>
                     </td>
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+
+                    <td style={{ padding: '10px 14px', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.empresa}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.fecha_cotizacion)}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>${Number(b.valor_cotizacion).toLocaleString('es-CL')}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.tipo_compra_nombre}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.etapa}</span>                      
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.numero_orden}</span>                      
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.estado_orden_nombre}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.fecha_orden)}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>${Number(b.valor_total).toLocaleString('es-CL')}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.numero_factura}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.fecha_factura)}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.proveedor}</span>
+                    </td>
+
+                    <td style={{ padding: '10px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7dd494', flexShrink: 0 }} />
-                        <span style={{ fontSize: '.78rem', color: '#1a2e22' }}>{b.estado_factura}</span>
+                        <div style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background:
+                            b.estado_factura_nombre === 'Pagada' ? '#16a34a' :
+                            b.estado_factura_nombre === 'Pendiente' ? '#f59e0b' :
+                            '#dc2626'
+                        }} />
+                        <span style={{ fontSize: '.78rem' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.estado_factura_nombre}</span>
+                        </span>
                       </div>
-                    </td>  
+                    </td>
+                    <td style={{ padding: '10px 14px', maxWidth: 200 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.observaciones}</span>
+                    </td>
+
+                    {/* ACCIONES */}
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        {/*<Link href={b.orden === 'sub_propiedad' ? `/bienes/sub/${b.id}` : `/bienes/${b.uuid}`}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                          title="Ver detalle"
+                        >
+                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Link>
+                        <Link href={b.tipo_registro === 'sub_propiedad' ? `/bienes/sub/${b.id}/editar` : `/bienes/${b.uuid}/editar`}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                          title="Editar"
+                        >
+                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </Link>*/}
+                        <button onClick={() => setDeleteId(b.orden)}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                          title="Eliminar"
+                        >
+                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+
                   </tr>
                 ))}
               </tbody>
