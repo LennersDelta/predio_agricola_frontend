@@ -33,9 +33,6 @@ interface InsumosProductos {
   estado_orden_nombre: string;
   estado_factura: number;
   estado_factura_nombre: string;
-
-
-
 }
 
 // FORMATEO DE FECHAS //
@@ -99,7 +96,7 @@ function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLI
     </div>
   );
 }
-/* FUNCION */
+/* FUNCION PARA MOSTRAR COMBO*/
 function FS({
   label,
   options,
@@ -140,7 +137,6 @@ function FS({
   );
 }
 
-
 const PAGE_SIZES = [10, 25, 50, 100];
 
 
@@ -169,11 +165,6 @@ function InsumosProductoPageInner() {
   const [page,     setPage]     = useState(1);
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
-
-
-  //const [tiposCompra, setTiposCompra] = useState<{id:number,nombre:string}[]>([]);
-  //const [estadosOC, setEstadosOC] = useState<{id:number,nombre:string}[]>([]);
-  //const [estadosFactura, setEstadosFactura] = useState<{id:number,nombre:string}[]>([]);
 
   const [tiposCompra, setTiposCompra] = useState([]);
   const [estadosOC, setEstadosOC] = useState([]);
@@ -644,7 +635,7 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                     {/* ACCIONES */}
                     <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                        {/*<Link href={b.orden === 'sub_propiedad' ? `/bienes/sub/${b.id}` : `/bienes/${b.uuid}`}
+                        {/* <Link href={b.orden === 'sub_propiedad' ? `/bienes/sub/${b.id}` : `/bienes/${b.uuid}`}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
@@ -654,8 +645,9 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                        </Link>
-                        <Link href={b.tipo_registro === 'sub_propiedad' ? `/bienes/sub/${b.id}/editar` : `/bienes/${b.uuid}/editar`}
+                        </Link>*/}
+
+                        <Link href={`/predio/insumosproductos/${b.orden}/edit`}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
@@ -664,7 +656,7 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                           <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                        </Link>*/}
+                        </Link>
                         <button onClick={() => setDeleteId(b.orden)}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}

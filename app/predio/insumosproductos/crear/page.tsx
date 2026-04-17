@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
-import DocumentosAdjuntos, { DocAdjunto } from '@/components/DocumentosAdjuntos';
+
 
 // ESTILOS REUTILIZABLES
 
@@ -18,7 +18,6 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', fontFamily: '"Barlow",sans-serif', appearance: 'none',
   transition: 'border-color .18s, box-shadow .18s',
 };
-
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
   textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5,
@@ -126,6 +125,12 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
     </div>
   );
 }
+const toOptions = (data: any[] = []) =>
+  data.map(d => ({
+    value: d.id,
+    label: d.nombre,
+  }));
+
 
 // COMPONENTE PRINCIPAL
 
@@ -138,124 +143,140 @@ export default function CrearBienPage() {
   const geoTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState({
-    orden: '',
-    predio: '',
-    producto_servicio: '',
+  id: '',
+  orden: '',
+  predio: '',
+  producto_servicio: '',
+  empresa_cotizacion: '',
+  etapa_compra: '',
+  numero_orden_compra: '',
+  estado_orden_compra: '',
+  fecha_orden_compra: '',
+  valor_total_orden: '',
+  numero_factura: '',
+  fecha_factura: '',
+  proveedor: '',
+  estado_factura: '',
+  doe: '',
+  observacion: '',
+  fecha_cotizacion: '',
+  valor_cotizacion: '',
+  tipo_compra: '',
 
-    empresa_cotizacion: '',
-    fecha_cotizacion: '',
-    valor_cotizacion: '',
-
-    tipo_compra: '',
-    etapa_compra: '',
-
-    numero_orden_compra: '',
-    estado_orden_compra: '',
-    fecha_orden_compra: '',
-    valor_total_orden: '',
-
-    numero_factura: '',
-    fecha_factura: '',
-    proveedor: '',
-    estado_factura: '',
-
-    doe: '',
-    observacion: '',
   });
 
 
-  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+    const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  const { administrador, loading: loadingAdministrador } = useAdministrador();
-  const { uso, loading: loadingUso } = useUso();
-  const [errors,  setErrors]  = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
+    const { administrador, loading: loadingAdministrador } = useAdministrador();
+    const { uso, loading: loadingUso } = useUso();
+    const [errors,  setErrors]  = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false);
 
-  // Documentos vacíos al crear — se llenan con el componente
-  const [docs, setDocs] = useState<DocAdjunto[]>([]);
+    const [predios, setPredios] = useState<any[]>([]);
+    const [tiposCompra, setTiposCompra] = useState<any[]>([]);
+    const [estadosOC, setEstadosOC] = useState<any[]>([]);
+    const [estadosFactura, setEstadosFactura] = useState<any[]>([]);
 
-  // Mapa Leaflet
+
+  /* CARGA COMBOX TIPO COMPRA - ESTADO O.C - ESTADO FACTURA - LISTADO PREDIO */
   useEffect(() => {
-    import('leaflet').then(L => {
-      if (!mapRef.current || mapInstance.current) return;
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
-      const map = L.map(mapRef.current!).setView([-33.4489, -70.6693], 13);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, attribution: '© Esri' }).addTo(map);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, opacity: 0.5 }).addTo(map);
-      map.on('click', (e: any) => setMarker(L, map, e.latlng.lat, e.latlng.lng));
-      mapInstance.current = map;
-      leaflet.current = L;
-    });
-    return () => { mapInstance.current?.remove(); mapInstance.current = null; };
+    const cargarCombos = async () => {
+      try {
+        const [tc, oc, ef, pr] = await Promise.all([
+          api.get('/api/estados/tipoCompra'),
+          api.get('/api/estados/estadoOC'),
+          api.get('/api/estados/estadoFactura'),
+          api.get('/api/listaPredio'),
+        ]);
+
+        setTiposCompra(tc.data);
+        setEstadosOC(oc.data);
+        setEstadosFactura(ef.data);
+        setPredios(pr.data);
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    cargarCombos();
   }, []);
 
-  const setMarker = (L: any, map: any, lat: number, lng: number) => {
-    if (markerRef.current) map.removeLayer(markerRef.current);
-    markerRef.current = L.marker([lat, lng]).addTo(map);
-    set('latitud', String(lat)); set('longitud', String(lng));
-  };
+
+
+
 
     //  Submit 
-    const [loadingBorrador, setLoadingBorrador] = useState(false);
+    const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const handleSubmit = async (e: React.FormEvent, esBorrador = false) => {
-        e.preventDefault();
+    const errsFront: Record<string, string> = {};
 
-        const errsFront: Record<string, string> = {};
+    // ───── INFORMACIÓN GENERAL ─────        
+    //if (!form.predio) errsFront.predio = 'El predio es obligatorio.';
+    if (!form.producto_servicio) errsFront.producto_servicio = 'Debe indicar producto o servicio.';
 
-        // ───── INFORMACIÓN GENERAL ─────
-        if (!form.orden) errsFront.orden = 'La orden es obligatoria.';
-        if (!form.predio) errsFront.predio = 'El predio es obligatorio.';
-        if (!form.producto_servicio) errsFront.producto_servicio = 'Debe indicar producto o servicio.';
+    // ───── COTIZACIÓN ─────
+    if (!form.empresa_cotizacion) errsFront.empresa_cotizacion = 'La empresa es obligatoria.';
+    if (!form.fecha_cotizacion) errsFront.fecha_cotizacion = 'La fecha de cotización es obligatoria.';
+    if (!form.valor_cotizacion || Number(form.valor_cotizacion) === 0)
+      errsFront.valor_cotizacion = 'El valor de cotización es obligatorio.';
 
-        // ───── COTIZACIÓN ─────
-        if (!form.empresa_cotizacion) errsFront.empresa_cotizacion = 'La empresa es obligatoria.';
-        if (!form.fecha_cotizacion) errsFront.fecha_cotizacion = 'La fecha de cotización es obligatoria.';
-        if (!form.valor_cotizacion || form.valor_cotizacion === '0')
-        errsFront.valor_cotizacion = 'El valor de cotización es obligatorio.';
+    // ───── COMPRA ─────
+    if (!form.tipo_compra) errsFront.tipo_compra = 'Debe seleccionar tipo de compra.';
+    if (!form.etapa_compra) errsFront.etapa_compra = 'Debe indicar la etapa de compra.';
 
-        // ───── COMPRA ─────
-        if (!form.tipo_compra) errsFront.tipo_compra = 'Debe seleccionar tipo de compra.';
-        if (!form.etapa_compra) errsFront.etapa_compra = 'Debe indicar la etapa de compra.';
+    // ───── ORDEN DE COMPRA ─────
+    if (!form.numero_orden_compra) errsFront.numero_orden_compra = 'El número de orden de compra es obligatorio.';
+    if (!form.estado_orden_compra) errsFront.estado_orden_compra = 'Debe seleccionar estado de la orden.';
+    if (!form.fecha_orden_compra) errsFront.fecha_orden_compra = 'La fecha de orden de compra es obligatoria.';
+    if (!form.valor_total_orden || Number(form.valor_total_orden) === 0)
+      errsFront.valor_total_orden = 'El valor total de la orden es obligatorio.';
 
-        // ───── ORDEN DE COMPRA ─────
-        if (!form.numero_orden_compra) errsFront.numero_orden_compra = 'El número de orden de compra es obligatorio.';
-        if (!form.estado_orden_compra) errsFront.estado_orden_compra = 'Debe seleccionar estado de la orden.';
-        if (!form.fecha_orden_compra) errsFront.fecha_orden_compra = 'La fecha de orden de compra es obligatoria.';
-        if (!form.valor_total_orden || form.valor_total_orden === '0')
-        errsFront.valor_total_orden = 'El valor total de la orden es obligatorio.';
+    // ───── FACTURA ─────
+    if (!form.numero_factura) errsFront.numero_factura = 'El número de factura es obligatorio.';
+    if (!form.fecha_factura) errsFront.fecha_factura = 'La fecha de factura es obligatoria.';
+    if (!form.proveedor) errsFront.proveedor = 'El proveedor es obligatorio.';
+    if (!form.estado_factura) errsFront.estado_factura = 'Debe seleccionar estado de la factura.';
 
-        // ───── FACTURA ─────
-        if (!form.numero_factura) errsFront.numero_factura = 'El número de factura es obligatorio.';
-        if (!form.fecha_factura) errsFront.fecha_factura = 'La fecha de factura es obligatoria.';
-        if (!form.proveedor) errsFront.proveedor = 'El proveedor es obligatorio.';
-        if (!form.estado_factura) errsFront.estado_factura = 'Debe seleccionar estado de la factura.';
+    // ───── DOE ─────
+    if (!form.doe) errsFront.doe = 'El DOE es obligatorio.';
 
-        // ───── DOE ─────
-        if (!form.doe) errsFront.doe = 'El DOE es obligatorio.';
+    // ───── VALIDACIÓN FINAL ─────
+    if (Object.keys(errsFront).length > 0) {
+      setErrors(errsFront);
 
-        // ───── VALIDACIÓN FINAL ─────
-        if (Object.keys(errsFront).length > 0) {
-        setErrors(errsFront);
+      toast.error(Object.values(errsFront)[0], { duration: 5000 });
 
-        toast.error(Object.values(errsFront)[0], { duration: 5000 });
+      const primerCampo = Object.keys(errsFront)[0];
+      document
+        .querySelector(`[data-field="${primerCampo}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        const primerCampo = Object.keys(errsFront)[0];
-
-        document.querySelector(`[data-field="${primerCampo}"]`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        return;
+      return;
     }
 
+    try {
+      const fd = new FormData();
 
+      Object.entries(form).forEach(([key, value]) => {
+        fd.append(key, value ?? '');
+      });
+
+      await api.post('/api/insumosproducto/insert', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast.success('Guardado correctamente');
+      setTimeout(() => {
+        router.push('/predio/insumosproductos'); 
+      }, 1000);
+
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Error al guardar', {
+        duration: 5000,
+      });
+    }
   };
 
   return (
@@ -321,16 +342,21 @@ export default function CrearBienPage() {
             <Section>
             <SecTitle label="Información General" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                
+            
                 <Field label="Predio" error={errors.predio}>
-                    <FSelect value={form.predio} onChange={e => set('predio', e.target.value)} >
-                        <option value="">Seleccione predio</option>
-                        <option value="centinela">Centinela</option>
-                        <option value="curacavi">Curacaví</option>
-                        <option value="san_simon">San Simón</option>
-                    </FSelect>
-                </Field>
-
+                  <FSelect
+                    value={form.predio}
+                    onChange={(e: any) => set('predio', e.target.value)}
+                  >
+                    <option value="">Seleccione</option>
+                    {toOptions(predios).map(o => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </FSelect>
+                </Field>               
+                
                 <Field label="Producto / Servicio" error={errors.producto_servicio}>
                     <FInput value={form.producto_servicio} onChange={e => set('producto_servicio', e.target.value)} />
                 </Field>
@@ -368,12 +394,17 @@ export default function CrearBienPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
                 
                 <Field label="Tipo Compra" error={errors.tipo_compra}>
-                <FSelect value={form.tipo_compra} onChange={e => set('tipo_compra', e.target.value)}>
+                  <FSelect
+                    value={form.tipo_compra}
+                    onChange={e => set('tipo_compra', e.target.value)}
+                  >
                     <option value="">Seleccione</option>
-                    <option value="td">Trato Directo</option>
-                    <option value="lic">Licitación</option>
-                    <option value="ca">Convenio Marco</option>
-                </FSelect>
+                    {toOptions(tiposCompra).map(o => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </FSelect>
                 </Field>
 
                 <Field label="Etapa" error={errors.etapa_compra}>
@@ -395,11 +426,17 @@ export default function CrearBienPage() {
                 </Field>
 
                 <Field label="Estado" error={errors.estado_orden_compra}>
-                <FSelect value={form.estado_orden_compra} onChange={e => set('estado_orden_compra', e.target.value)}>
-                    <option value="">Seleccione</option>
-                    <option value="aceptado">Aceptado</option>
-                    <option value="rechazado">Rechazado</option>
-                </FSelect>
+                  <FSelect
+                      value={form.estado_orden_compra}
+                      onChange={e => set('estado_orden_compra', e.target.value)}
+                    >
+                      <option value="">Seleccione</option>
+                      {toOptions(estadosOC).map(o => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                  </FSelect>
                 </Field>
 
                 <Field label="Fecha" error={errors.fecha_orden_compra}>
@@ -433,11 +470,17 @@ export default function CrearBienPage() {
                 </Field>
 
                 <Field label="Estado" error={errors.estado_factura}>
-                <FSelect value={form.estado_factura} onChange={e => set('estado_factura', e.target.value)}>
+                  <FSelect
+                    value={form.estado_factura}
+                    onChange={e => set('estado_factura', e.target.value)}
+                  >
                     <option value="">Seleccione</option>
-                    <option value="pagada">Pagada</option>
-                    <option value="pendiente">Pendiente</option>
-                </FSelect>
+                    {toOptions(estadosFactura).map(o => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </FSelect>
                 </Field>
 
             </div>
@@ -464,48 +507,57 @@ export default function CrearBienPage() {
             </div>
 
             </Section>                
-
-            {/* BOTÓN GUARDAR (DERECHA) */}
-            <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: 20,
-            marginBottom: 20,
-            paddingRight: 20 
-            }}>
-            <button
-                type="submit"
-                disabled={loading}
-                style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '10px 24px',
-                borderRadius: 9,
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: '"Barlow Condensed",sans-serif',
-                fontSize: '.85rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '.07em',
-                color: '#0d2318',
-                background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
-                boxShadow: '0 4px 14px rgba(76,202,122,.28)',
-                opacity: loading ? .7 : 1
-                }}
-                onMouseEnter={e => {
-                if (!loading) e.currentTarget.style.filter = 'brightness(1.08)';
-                }}
-                onMouseLeave={e => {
-                e.currentTarget.style.filter = '';
-                }}
-            >
-                {loading ? 'Guardando...' : 'Guardar Insumos y productos'}
-            </button>
+            
+           {/* FOOTER */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                          background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+              <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+                <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Link href="/predio/insumosproductos"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 20px', borderRadius: 9,
+                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                            color: '#6b8f75', background: '#eaf3ec',
+                            border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                  Cancelar
+                </Link>
+                
+                <button type="submit" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 24px', borderRadius: 9, border: 'none',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                            color: '#0d2318',
+                            background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
+                            boxShadow: '0 4px 14px rgba(76,202,122,.28)',
+                            opacity: loading ? .7 : 1 }}
+                  onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
+                >
+                  {loading ? (
+                    <svg className="animate-spin" style={{ width: 14, height: 14 }}
+                      fill="none" viewBox="0 0 24 24">
+                      <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
+                        stroke="currentColor" strokeWidth="4" />
+                      <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  ) : (
+                    <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  {loading ? 'Guardando...' : 'Guardar insumos y productos'}
+                </button>
+              </div>
             </div>
 
-            </div>
+          </div>
             
         </form>
       </div>
