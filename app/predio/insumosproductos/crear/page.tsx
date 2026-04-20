@@ -157,7 +157,7 @@ export default function CrearBienPage() {
   fecha_factura: '',
   proveedor: '',
   estado_factura: '',
-  doe: '',
+  doerespuesta: '',
   observacion: '',
   fecha_cotizacion: '',
   valor_cotizacion: '',
@@ -240,7 +240,7 @@ export default function CrearBienPage() {
     if (!form.estado_factura) errsFront.estado_factura = 'Debe seleccionar estado de la factura.';
 
     // ───── DOE ─────
-    if (!form.doe) errsFront.doe = 'El DOE es obligatorio.';
+    if (!form.doerespuesta) errsFront.doerespuesta = 'El DOE es obligatorio.';
 
     // ───── VALIDACIÓN FINAL ─────
     if (Object.keys(errsFront).length > 0) {
@@ -492,8 +492,8 @@ export default function CrearBienPage() {
             <Section>
             <SecTitle label="Otros" />
             
-            <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doe}>
-                <FInput value={form.doe} onChange={e => set('doe', e.target.value)} />
+            <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doerespuesta}>
+                <FInput value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} />
             </Field>
 
             <div style={{ marginTop: 16 }}>

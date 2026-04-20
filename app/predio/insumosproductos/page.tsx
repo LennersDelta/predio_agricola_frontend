@@ -33,6 +33,7 @@ interface InsumosProductos {
   estado_orden_nombre: string;
   estado_factura: number;
   estado_factura_nombre: string;
+  doerespuesta: string;
 }
 
 // FORMATEO DE FECHAS //
@@ -270,7 +271,8 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
               b.empresa,
               b.tipo_compra_nombre,
               b.estado_orden_nombre,
-              b.estado_factura_nombre
+              b.estado_factura_nombre,
+              b.doerespuesta
             ]
               .join(' ')
               .toLowerCase()
@@ -522,6 +524,7 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                     ['fecha_factura', 'Fecha Factura' , 'center'],
                     ['proveedor', 'Proveedor' , 'center'],
                     ['estado_factura_nombre', 'Estado Factura' , 'center'],
+                    ['doerespuesta', 'DOE Respuesta', 'center'],
                     ['observaciones', 'Observación' , 'center'],
 
                   ] as [string, string, string][]).map(([col, label, align]) => (
@@ -627,6 +630,9 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.estado_factura_nombre}</span>
                         </span>
                       </div>
+                    </td>
+                    <td style={{ padding: '10px 14px', maxWidth: 200 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.doerespuesta}</span>
                     </td>
                     <td style={{ padding: '10px 14px', maxWidth: 200 }}>
                       <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.observaciones}</span>

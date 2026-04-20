@@ -6,10 +6,11 @@ import { usePathname } from 'next/navigation';
 // Rutas estáticas
 const breadcrumbs: Record<string, string> = {
   '/dashboard':          'Dashboard',
-  
+   // MODULO DE ADQUISICIÓN INSUMOS Y PRODUCTOS //
   '/predio/insumosproductos':             'Adquisición de insumos y productos',
-  '/predio/insumosproductos/crear':       'Ingreso de insumos y productos',
-
+  '/predio/insumosproductos/crear':       'Ingreso adquisición de insumos y productos',
+  
+   
   '/predio/parquevehicular':    'Parque Vehicular',
   '/predio/parquevehicular/crear': 'Ingreso parque vehicular', 
   
@@ -33,11 +34,6 @@ const breadcrumbs: Record<string, string> = {
 '/predio/contratos/crear' : 'Ingreso contratos efectuados',
 
 
-
-
-
-
-
   '/reportes/provincia': 'Reportes por Provincia',
   '/reportes/comuna':    'Reportes por Comuna',
   '/usuarios':           'Usuarios',
@@ -47,7 +43,7 @@ const breadcrumbs: Record<string, string> = {
 
 // Patrones dinámicos — orden importa (más específico primero)
 const dynamicBreadcrumbs: { pattern: RegExp; label: string }[] = [
-  { pattern: /^\/bienes\/.+\/editar$/,   label: 'Editar Bien'    },
+  { pattern: /^\/predio\/.+\/edit$/,   label: 'Editar adquisición de insumos y productos'    },
   { pattern: /^\/bienes\/.+$/,            label: 'Ver Bien'       },
   { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
   { pattern: /^\/usuarios\/.+$/,          label: 'Ver Usuario'    },
