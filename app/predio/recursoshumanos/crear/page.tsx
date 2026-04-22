@@ -362,7 +362,7 @@ return (
             justifyContent: 'flex-end',
             marginTop: 20,
             marginBottom: 20,
-            paddingRight: 20 // 👈 separa del borde derecho
+            paddingRight: 20 
             }}>
             <button
                 type="submit"

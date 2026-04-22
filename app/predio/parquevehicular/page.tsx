@@ -7,33 +7,50 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-
+ import { usePredio } from '@/hooks/usePredio';
+ import { useTipoVehiculo } from '@/hooks/useTipoVehiculo';
+ 
 // TIPOS — alineados con campos del backend
 
 interface ParqueVehicular{
   
-  id: number;
-  orden: string;
-  predio: string;
-  tipoVehicular: string;
+  orden: number; // 
+  
+  predio: number; // FK (id de predio)
+  predio_nombre: string;
+  tipo_vehicular_id: number; // FK tipo_vehiculo
+  tipo_vehiculo_nombre:string;
+  
   ppu: string;
-  siglaInstitucional: string;
+  sigla_institucional: string;
+
   marca: string;
   modelo: string;
-  annio: number;
-  fechaAdquisicion: string; 
-  fondoAdquisicion: string;
 
-  // Fechas
-  vencimientoPermisoCirculacion: string; 
-  vencimientoSeguroObligatorio: string; 
-  ultimaMantencion: string; 
+  anio: number; 
+  fecha_adquisicion: string; // formato YYYY-MM-DD
+  fondo_adquisicion: string;
 
-  // Archivos (imágenes)
-  permisoCirculacionImg?: File;
-  seguroObligatorioImg?: File;
+  vencimiento_permiso_circulacion: string;
+  vencimiento_seguro_obligatorio: string;
+  ultima_mantencion: string;
+
+  permisoCirculacionImg?: string; 
+  seguroObligatorioImg?: string; // URL o path
+
+  createdAt?: string;
+  updatedAt?: string;
 
 }
+
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
+
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
+
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
@@ -86,17 +103,47 @@ function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLI
     </div>
   );
 }
-function FS({ label, options, ...p }: { label: string; options: string[] } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+/* FUNCION PARA MOSTRAR COMBO*/
+function FS({
+  label,
+  options,
+  ...p
+}: {
+  label: string;
+  options: { id: number; nombre: string }[];
+} & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div>
       <label style={lblStyle}>{label}</label>
-      <select {...p} style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+
+      <select
+        {...p}
+        style={{
+          ...siStyle,
+          paddingRight: 32,
+          cursor: 'pointer',
+          appearance: 'none',
+
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 10px center',
+          backgroundColor: '#fff'
+        }}
+      >
         <option value="">Todos</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+
+        {options.map(o => (
+          <option key={o.id} value={o.id}>
+            {o.nombre}
+          </option>
+        ))}
       </select>
     </div>
   );
 }
+
 const PAGE_SIZES = [10, 25, 50, 100];
 
 
@@ -114,9 +161,8 @@ function ParqueVehicularPageInner() {
   // Filtros
   const [fOrden, setFOrden] = useState('');
   const [fPredio, setFPredio] = useState('');
-  const [fSiglaInstitucional, setSiglaInstitucional] = useState('');
-  const [fAnnio, setAnnio] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  siglaInstitucional: '',  annio: ''});
+  const [fTipoVehiculo, setFTipoVehiculo] = useState('');
+  const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoVehicularId: ''});
 
   // Tabla
   const [search,   setSearch]   = useState('');
@@ -125,32 +171,57 @@ function ParqueVehicularPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  // ── Cargar datos ──────────────────────────────────────────────────────────
-  const cargaParqueVehicular = useCallback(() => {
-    setLoading(true);
-    api.get('/api/predio')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar parque vehicular'))
-      .finally(() => setLoading(false));
-  }, []);  
+const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+const { tipoVehiculo, loading: loadingTipoVehiculo, error: errorTipoVehiculo } = useTipoVehiculo();
 
-  useEffect(() => {
-    cargaParqueVehicular();
-  }, []);
+  // ── Cargar datos ──────────────────────────────────────────────────────────
+const cargaParqueVehicular = useCallback(() => {
+  setLoading(true);
+
+  api.get('/api/listaParqueVehicular')
+    .then(({ data }) => {
+
+      let datos = [];
+
+      if (Array.isArray(data)) {
+        datos = data;
+      } else if (Array.isArray(data?.data)) {
+        datos = data.data;
+      } else {
+        console.warn('Formato inesperado del backend:', data);
+      }
+
+      setData(datos);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error('Error al cargar parque vehicular');
+      setData([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+
+}, []);
+
+useEffect(() => {
+  cargaParqueVehicular();
+}, [cargaParqueVehicular]);
+
 
   // ── Opciones dinámicas para filtros ──────────────────────────────────────
   const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opSiglas = [...new Set(data.map(b => b.siglaInstitucional).filter(Boolean))].sort();
-  const opAnnio = [...new Set(data.map(b => b.annio).filter(a => a != null))].sort((a, b) => a - b);
+  const opTipoVehicularNombre = [...new Set(data.map(b => b.tipo_vehiculo_nombre).filter(Boolean))].sort();
+  const opAnnio = [...new Set(data.map(b => b.anio).filter(a => a != null))].sort((a, b) => a - b);
 
   // ── Aplicar filtros ───────────────────────────────────────────────────────
   const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, siglaInstitucional: fSiglaInstitucional, annio: fAnnio});
+    setApplied({orden: fOrden, predio: fPredio, tipoVehicularId: fTipoVehiculo});
     setPage(1);
   };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setSiglaInstitucional(''); setAnnio('');
-    setApplied({orden: '', predio: '', siglaInstitucional: '',annio: '' });
+    const limpiar = () => {setFOrden(''); setFPredio(''); setFTipoVehiculo('');
+    setApplied({orden: '', predio: '', tipoVehicularId: '' });
 
     setSearch('');
     setPage(1);
@@ -164,17 +235,21 @@ function ParqueVehicularPageInner() {
     .filter(b => {
       const orden = b.orden ?? '';
       const predio = b.predio ?? '';
-      const sigla = b.siglaInstitucional ?? '';
-      const annio = b.annio ?? 0;
+      const tipoVehiculo = b.tipo_vehicular_id ?? '';
 
-      return (
-        (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.siglaInstitucional || sigla === applied.siglaInstitucional) &&
-        (!applied.annio || annio === Number(applied.annio)) &&
+      return (       
+        (!applied.predio || String(b.predio) === String(applied.predio)) &&
+        (!applied.tipoVehicularId || String(b.tipo_vehicular_id) === String(applied.tipoVehicularId)) && 
+        
+       (!search ||
+            [
+              b.predio_nombre,
+              b.tipo_vehiculo_nombre,
+            ]
+              .join(' ')
+              .toLowerCase()
+              .includes(search.toLowerCase()))
 
-        (!search || [orden, predio, sigla, String(annio)]
-          .some(v => v.toLowerCase().includes(search.toLowerCase())))
       );
     })
     .sort((a, b) => {
@@ -200,7 +275,7 @@ function ParqueVehicularPageInner() {
       const toastId = toast.loading('Eliminando...');
       try {
         await api.delete(`/api/bienes/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
+        setData(prev => prev.filter(b => b.orden !== deleteId));
         toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
@@ -273,35 +348,19 @@ function ParqueVehicularPageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FI 
-                label="Orden"
-                placeholder="111125"
-                value={fOrden}
-                onChange={e => setFOrden(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && aplicar()}
-              />
-
-              <FS             
+              <FS
                 label="Predio"
-                options={opPredios}
+                options={predios} 
                 value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
-              />
+                onChange={e => setFPredio(e.target.value)}
+              /> 
 
               <FS 
-                label="Sigla Institucional"
-                options={opSiglas}
-                value={fSiglaInstitucional}
-                onChange={e => { setSiglaInstitucional(e.target.value); aplicar(); }}
+                label="Tipo Vehiculo"
+                options={tipoVehiculo}
+                value={fTipoVehiculo}
+                onChange={e => setFTipoVehiculo(e.target.value)}
               />
-
-              <FS 
-                label="Año"
-                options={opAnnio.map(String)} // 👈 importante
-                value={fAnnio}
-                onChange={e => { setAnnio(e.target.value); aplicar(); }}
-              />
-            
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <button
@@ -404,13 +463,13 @@ function ParqueVehicularPageInner() {
                     <tr>
                       {([
                           ['orden', 'N° Orden', 'left'],
-                          ['predio', 'Predio', 'left'],
-                          ['tipoVehicular', 'Tipo Vehicular', 'left'],
+                          ['predio_Nombre', 'Predio', 'left'], // viene del JOIN
+                          ['tipoVehiculo_Nombre', 'Tipo Vehicular', 'left'], // viene del JOIN
                           ['ppu', 'PPU', 'left'],
                           ['siglaInstitucional', 'Sigla', 'left'],
                           ['marca', 'Marca', 'left'],
                           ['modelo', 'Modelo', 'left'],
-                          ['annio', 'Año', 'center'],
+                          ['anio', 'Año', 'center'], 
                           ['fechaAdquisicion', 'Fecha Adq.', 'center'],
                           ['fondoAdquisicion', 'Fondo', 'left'],
                           ['vencimientoPermisoCirculacion', 'Venc. Permiso', 'center'],
@@ -441,14 +500,46 @@ function ParqueVehicularPageInner() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.orden}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.siglaInstitucional}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.predio_nombre}</span>
                         </td>
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '.8rem', color: '#1a2e22' }}> {b.annio}</span>
-                        </td>        
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.tipo_vehiculo_nombre}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.ppu}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.sigla_institucional}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.marca}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.modelo}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.anio}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                            {b.fecha_adquisicion ? b.fecha_adquisicion.slice(0, 4) : '-'}
+                          </span>
+                        </td>  
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.fondo_adquisicion}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.vencimiento_permiso_circulacion)}</span>
+                        </td>  
+                        <td style={{ padding: '10px 14px' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.vencimiento_seguro_obligatorio)}</span>
+                        </td>  
+                        <td style={{ padding: '10px 14px' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.ultima_mantencion)}</span>
+                        </td>                                                                          
                       </tr>
                     ))}
                   </tbody>

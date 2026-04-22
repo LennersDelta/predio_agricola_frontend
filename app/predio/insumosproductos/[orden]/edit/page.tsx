@@ -8,6 +8,10 @@ import { Suspense } from 'react';
 
 import { toast } from 'sonner';
 
+import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
+
+
 const inputStyle: React.CSSProperties = {
   width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,.1)',
   borderRadius: 8, color: '#1a2e22', fontSize: '.82rem', padding: '9px 13px',
@@ -68,10 +72,11 @@ function EditarInsumoProductoPageInner() {
     const [loading, setLoading] = useState(false);
     const [cargando, setCargando] = useState(true);
 
-    const [predios, setPredios] = useState<any[]>([]);
-    const [tiposCompra, setTiposCompra] = useState<any[]>([]);
-    const [estadosOC, setEstadosOC] = useState<any[]>([]);
-    const [estadosFactura, setEstadosFactura] = useState<any[]>([]);
+  const { estados: TipoCompra, loading: loadingTipoCompra, error: errorTipoCompra } = useEstados('tipoCompra');
+  const { estados: OrdenCompra, loading: loadingOrdenCompra, error: errorOrdenCompra } = useEstados('estadoOC');
+  const { estados: EstadoFactura, loading: loadingEstadosFactura, error: errorEstadosFactura } = useEstados('estadoFactura');
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+
 
 
 
@@ -142,30 +147,6 @@ function EditarInsumoProductoPageInner() {
   }, [orden]);
 
 
-  /* CARGA COMBOX TIPO COMPRA - ESTADO O.C - ESTADO FACTURA - LISTADO PREDIO */
-  useEffect(() => {
-    const cargarCombos = async () => {
-      try {
-        const [tc, oc, ef, pr] = await Promise.all([
-          api.get('/api/estados/tipoCompra'),
-          api.get('/api/estados/estadoOC'),
-          api.get('/api/estados/estadoFactura'),
-          api.get('/api/listaPredio'),
-        ]);
-
-        setTiposCompra(tc.data);
-        setEstadosOC(oc.data);
-        setEstadosFactura(ef.data);
-        setPredios(pr.data);
-
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    cargarCombos();
-  }, []);
-
-
 
   // Submit editar
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,10 +210,10 @@ function EditarInsumoProductoPageInner() {
                         <FSelect
                             value={form.predio}
                             onChange={(e) => set('predio', e.target.value)}
-                            disabled={loadingData}
+                            disabled={loadingPredios}
                         >
                             <option value="" disabled>
-                            {loadingData ? 'Cargando...' : 'Seleccione predio'}
+                            {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
                             </option>
 
                             {predios.map((p) => (
@@ -278,13 +259,13 @@ function EditarInsumoProductoPageInner() {
                         <FSelect
                             value={form.tipo_compra}
                             onChange={(e) => set('tipoCompra', e.target.value)}
-                            disabled={loadingData}
+                            disabled={loadingTipoCompra}
                         >
                             <option value="" disabled>
-                            {loadingData ? 'Cargando...' : 'Seleccione tipo compra'}
+                            {loadingTipoCompra ? 'Cargando...' : errorTipoCompra ? errorTipoCompra : 'Seleccione'}
                             </option>
 
-                            {tiposCompra.map((p) => (
+                            {TipoCompra.map((p) => (
                             <option key={p.id} value={p.id}>
                                 {p.nombre}
                             </option>
@@ -303,13 +284,13 @@ function EditarInsumoProductoPageInner() {
                         <FSelect
                             value={form.estado_orden}
                             onChange={(e) => set('estadosOC', e.target.value)}
-                            disabled={loadingData}
+                            disabled={loadingOrdenCompra}
                         >
                             <option value="" disabled>
-                            {loadingData ? 'Cargando...' : 'Seleccione estado O.C'}
+                              {loadingOrdenCompra ?  'Cargando...' : errorOrdenCompra ? errorOrdenCompra : 'Seleccione'}                          
                             </option>
 
-                            {estadosOC.map((p) => (
+                            {OrdenCompra.map((p) => (
                             <option key={p.id} value={p.id}>
                                 {p.nombre}
                             </option>
@@ -353,13 +334,13 @@ function EditarInsumoProductoPageInner() {
                         <FSelect
                             value={form.estado_factura}
                             onChange={(e) => set('estadosOC', e.target.value)}
-                            disabled={loadingData}
+                            disabled={loadingEstadosFactura}
                         >
                             <option value="" disabled>
-                            {loadingData ? 'Cargando...' : 'Seleccione estado factura'}
+                              {loadingEstadosFactura ? 'Cargando...' : errorEstadosFactura ? errorEstadosFactura : 'Seleccione'}                            
                             </option>
 
-                            {estadosFactura.map((p) => (
+                            {EstadoFactura.map((p) => (
                             <option key={p.id} value={p.id}>
                                 {p.nombre}
                             </option>

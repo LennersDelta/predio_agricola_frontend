@@ -9,7 +9,8 @@ import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
 
-
+import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
 // ESTILOS REUTILIZABLES
 
 const inputStyle: React.CSSProperties = {
@@ -173,37 +174,11 @@ export default function CrearBienPage() {
     const [errors,  setErrors]  = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
-    const [predios, setPredios] = useState<any[]>([]);
-    const [tiposCompra, setTiposCompra] = useState<any[]>([]);
-    const [estadosOC, setEstadosOC] = useState<any[]>([]);
-    const [estadosFactura, setEstadosFactura] = useState<any[]>([]);
-
-
-  /* CARGA COMBOX TIPO COMPRA - ESTADO O.C - ESTADO FACTURA - LISTADO PREDIO */
-  useEffect(() => {
-    const cargarCombos = async () => {
-      try {
-        const [tc, oc, ef, pr] = await Promise.all([
-          api.get('/api/estados/tipoCompra'),
-          api.get('/api/estados/estadoOC'),
-          api.get('/api/estados/estadoFactura'),
-          api.get('/api/listaPredio'),
-        ]);
-
-        setTiposCompra(tc.data);
-        setEstadosOC(oc.data);
-        setEstadosFactura(ef.data);
-        setPredios(pr.data);
-
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    cargarCombos();
-  }, []);
-
-
-
+    const { estados: TipoCompra, loading: loadingTipoCompra, error: errorTipoCompra } = useEstados('tipoCompra');
+    const { estados: OrdenCompra, loading: loadingOrdenCompra, error: errorOrdenCompra } = useEstados('estadoOC');
+    const { estados: EstadoFactura, loading: loadingEstadosFactura, error: errorEstadosFactura } = useEstados('estadoFactura');
+     
+    const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
 
     //  Submit 
@@ -344,18 +319,13 @@ export default function CrearBienPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
             
                 <Field label="Predio" error={errors.predio}>
-                  <FSelect
-                    value={form.predio}
-                    onChange={(e: any) => set('predio', e.target.value)}
-                  >
-                    <option value="">Seleccione</option>
-                    {toOptions(predios).map(o => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
+                  <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
+                    <option value="">
+                      {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
+                    </option>
+                    {predios.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </FSelect>
-                </Field>               
+                </Field>      
                 
                 <Field label="Producto / Servicio" error={errors.producto_servicio}>
                     <FInput value={form.producto_servicio} onChange={e => set('producto_servicio', e.target.value)} />
@@ -398,12 +368,10 @@ export default function CrearBienPage() {
                     value={form.tipo_compra}
                     onChange={e => set('tipo_compra', e.target.value)}
                   >
-                    <option value="">Seleccione</option>
-                    {toOptions(tiposCompra).map(o => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
+                    <option value="">
+                      {loadingTipoCompra ? 'Cargando...' : errorTipoCompra ? errorTipoCompra : 'Seleccione'}
+                    </option>
+                    {TipoCompra.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </FSelect>
                 </Field>
 
@@ -430,12 +398,10 @@ export default function CrearBienPage() {
                       value={form.estado_orden_compra}
                       onChange={e => set('estado_orden_compra', e.target.value)}
                     >
-                      <option value="">Seleccione</option>
-                      {toOptions(estadosOC).map(o => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
+                    <option value="">
+                      {loadingOrdenCompra ? 'Cargando...' : errorOrdenCompra ? errorOrdenCompra : 'Seleccione'}
+                    </option>
+                    {OrdenCompra.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </FSelect>
                 </Field>
 
@@ -474,14 +440,16 @@ export default function CrearBienPage() {
                     value={form.estado_factura}
                     onChange={e => set('estado_factura', e.target.value)}
                   >
-                    <option value="">Seleccione</option>
-                    {toOptions(estadosFactura).map(o => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
+                    <option value="">
+                      {loadingEstadosFactura ? 'Cargando...' : errorEstadosFactura ? errorEstadosFactura : 'Seleccione'}
+                    </option>
+                    {EstadoFactura.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </FSelect>
                 </Field>
+
+                
+
+
 
             </div>
             </Section>

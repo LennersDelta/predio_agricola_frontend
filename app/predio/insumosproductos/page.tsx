@@ -7,6 +7,8 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
+import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
 
 // TIPOS — alineados con campos del backend
 interface InsumosProductos {
@@ -167,10 +169,10 @@ function InsumosProductoPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  const [tiposCompra, setTiposCompra] = useState([]);
-  const [estadosOC, setEstadosOC] = useState([]);
-  const [estadosFactura, setEstadosFactura] = useState([]);
-  const [predios, setPredios] = useState([]);
+  const { estados: TipoCompra, loading: loadingTipoCompra, error: errorTipoCompra } = useEstados('tipoCompra');
+  const { estados: OrdenCompra, loading: loadingOrdenCompra, error: errorOrdenCompra } = useEstados('estadoOC');
+  const { estados: EstadoFactura, loading: loadingEstadosFactura, error: errorEstadosFactura } = useEstados('estadoFactura');
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
 
 const cargaInsumosProducto = useCallback(() => {
@@ -205,31 +207,6 @@ const cargaInsumosProducto = useCallback(() => {
 useEffect(() => {
   cargaInsumosProducto();
 }, [cargaInsumosProducto]);
-
-/* CARGA COMBOX TIPO COMPRA - ESTADO O.C - ESTADO FACTURA - LISTADO PREDIO */
-useEffect(() => {
-  const cargarCombos = async () => {
-    try {
-      const [tc, oc, ef, pr] = await Promise.all([
-        api.get('/api/estados/tipoCompra'),
-        api.get('/api/estados/estadoOC'),
-        api.get('/api/estados/estadoFactura'),
-        api.get('/api/listaPredio'),
-      ]);
-
-      setTiposCompra(tc.data);
-      setEstadosOC(oc.data);
-      setEstadosFactura(ef.data);
-      setPredios(pr.data);
-
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  cargarCombos();
-}, []);
-
-
 
 
 // ── Opciones dinámicas para filtros ──────────────────────────────────────
@@ -389,21 +366,21 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
 
           <FS
             label="Tipo de Compra"
-            options={tiposCompra}
+            options={TipoCompra}
             value={fTipoCompra}
             onChange={e => setFTipoCompra(e.target.value)}
           />
 
           <FS
             label="Estado OC"
-            options={estadosOC}
+            options={OrdenCompra}
             value={fEstadoOC}
             onChange={e => setFEstadoOC(e.target.value)}
           />
 
           <FS
             label="Estado Factura"
-            options={estadosFactura}
+            options={EstadoFactura}
             value={fEstadoFactura}
             onChange={e => setFEstadoFactura(e.target.value)}
           />
