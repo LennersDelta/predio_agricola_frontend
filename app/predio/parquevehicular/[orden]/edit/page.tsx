@@ -5,11 +5,12 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-
 import { toast } from 'sonner';
 
-import { useEstados } from '@/hooks/useEstado';
+
+import DocumentosAdjuntos, { DocAdjunto, DocGuardado } from '@/components/DocAdjParqueVehicular';
 import { usePredio } from '@/hooks/usePredio';
+import { useTipoVehiculo } from '@/hooks/useTipoVehiculo';
 
 
 const inputStyle: React.CSSProperties = {
@@ -59,56 +60,51 @@ function Section({ children }: { children: React.ReactNode }) {
 }
 
 
-function EditarInsumoProductoPageInner() {
+function EditarParqueVehicularPageInner() {
     const router = useRouter();
     const params = useParams();
 
-    const orden = Array.isArray(params?.orden)
-        ? params.orden[0]
-        : params?.orden;
-
+    const uuid = Array.isArray(params?.orden)
+      ? params.orden[0]
+      : params?.orden;
+    
     const [errors,        setErrors]        = useState<Record<string, string>>({});
     const [loadingData, setLoadingData] = useState(true);
     const [loading, setLoading] = useState(false);
     const [cargando, setCargando] = useState(true);
 
-  const { estados: TipoCompra, loading: loadingTipoCompra, error: errorTipoCompra } = useEstados('tipoCompra');
-  const { estados: OrdenCompra, loading: loadingOrdenCompra, error: errorOrdenCompra } = useEstados('estadoOC');
-  const { estados: EstadoFactura, loading: loadingEstadosFactura, error: errorEstadosFactura } = useEstados('estadoFactura');
-  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+    const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+    const { tipoVehiculo, loading: loadingTipoVehiculo, error: errorTipoVehiculo } = useTipoVehiculo();
+
+    // DATA PARA ADJUNTAR ARCHIVOS //
+
+    const [docsPermiso, setDocsPermiso] = useState<DocGuardado[]>([]);
+    const [docsSeguro, setDocsSeguro] = useState<DocGuardado[]>([]);
+
+    const [docsLocalPermiso, setDocsLocalPermiso] = useState<DocAdjunto[]>([]);
+    const [docsLocalSeguro, setDocsLocalSeguro] = useState<DocAdjunto[]>([]);
 
 
+    const [form, setForm] = useState({
 
+      orden:  '',
+      predio: '',
+      tipo_vehicular: '',
+      ppu: '',
+      sigla_institucional: '',
+      marca: '',
+      modelo: '',
+      anio: '',
 
-  const [form, setForm] = useState({
-    id: '',
-    orden: '',
-    uuid: '',
+      fecha_adquisicion: '',
+      fondo_adquisicion: '', 
+      vencimiento_permiso: '',
+      vencimiento_seguro: '',
+      ultima_mantencion: '',
 
-    predio: '',
-
-    producto_servicio: '',
-    empresa: '',
-
-    fecha_cotizacion: '',
-    valor_cotizacion: '',
-
-    tipo_compra: '',
-    etapa: '',
-
-    numero_orden: '',
-    estado_orden: '',
-    fecha_orden: '',
-    valor_total: '',
-
-    numero_factura: '',
-    fecha_factura: '',
-
-    proveedor: '',
-    estado_factura: '',
-
-    doerespuesta: '',
-    observaciones: ''
+      permiso_img: '',
+      seguro_img:'',
+    
   });
 
   const set = (k: string, v: string) =>
@@ -116,45 +112,72 @@ function EditarInsumoProductoPageInner() {
 
   // Cargar datos
   useEffect(() => {
-    if (!orden) return;
+    if (!uuid) return;
 
     const cargar = async () => {
       try {
         setLoadingData(true);
 
-        const { data } = await api.get(`/api/insumosproducto/${orden}`);
+        const { data } = await api.get(`/api/parquevehicular/${uuid}`);
         const b = data.data ?? data;
 
         setForm({
-            id: String(b.id ?? ''),
-            orden: String(b.orden ?? ''),
-            uuid: b.uuid ?? '',
-
-            predio: String(b.predio ?? ''),
-
-            producto_servicio: b.producto_servicio ?? '',
-            empresa: b.empresa ?? '',
-
-            fecha_cotizacion: b.fecha_cotizacion ?? '',
-            valor_cotizacion: String(b.valor_cotizacion ?? ''),
-
-            tipo_compra: String(b.tipo_compra ?? ''),
-            etapa: b.etapa ?? '',
-
-            numero_orden: b.numero_orden ?? '',
-            estado_orden: String(b.estado_orden ?? ''),
-            fecha_orden: b.fecha_orden ?? '',
-            valor_total: String(b.valor_total ?? ''),
-
-            numero_factura: b.numero_factura ?? '',
-            fecha_factura: b.fecha_factura ?? '',
-
-            proveedor: b.proveedor ?? '',
-            estado_factura: String(b.estado_factura ?? ''),
-
-            doerespuesta: b.doerespuesta ?? '',
-            observaciones: b.observaciones ?? ''
+          orden: String(b.orden ?? ''),
+          predio: String(b.predio ?? ''),
+          tipo_vehicular: String(b.tipo_vehicular_id ?? ''),
+          ppu: b.ppu ?? '',
+          sigla_institucional: b.sigla_institucional ?? '',
+          marca: b.marca ?? '',
+          modelo: b.modelo ?? '',
+          anio: String(b.anio ?? ''),
+          fecha_adquisicion: b.fecha_adquisicion ?? '',
+          fondo_adquisicion: b.fondo_adquisicion ?? '',
+          vencimiento_permiso: b.vencimiento_permiso_circulacion ?? '',
+          vencimiento_seguro: b.vencimiento_seguro_obligatorio ?? '',
+          ultima_mantencion: b.ultima_mantencion ?? '',
+          permiso_img: b.permiso_circulacion_img ?? '',
+          seguro_img: b.seguro_obligatorio_img ?? '',
         });
+
+    // documentos existentes
+
+    if (b.permiso_circulacion_url) {
+      setDocsPermiso([
+        {
+          id: 1,
+          uuid: uuid,
+          nombre_original: b.permiso_circulacion_url?.split('/').pop() || 'Permiso',
+          mime_type:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          peso: 0,
+          url: b.permiso_circulacion_url,
+          tipo_id: 1,
+          tipo_label: 'Permiso Circulación',
+          permiso_img: b.permiso_circulacion_img,
+          seguro_img: '',
+        }
+      ]);
+    }
+
+    if (b.seguro_obligatorio_url) {
+      setDocsSeguro([
+        {
+          id: 2,
+          uuid: uuid,
+          nombre_original: b.seguro_obligatorio_url?.split('/').pop() || 'Seguro',
+          mime_type:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          peso: 0,
+          url: b.seguro_obligatorio_url,
+          tipo_id: 2,
+          tipo_label: 'Seguro Obligatorio',
+          permiso_img: '',
+          seguro_img: b.seguro_obligatorio_img,
+        }
+      ]);
+    }
+
+
 
       } catch (error) {
         console.error(error);
@@ -166,31 +189,85 @@ function EditarInsumoProductoPageInner() {
     };
 
     cargar();
-  }, [orden]);
+  }, [uuid]);
 
 
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  // Submit editar
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  try {
+    setLoading(true);
 
-    try {
-      setLoading(true);
+    const formData = new FormData();
 
-      await api.put(`/api/insumosproducto/update/${orden}`, form);
+    // campos normales
+    formData.append('predio', form.predio);
+    formData.append('tipo_vehicular', form.tipo_vehicular);
+    formData.append('ppu', form.ppu);
+    formData.append('sigla_institucional', form.sigla_institucional);
+    formData.append('marca', form.marca);
+    formData.append('modelo', form.modelo);
+    formData.append('anio', form.anio);
 
-      toast.success('Actualizado correctamente');
+    formData.append('fecha_adquisicion', form.fecha_adquisicion);
+    formData.append('fondo_adquisicion', form.fondo_adquisicion);
 
-      setTimeout(() => {
-        router.push('/predio/insumosproductos');
-      }, 800);
+    formData.append('vencimiento_permiso', form.vencimiento_permiso);
+    formData.append('vencimiento_seguro', form.vencimiento_seguro);
+    formData.append('ultima_mantencion', form.ultima_mantencion);
 
-    } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Error al actualizar');
-    } finally {
-      setLoading(false);
+
+    // Archivos nuevos
+    if (docsLocalPermiso?.length > 0 && docsLocalPermiso[0]?.archivo) {
+      formData.append(
+        'permiso[0][archivo]',
+        docsLocalPermiso[0].archivo
+      );
     }
-  };
+
+    if (docsLocalSeguro?.length > 0 && docsLocalSeguro[0]?.archivo) {
+      formData.append(
+        'seguro[0][archivo]',
+        docsLocalSeguro[0].archivo
+      );
+    }
+
+
+    await api.post(
+      `/api/parquevehicular/${uuid}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+
+    toast.success('Actualizado correctamente');
+
+    setTimeout(() => {
+      router.push('/predio/parquevehicular');
+    }, 800);
+
+  } catch (err:any) {
+    toast.error(
+      err.response?.data?.message ?? 'Error al actualizar'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 
   // Loading
   if (cargando) return (
@@ -213,9 +290,9 @@ function EditarInsumoProductoPageInner() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
               <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Gestión Predio Agrícola</span>
             </div>
-            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar Aquisición insumos y productos</h2>
+            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar parque vehicular</h2>
           </div>
-          <Link href={`/predio/insumosproductos/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
+          <Link href={`/predio/parquevehicular/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
             <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Volver
           </Link>
@@ -245,130 +322,115 @@ function EditarInsumoProductoPageInner() {
                             ))}
                         </FSelect>
                     </Field>
-                    <Field label="Producto / Servicio" required error={errors.producto_servicio}><FInput placeholder="#" value={form.producto_servicio} onChange={e => set('producto_servicio', e.target.value)} required /></Field>
-                </div>
-            </Section>
 
-            <Section>
-                <SecTitle label="Cotización" />
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                      <Field label="Empresa" required error={errors.empresa}><FInput placeholder="#" value={form.empresa} onChange={e => set('empresa', e.target.value)} required /></Field>
-                      <Field label="Fecha" required error={errors.fecha_cotizacion}>
-                      <FInput
-                        type="date"
-                        value={form.fecha_cotizacion}
-                        onChange={e => set('fecha_cotizacion', e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field label="Valor" required error={errors.valor_cotizacion}>
-                      <FInput
-                        type="number"
-                        inputMode="decimal"
-                        placeholder="0"
-                        value={form.valor_cotizacion}
-                        onChange={e => set('valor_cotizacion', e.target.value)}
-                        required
-                      />
-                    </Field>
-                  </div>
-            </Section>
-
-            <Section>
-                <SecTitle label="Compra" />
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    
-                    <Field label="Tipo Compra" error={errors.tipo_compra}>
+                    <Field label="Tipo Vehiculo" error={errors.tipo_vehicular}>
                       <FSelect
-                        value={form.tipo_compra}
-                        onChange={e => set('tipo_compra', e.target.value)}
+                        value={form.tipo_vehicular}
+                        onChange={e => set('tipo_vehicular', e.target.value)}
                       >
                         <option value="">
-                          {loadingTipoCompra ? 'Cargando...' : errorTipoCompra ? errorTipoCompra : 'Seleccione'}
+                          {loadingTipoVehiculo
+                            ? 'Cargando...'
+                            : errorTipoVehiculo
+                            ? errorTipoVehiculo
+                            : 'Seleccione'}
                         </option>
-                        {TipoCompra.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+
+                        {!loadingTipoVehiculo &&
+                          !errorTipoVehiculo &&
+                          tipoVehiculo.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.nombre}
+                            </option>
+                          ))}
                       </FSelect>
-                    </Field>
-
-                    <Field label="Etapa" required error={errors.etapa}><FInput placeholder="#" value={form.etapa} onChange={e => set('etapa', e.target.value)} required /></Field>
-                  </div>
-            </Section>
-
-            <Section>
-                <SecTitle label="Orden de Compra" />
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="N° Orden" required error={errors.numero_orden}><FInput placeholder="#" value={form.numero_orden} onChange={e => set('numero_orden', e.target.value)} required /></Field>
-                    <Field label="Estado" error={errors.estado_orden}>
-                      <FSelect
-                          value={form.estado_orden}
-                          onChange={e => set('estado_orden', e.target.value)}
-                        >
-                        <option value="">
-                          {loadingOrdenCompra ? 'Cargando...' : errorOrdenCompra ? errorOrdenCompra : 'Seleccione'}
-                        </option>
-                        {OrdenCompra.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                      </FSelect>                  
-                    </Field>
-                    <Field label="Fecha" required error={errors.fecha_orden}>
-                      <FInput
-                        type="date"
-                        value={form.fecha_orden}
-                        onChange={e => set('fecha_orden', e.target.value)}
-                        required
-                      />
-                    </Field>
-                    <Field label="Valor" required error={errors.valor_total}>
-                      <FInput
-                        type="number"
-                        inputMode="decimal"
-                        placeholder="0"
-                        value={form.valor_total}
-                        onChange={e => set('valor_total', e.target.value)}
-                        required
-                      />
-                    </Field>                    
-                 </div>       
-            </Section>
-            <Section>
-                <SecTitle label="Factura" />
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="N° Factura" required error={errors.numero_factura}><FInput placeholder="#" value={form.numero_factura} onChange={e => set('numero_factura', e.target.value)} required /></Field>
-                    <Field label="Fecha Factura" required error={errors.fecha_factura}>
-                      <FInput
-                        type="date"
-                        value={form.fecha_factura}
-                        onChange={e => set('fecha_factura', e.target.value)}
-                        required
-                      />
-                    </Field>          
-                    <Field label="Proveedor" required error={errors.proveedor}><FInput placeholder="#" value={form.proveedor} onChange={e => set('proveedor', e.target.value)} required /></Field>
-                    <Field label="Estado" error={errors.estado_factura}>
-                        <FSelect
-                          value={form.estado_factura}
-                          onChange={e => set('estado_factura', e.target.value)}
-                        >
-                          <option value="">
-                            {loadingEstadosFactura ? 'Cargando...' : errorEstadosFactura ? errorEstadosFactura : 'Seleccione'}
-                          </option>
-                          {EstadoFactura.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                        </FSelect>
-                    </Field>                         
-                 </div>                            
-            </Section>
-            <Section>
-                <SecTitle label="Otros" />
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="DOE DE RESPUESTA B.5 POR PAGO DE FACTURA" required error={errors.doerespuesta}><FInput placeholder="#" value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
-                        <Field label="observaciones">
-                        <textarea
-                            value={form.observaciones}
-                            onChange={e => set('observaciones', e.target.value)}
-                            style={{ ...inputStyle, minHeight: 80 }}
+                    </Field>  
+                    <Field label="PPU" error={errors.ppu}>
+                        <FInput
+                        value={form.ppu}
+                        onChange={e =>
+                            set('ppu', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
+                        }
                         />
-                        </Field>
-                 </div>             
+                    </Field>          
+                    <Field label="Sigla Institucional" error={errors.sigla_institucional}>
+                        <FInput
+                        value={form.sigla_institucional}
+                        onChange={e => set('sigla_institucional', e.target.value)}
+                        />
+                    </Field>  
+                    <Field label="Marca" error={errors.marca}>
+                        <FInput value={form.marca} onChange={e => set('marca', e.target.value)} />
+                    </Field>
+
+                    <Field label="Modelo" error={errors.modelo}>
+                        <FInput value={form.modelo} onChange={e => set('modelo', e.target.value)} />
+                    </Field>    
+
+                    <Field label="Año" error={errors.anio}>
+                        <FInput type="number" value={form.anio} onChange={e => set('anio', e.target.value)} />
+                    </Field>
+
+                    <Field label="Fecha Adquisición" error={errors.fecha_adquisicion}>
+                        <FInput type="date" value={form.fecha_adquisicion} onChange={e => set('fecha_adquisicion', e.target.value)} />
+                    </Field>
+
+                    <Field label="Fondos Adquisición" error={errors.fondo_adquisicion}>
+                        <FInput value={form.fondo_adquisicion} onChange={e => set('fondo_adquisicion', e.target.value)} />
+                    </Field>                                                                  
+                </div>
             </Section>
-         
+            {/* PERMISO */}
+            <Section>
+                <SecTitle label="Permiso Circulación / Seguro Obligatorio" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+                
+                    <Field label="Venc. Permiso Circulación">
+                        <FInput
+                        type="date"
+                        value={form.vencimiento_permiso}
+                        onChange={e => set('vencimiento_permiso', e.target.value)}
+                        />
+                    </Field>
+
+                    <div style={{ gridColumn: '1 / -1' }} data-field="docsPermiso">
+                      <DocumentosAdjuntos
+                        docs={docsLocalPermiso}
+                        onChange={setDocsLocalPermiso}
+                        docsGuardados={docsPermiso}
+                        onDocsGuardadosChange={setDocsPermiso}
+                        tipoFiltro="1"
+                      />
+                    </div>
+                    <Field label="Venc. Seguro Obligatorio">
+                        <FInput
+                        type="date"
+                        value={form.vencimiento_seguro}
+                        onChange={e => set('vencimiento_seguro', e.target.value)}
+                        />
+                    </Field>
+                    <div style={{ gridColumn: '1 / -1' }} data-field="docsSeguro">
+                      <DocumentosAdjuntos
+                        docs={docsLocalSeguro}   // o el state real
+                        onChange={setDocsLocalSeguro}
+                        docsGuardados={docsSeguro}
+                        onDocsGuardadosChange={setDocsSeguro}
+                        tipoFiltro="2"
+                      />
+                    </div>                    
+
+            {/* SEGURO */}
+           
+                    <Field label="Última Mantención">
+                        <FInput
+                        type="date"
+                        value={form.ultima_mantencion}
+                        onChange={e => set('ultima_mantencion', e.target.value)}
+                        />
+                    </Field>
+                </div>
+            </Section>       
+
             {/* FOOTER */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           flexWrap: 'wrap', gap: 12, padding: '20px 28px',
@@ -377,7 +439,7 @@ function EditarInsumoProductoPageInner() {
                 <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
               </p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <Link href="/predio/insumosproductos"
+                <Link href="/predio/parquevehicular"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
                             padding: '10px 20px', borderRadius: 9,
                             fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
@@ -417,17 +479,13 @@ function EditarInsumoProductoPageInner() {
                 </button>
               </div>
             </div>  
-
-
           </div>
         </form>
       </div>
-
-
     </>
   );
 }
 
-export default function EditarInsumoProductoPage() {
-  return <Suspense><EditarInsumoProductoPageInner /></Suspense>;
+export default function EditarParqueVehicularPage() {
+  return <Suspense><EditarParqueVehicularPageInner /></Suspense>;
 }

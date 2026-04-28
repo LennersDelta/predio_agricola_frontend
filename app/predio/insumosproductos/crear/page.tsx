@@ -146,23 +146,32 @@ export default function CrearBienPage() {
   const [form, setForm] = useState({
   id: '',
   orden: '',
+  uuid: '',
+
   predio: '',
+
   producto_servicio: '',
-  empresa_cotizacion: '',
-  etapa_compra: '',
-  numero_orden_compra: '',
-  estado_orden_compra: '',
-  fecha_orden_compra: '',
-  valor_total_orden: '',
-  numero_factura: '',
-  fecha_factura: '',
-  proveedor: '',
-  estado_factura: '',
-  doerespuesta: '',
-  observacion: '',
+  empresa: '',
+
   fecha_cotizacion: '',
   valor_cotizacion: '',
+
   tipo_compra: '',
+  etapa: '',
+
+  numero_orden: '',
+  estado_orden: '',
+  fecha_orden: '',
+  valor_total: '',
+
+  numero_factura: '',
+  fecha_factura: '',
+
+  proveedor: '',
+  estado_factura: '',
+
+  doerespuesta: '',
+  observaciones: ''
 
   });
 
@@ -187,35 +196,49 @@ export default function CrearBienPage() {
 
     const errsFront: Record<string, string> = {};
 
-    // ───── INFORMACIÓN GENERAL ─────        
-    //if (!form.predio) errsFront.predio = 'El predio es obligatorio.';
-    if (!form.producto_servicio) errsFront.producto_servicio = 'Debe indicar producto o servicio.';
+// ───── INFORMACIÓN GENERAL ─────
+if (!form.predio)
+  errsFront.predio = 'El predio es obligatorio.';
+if (!form.producto_servicio)
+  errsFront.producto_servicio = 'Debe indicar producto o servicio.';
 
-    // ───── COTIZACIÓN ─────
-    if (!form.empresa_cotizacion) errsFront.empresa_cotizacion = 'La empresa es obligatoria.';
-    if (!form.fecha_cotizacion) errsFront.fecha_cotizacion = 'La fecha de cotización es obligatoria.';
-    if (!form.valor_cotizacion || Number(form.valor_cotizacion) === 0)
-      errsFront.valor_cotizacion = 'El valor de cotización es obligatorio.';
+// ───── COTIZACIÓN ─────
+if (!form.empresa)
+  errsFront.empresa = 'La empresa es obligatoria.';
+if (!form.fecha_cotizacion)
+  errsFront.fecha_cotizacion = 'La fecha de cotización es obligatoria.';
+if (!form.valor_cotizacion || Number(form.valor_cotizacion) === 0)
+  errsFront.valor_cotizacion = 'El valor de cotización es obligatorio.';
 
-    // ───── COMPRA ─────
-    if (!form.tipo_compra) errsFront.tipo_compra = 'Debe seleccionar tipo de compra.';
-    if (!form.etapa_compra) errsFront.etapa_compra = 'Debe indicar la etapa de compra.';
+// ───── COMPRA ─────
+if (!form.tipo_compra)
+  errsFront.tipo_compra = 'Debe seleccionar tipo de compra.';
+if (!form.etapa)
+  errsFront.etapa = 'Debe indicar la etapa de compra.';
 
-    // ───── ORDEN DE COMPRA ─────
-    if (!form.numero_orden_compra) errsFront.numero_orden_compra = 'El número de orden de compra es obligatorio.';
-    if (!form.estado_orden_compra) errsFront.estado_orden_compra = 'Debe seleccionar estado de la orden.';
-    if (!form.fecha_orden_compra) errsFront.fecha_orden_compra = 'La fecha de orden de compra es obligatoria.';
-    if (!form.valor_total_orden || Number(form.valor_total_orden) === 0)
-      errsFront.valor_total_orden = 'El valor total de la orden es obligatorio.';
+// ───── ORDEN DE COMPRA ─────
+if (!form.numero_orden)
+  errsFront.numero_orden = 'El número de orden es obligatorio.';
+if (!form.estado_orden)
+  errsFront.estado_orden = 'Debe seleccionar estado de la orden.';
+if (!form.fecha_orden)
+  errsFront.fecha_orden = 'La fecha de orden es obligatoria.';
+if (!form.valor_total || Number(form.valor_total) === 0)
+  errsFront.valor_total = 'El valor total es obligatorio.';
 
-    // ───── FACTURA ─────
-    if (!form.numero_factura) errsFront.numero_factura = 'El número de factura es obligatorio.';
-    if (!form.fecha_factura) errsFront.fecha_factura = 'La fecha de factura es obligatoria.';
-    if (!form.proveedor) errsFront.proveedor = 'El proveedor es obligatorio.';
-    if (!form.estado_factura) errsFront.estado_factura = 'Debe seleccionar estado de la factura.';
+// ───── FACTURA ─────
+if (!form.numero_factura)
+  errsFront.numero_factura = 'El número de factura es obligatorio.';
+if (!form.fecha_factura)
+  errsFront.fecha_factura = 'La fecha de factura es obligatoria.';
+if (!form.proveedor)
+  errsFront.proveedor = 'El proveedor es obligatorio.';
+if (!form.estado_factura)
+  errsFront.estado_factura = 'Debe seleccionar estado de la factura.';
 
-    // ───── DOE ─────
-    if (!form.doerespuesta) errsFront.doerespuesta = 'El DOE es obligatorio.';
+// ───── DOE ─────
+if (!form.doerespuesta)
+  errsFront.doerespuesta = 'El DOE es obligatorio.';
 
     // ───── VALIDACIÓN FINAL ─────
     if (Object.keys(errsFront).length > 0) {
@@ -341,8 +364,8 @@ export default function CrearBienPage() {
             <SecTitle label="Cotización" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
                 
-                <Field label="Empresa" error={errors.empresa_cotizacion}>
-                <FInput value={form.empresa_cotizacion} onChange={e => set('empresa_cotizacion', e.target.value)} />
+                <Field label="Empresa" error={errors.empresa}>
+                <FInput value={form.empresa} onChange={e => set('empresa', e.target.value)} />
                 </Field>
 
                 <Field label="Fecha" error={errors.fecha_cotizacion}>
@@ -375,8 +398,8 @@ export default function CrearBienPage() {
                   </FSelect>
                 </Field>
 
-                <Field label="Etapa" error={errors.etapa_compra}>
-                <FInput value={form.etapa_compra} onChange={e => set('etapa_compra', e.target.value)} />
+                <Field label="Etapa" error={errors.etapa}>
+                <FInput value={form.etapa} onChange={e => set('etapa', e.target.value)} />
                 </Field>
 
             </div>
@@ -389,14 +412,14 @@ export default function CrearBienPage() {
             <SecTitle label="Orden de Compra" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
                 
-                <Field label="N° Orden" error={errors.numero_orden_compra}>
-                <FInput value={form.numero_orden_compra} onChange={e => set('numero_orden_compra', e.target.value)} />
+                <Field label="N° Orden" error={errors.numero_orden}>
+                <FInput value={form.numero_orden} onChange={e => set('numero_orden', e.target.value)} />
                 </Field>
 
-                <Field label="Estado" error={errors.estado_orden_compra}>
+                <Field label="Estado" error={errors.estado_orden}>
                   <FSelect
-                      value={form.estado_orden_compra}
-                      onChange={e => set('estado_orden_compra', e.target.value)}
+                      value={form.estado_orden}
+                      onChange={e => set('estado_orden', e.target.value)}
                     >
                     <option value="">
                       {loadingOrdenCompra ? 'Cargando...' : errorOrdenCompra ? errorOrdenCompra : 'Seleccione'}
@@ -405,12 +428,13 @@ export default function CrearBienPage() {
                   </FSelect>
                 </Field>
 
-                <Field label="Fecha" error={errors.fecha_orden_compra}>
-                <FInput type="date" value={form.fecha_orden_compra} onChange={e => set('fecha_orden_compra', e.target.value)} />
+
+                <Field label="Fecha" error={errors.fecha_orden}>
+                <FInput type="date" value={form.fecha_orden} onChange={e => set('fecha_orden', e.target.value)} />
                 </Field>
 
                 <Field label="Valor Total" error={errors.valor_total_orden}>
-                <FInputMoney value={form.valor_total_orden} onChange={e => set('valor_total_orden', e.target.value)} />
+                <FInputMoney value={form.valor_total} onChange={e => set('valor_total', e.target.value)} />
                 </Field>
 
             </div>
@@ -467,8 +491,8 @@ export default function CrearBienPage() {
             <div style={{ marginTop: 16 }}>
                 <Field label="Observación">
                 <textarea
-                    value={form.observacion}
-                    onChange={e => set('observacion', e.target.value)}
+                    value={form.observaciones}
+                    onChange={e => set('observaciones', e.target.value)}
                     style={{ ...inputStyle, minHeight: 80 }}
                 />
                 </Field>

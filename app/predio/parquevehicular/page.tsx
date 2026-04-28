@@ -41,6 +41,7 @@ interface ParqueVehicular{
   createdAt?: string;
   updatedAt?: string;
 
+   uuid:string;
 }
 
 // FORMATEO DE FECHAS //
@@ -66,7 +67,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />Parque Vehicular sera eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -92,6 +93,8 @@ const lblStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
   textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5, fontFamily: 'monospace',
 };
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
+
 function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
@@ -103,46 +106,7 @@ function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLI
     </div>
   );
 }
-/* FUNCION PARA MOSTRAR COMBO*/
-function FS({
-  label,
-  options,
-  ...p
-}: {
-  label: string;
-  options: { id: number; nombre: string }[];
-} & React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <div>
-      <label style={lblStyle}>{label}</label>
 
-      <select
-        {...p}
-        style={{
-          ...siStyle,
-          paddingRight: 32,
-          cursor: 'pointer',
-          appearance: 'none',
-
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
-
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 10px center',
-          backgroundColor: '#fff'
-        }}
-      >
-        <option value="">Todos</option>
-
-        {options.map(o => (
-          <option key={o.id} value={o.id}>
-            {o.nombre}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
@@ -158,12 +122,6 @@ function ParqueVehicularPageInner() {
   const [loadingBorr,  setLoadingBorr]  = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // Filtros
-  const [fOrden, setFOrden] = useState('');
-  const [fPredio, setFPredio] = useState('');
-  const [fTipoVehiculo, setFTipoVehiculo] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoVehicularId: ''});
-
   // Tabla
   const [search,   setSearch]   = useState('');
   const [pageSize, setPageSize] = useState(10);
@@ -171,8 +129,15 @@ function ParqueVehicularPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
-const { tipoVehiculo, loading: loadingTipoVehiculo, error: errorTipoVehiculo } = useTipoVehiculo();
+
+ // Filtros
+  const [fPredio,     setFPredio]     = useState('');
+  const [fTipoVehiculo, setFTipoVehiculo] = useState('');
+  const [applied,     setApplied]     = useState({ predio: '', tipoVehiculo: '' });
+  
+
+  const { predios, loading: loadingPredios } = usePredio();
+  const { tipoVehiculo, loading: loadingTipoVehiculo } = useTipoVehiculo();
 
   // ── Cargar datos ──────────────────────────────────────────────────────────
 const cargaParqueVehicular = useCallback(() => {
@@ -215,50 +180,28 @@ useEffect(() => {
   const opTipoVehicularNombre = [...new Set(data.map(b => b.tipo_vehiculo_nombre).filter(Boolean))].sort();
   const opAnnio = [...new Set(data.map(b => b.anio).filter(a => a != null))].sort((a, b) => a - b);
 
-  // ── Aplicar filtros ───────────────────────────────────────────────────────
-  const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, tipoVehicularId: fTipoVehiculo});
-    setPage(1);
-  };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setFTipoVehiculo('');
-    setApplied({orden: '', predio: '', tipoVehicularId: '' });
-
-    setSearch('');
-    setPage(1);
-  };
-
-    const filtrosActivos = Object.values(applied).filter(Boolean).length;
-
     // ── Filtrar + buscar + ordenar ────────────────────────────────────────────
-    const filtered = useMemo(() => {
-  return data
-    .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const tipoVehiculo = b.tipo_vehicular_id ?? '';
+  const aplicar = () => { setApplied({ predio: fPredio, tipoVehiculo: fTipoVehiculo }); setPage(1); };
+  const limpiar = () => { setFPredio(''); setFTipoVehiculo(''); setApplied({ predio: '', tipoVehiculo: '' }); setSearch(''); setPage(1); };
+  const filtrosActivos = Object.values(applied).filter(Boolean).length;
 
-      return (       
-        (!applied.predio || String(b.predio) === String(applied.predio)) &&
-        (!applied.tipoVehicularId || String(b.tipo_vehicular_id) === String(applied.tipoVehicularId)) && 
-        
-       (!search ||
-            [
-              b.predio_nombre,
-              b.tipo_vehiculo_nombre,
-            ]
-              .join(' ')
-              .toLowerCase()
-              .includes(search.toLowerCase()))
-
-      );
-    })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    }, [data, applied, search, sortCol, sortDir]);
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return data
+      .filter(b => {
+        const matchPredio     = !applied.predio     || b.predio_nombre?.toLowerCase().includes(applied.predio.toLowerCase());
+        const matchMesConsumo = !applied.tipoVehiculo || b.tipo_vehiculo_nombre?.includes(applied.tipoVehiculo);
+        const matchSearch     = !q || [b.predio, b.tipo_vehiculo_nombre, b.fondo_adquisicion, b.sigla_institucional]
+          .some(v => String(v ?? '').toLowerCase().includes(q));
+        return matchPredio && matchMesConsumo && matchSearch;
+      })
+      .sort((a, b) => {
+        const av = String((a as any)[sortCol] ?? '');
+        const bv = String((b as any)[sortCol] ?? '');
+        const cmp = av.localeCompare(bv, 'es', { numeric: true });
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+  }, [data, applied, search, sortCol, sortDir]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -274,9 +217,9 @@ useEffect(() => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
-        await api.delete(`/api/bienes/${deleteId}`);
+        await api.delete(`/api/deleteParqueVehicular/${deleteId}`);
         setData(prev => prev.filter(b => b.orden !== deleteId));
-        toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
+        toast.success('Parque Vehicular eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {
@@ -347,20 +290,35 @@ useEffect(() => {
 
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
+            
+              {/* Predio desde hook */}
+              <div>
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => { setFPredio(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
+                  {predios.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-              <FS
-                label="Predio"
-                options={predios} 
-                value={fPredio}
-                onChange={e => setFPredio(e.target.value)}
-              /> 
-
-              <FS 
-                label="Tipo Vehiculo"
-                options={tipoVehiculo}
-                value={fTipoVehiculo}
-                onChange={e => setFTipoVehiculo(e.target.value)}
-              />
+              <div>
+                <label style={lblStyle}>Tipo Vehiculo</label>
+                <select
+                  value={fTipoVehiculo}
+                  onChange={e => { setFTipoVehiculo(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingTipoVehiculo ? 'Cargando...' : 'Todos'}</option>
+                  {tipoVehiculo.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <button
@@ -500,7 +458,7 @@ useEffect(() => {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.orden}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.orden}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.predio_nombre}</span>
@@ -532,14 +490,61 @@ useEffect(() => {
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.fondo_adquisicion}</span>
                         </td>
                         <td style={{ padding: '10px 14px' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.vencimiento_permiso_circulacion)}</span>
-                        </td>  
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                            {b.vencimiento_permiso_circulacion
+                              ? formatearFecha(b.vencimiento_permiso_circulacion)
+                              : ''}
+                          </span>
+                        </td>
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.vencimiento_seguro_obligatorio)}</span>
-                        </td>  
+                        </td>                      
                         <td style={{ padding: '10px 14px' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{formatearFecha(b.ultima_mantencion)}</span>
-                        </td>                                                                          
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                            {b.ultima_mantencion
+                              ? formatearFecha(b.ultima_mantencion)
+                              : 'No registra F. mantención'}
+                          </span>                          
+                        </td>  
+
+
+                        {/* ACCIONES */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <Link href={`/predio/parquevehicular/${b.uuid}/ver`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                              title="Ver detalle"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </Link>
+
+                            <Link href={`/predio/parquevehicular/${b.uuid}/edit`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                              title="Editar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </Link>
+                            <button onClick={() => setDeleteId(b.orden)}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                              title="Eliminar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

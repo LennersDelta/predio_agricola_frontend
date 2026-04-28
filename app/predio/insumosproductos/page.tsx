@@ -36,6 +36,7 @@ interface InsumosProductos {
   estado_factura: number;
   estado_factura_nombre: string;
   doerespuesta: string;
+  uuid:string;
 }
 
 // FORMATEO DE FECHAS //
@@ -139,7 +140,6 @@ function FS({
     </div>
   );
 }
-
 const PAGE_SIZES = [10, 25, 50, 100];
 
 
@@ -265,9 +265,6 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
       });
   }, [data, applied, search, sortCol, sortDir]);
 
-
-
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -275,10 +272,6 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortCol(col); setSortDir('asc'); }
   };
-  
-
-
-
 
   //  Eliminar //
   const handleDelete = async () => {
@@ -530,7 +523,7 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                   >
                     <td style={{ padding: '10px 14px' }}>
                       <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>
-                        {b.orden}
+                        #{b.orden}
                       </span>
                     </td>
 
@@ -630,7 +623,7 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                           </svg>
                         </Link>*/}
 
-                        <Link href={`/predio/insumosproductos/${b.orden}/edit`}
+                        <Link href={`/predio/insumosproductos/${b.uuid}/edit`}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}

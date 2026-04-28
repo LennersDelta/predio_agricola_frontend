@@ -41,12 +41,24 @@ const breadcrumbs: Record<string, string> = {
   '/configuracion':      'Configuración',
 };
 
-// Patrones dinámicos — orden importa (más específico primero)
 const dynamicBreadcrumbs: { pattern: RegExp; label: string }[] = [
-  { pattern: /^\/predio\/.+\/edit$/,   label: 'Editar adquisición de insumos y productos'    },
-  { pattern: /^\/bienes\/.+$/,            label: 'Ver Bien'       },
+
+  {
+    pattern: /^\/predio\/parquevehicular\/[^/]+\/edit$/,
+    label: 'Editar Parque Vehicular'
+  },
+  {
+    pattern: /^\/predio\/parquevehicular\/[^/]+\/ver$/,
+    label: 'Ver Parque Vehicular'
+  },
+  {
+    pattern: /^\/predio\/.+\/edit$/,
+    label: 'Editar adquisición de insumos y productos'
+  },
+
+  { pattern: /^\/bienes\/.+$/,           label: 'Ver Bien' },
   { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
-  { pattern: /^\/usuarios\/.+$/,          label: 'Ver Usuario'    },
+  { pattern: /^\/usuarios\/.+$/,         label: 'Ver Usuario' },
 ];
 
 function getLabel(pathname: string): string {

@@ -354,7 +354,7 @@ return (
                             ? 'Cargando...'
                             : errorTipoVehiculo
                             ? errorTipoVehiculo
-                            : 'Seleccione un tipo de vehículo'}
+                            : 'Seleccione'}
                         </option>
 
                         {!loadingTipoVehiculo &&

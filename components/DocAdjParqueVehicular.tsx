@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
@@ -23,6 +22,7 @@ export interface DocAdjunto {
   existente?: boolean;  // true = ya guardado en servidor, no resubir
 }
 
+
 // Documento ya guardado en BD (modo editar/ver)
 export interface DocGuardado {
   id: number;
@@ -33,7 +33,24 @@ export interface DocGuardado {
   url: string | null;
   tipo_id: number;
   tipo_label: string;
+  permiso_img: string;
+  seguro_img: string;
+
 }
+
+export interface DocVer{
+    id: number;
+  uuid: string;
+  nombre_original: string;
+  mime_type: string;
+  peso: number;
+  url: string | null;
+  tipo_id: number;
+  tipo_label: string;
+  permiso_img: string;
+  seguro_img: string;
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -48,22 +65,7 @@ function formatSize(bytes: number): string {
 
 function isImage(file: File) { return file.type.startsWith('image/'); }
 
-/*function inferirIcono(label: string): TipoDoc['icono'] {
-  const d = label.toLowerCase();
-  if (d.includes('foto') || d.includes('imagen')) return 'foto';
-  if (d.includes('seguro')) return 'seguro';
-  if (d.includes('decreto') || d.includes('resolucion') || d.includes('contrato') ||
-      d.includes('poliza') || d.includes('inscripcion')) return 'legal';
-  return 'doc';
-}
 
-const ICON_PATHS: Record<TipoDoc['icono'], string> = {
-  doc:   'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-  legal: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-  seguro: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
-  foto:  'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
-  otro:  'M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13',
-};*/
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUBCOMPONENTES
@@ -202,7 +204,7 @@ function FileRowGuardado({ doc, onEliminar, eliminando }: {
               color="#3b82f6" bg="rgba(96,165,250,.1)" bgHov="rgba(96,165,250,.25)"
               onClick={() => {
                 window.open(doc.url!, '_blank');
-                api.get(`/api/documentos/${doc.uuid}/ver`).catch(() => {});
+                //api.get(`/api/documentos/${doc.uuid}/ver`).catch(() => {});
               }} />
             <IconBtn title="Descargar"
               path="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
@@ -247,40 +249,23 @@ export default function DocumentosAdjuntos({
   const [subiendo,   setSubiendo]   = useState<string | null>(null);  // tipoId subiendo
   const [eliminando, setEliminando] = useState<number | null>(null);  // docId eliminando
 
-  // ── Tipos desde BD ────────────────────────────────────────────────────────
-  const { tipoDocumento, loading: loadingTipos } = useTipoDocumento();
-
-  /* SE COMENTA PARA MANEJAR DOS TIPOS DIFERENTES DE CARGA */
-  /*const tiposDoc: TipoDoc[] = tipoDocumento.map(t => ({
-    id:          String(t.id),
-    label:       t.label || t.descripcion,
-    descripcion: t.descripcion,
-    icono:       inferirIcono(t.label || t.descripcion),
-  }));*/
-
-const tiposDoc: TipoDoc[] = (
-  tipoDocumento.length > 0
-    ? tipoDocumento.map(t => ({
-        id: String(t.id),
-        label: t.label || t.descripcion,
-        descripcion: t.descripcion,
-        icono: 'legal' as const, 
-      }))
-    : [
-        {
-          id: '1',
-          label: 'Permiso Circulación',
-          descripcion: '',
-          icono: 'legal' as const,
-        },
-        {
-          id: '2',
-          label: 'Seguro Obligatorio',
-          descripcion: '',
-          icono: 'legal' as const,
-        },
-      ]
-).filter(t => !tipoFiltro || t.id === tipoFiltro);
+  const [resetKey, setResetKey] = useState(0);
+  
+  const tiposDoc = ([
+          {
+            id: '1',
+            label: 'Permiso Circulación',
+            descripcion: '',
+            icono: 'legal' as const,
+          },
+          {
+            id: '2',
+            label: 'Seguro Obligatorio',
+            descripcion: '',
+            icono: 'legal' as const,
+          },
+        ]
+  ).filter(t => !tipoFiltro || t.id === tipoFiltro);
 
   // ── Modo CREAR — archivos locales ─────────────────────────────────────────
   const adjuntarLocal = (tipoId: string, files: FileList) => {
@@ -313,7 +298,7 @@ const tiposDoc: TipoDoc[] = (
         fd.append('archivo', file);
         fd.append('tipo_documento_id', tipoId);
         const { data } = await api.post(
-          `/api/bienes/${propiedadId}/documentos`, fd,
+          `/api/predio/${propiedadId}/documentos`, fd,
           { headers: { 'Content-Type': 'multipart/form-data' } }
         );
         // Recargar lista completa
@@ -328,24 +313,51 @@ const tiposDoc: TipoDoc[] = (
       if (inputRefs.current[tipoId]) inputRefs.current[tipoId]!.value = '';
     }
   };
-
-  const eliminarRemoto = async (docId: number) => {
+   /* ELIMINAR */
+    const eliminarRemoto = async (docId: number) => {
     const doc = docsGuardados.find(d => d.id === docId);
     if (!doc) return;
-    // Pedir confirmación antes de eliminar
+
+    // confirmación
     if (!window.confirm(`¿Eliminar "${doc.nombre_original}"? Esta acción no se puede deshacer.`)) return;
+
     setEliminando(docId);
     const toastId = toast.loading('Eliminando documento...');
+
     try {
-      await api.delete(`/api/documentos/${doc.uuid}`);
-      onDocsGuardadosChange?.(docsGuardados.filter(d => d.id !== docId));
-      toast.success('Documento eliminado', { id: toastId, duration: 2500 });
+      await api.delete(`/api/documentos/${doc.uuid}`, {
+        data: {
+          tipo: doc.tipo_id
+        }
+      });
+      onDocsGuardadosChange?.(
+        docsGuardados.filter(d => d.id !== docId)
+      );
+      if (inputRefs.current[doc.tipo_id]) 
+        {
+          const input = inputRefs.current[doc.tipo_id];
+            if (input) {
+              input.value = '';
+            }
+        }
+      setResetKey(prev => prev + 1);
+
+      toast.success('Documento eliminado', {
+        id: toastId,
+        duration: 2500
+      });
+
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
+      toast.error(
+        err.response?.data?.message ?? 'Error al eliminar',
+        { id: toastId, duration: 5000 }
+      );
     } finally {
       setEliminando(null);
     }
   };
+
+
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -376,12 +388,7 @@ const tiposDoc: TipoDoc[] = (
       </div>
 
       {/* Loading tipos */}
-      {loadingTipos ? (
-        <div style={{ padding: '24px', textAlign: 'center',
-                      fontFamily: 'monospace', fontSize: '.7rem', color: '#9ab8a2' }}>
-          Cargando tipos de documentos...
-        </div>
-      ) : (
+      {(
         <div style={{ display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))',
                       gap: 10 }}>
@@ -512,6 +519,7 @@ const tiposDoc: TipoDoc[] = (
                         {estaSubiendo ? 'Subiendo...' : tiene ? 'Agregar otro' : 'Adjuntar archivo'}
                       </span>
                       <input
+                        key={resetKey}
                         ref={el => { inputRefs.current[tipo.id] = el; }}
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -520,11 +528,15 @@ const tiposDoc: TipoDoc[] = (
                         style={{ display: 'none' }}
                         onChange={e => {
                           if (!e.target.files?.length) return;
+
                           if (modoEditar) {
                             adjuntarRemoto(tipo.id, e.target.files);
                           } else {
                             adjuntarLocal(tipo.id, e.target.files);
                           }
+
+                          // limpieza inmediata del input
+                          e.target.value = '';
                         }}
                       />
                     </label>
