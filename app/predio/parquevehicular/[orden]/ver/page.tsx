@@ -162,7 +162,7 @@ function VerParqueVehicularPageInner() {
         }
       ]);
     }
-
+  /* PREVENCIÓN */
     if (b.seguro_obligatorio_url) {
       setDocsSeguro([
         {
@@ -396,6 +396,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         docsGuardados={docsPermiso}
                         onDocsGuardadosChange={setDocsPermiso}
                         tipoFiltro="1"
+                        soloLectura={true}
                       />
                     </div>
                     <Field label="Venc. Seguro Obligatorio">
@@ -413,6 +414,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         docsGuardados={docsSeguro}
                         onDocsGuardadosChange={setDocsSeguro}
                         tipoFiltro="2"
+                         soloLectura={true}
                       />
                     </div>                    
 

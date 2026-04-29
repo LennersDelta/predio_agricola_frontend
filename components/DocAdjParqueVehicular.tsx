@@ -173,8 +173,18 @@ function FileRowLocal({ doc, onVer, onDescargar, onEliminar }: {
 }
 
 // ── Fila archivo guardado en BD (editar) ─────────────────────────────────────
-function FileRowGuardado({ doc, onEliminar, eliminando }: {
-  doc: DocGuardado; onEliminar: () => void; eliminando: boolean;
+function FileRowGuardado({
+  doc,
+  onEliminar,
+  eliminando,
+  soloLectura, onVerVisor
+}: {
+  doc: DocGuardado;
+  onEliminar: () => void;
+  eliminando: boolean;
+  soloLectura?: boolean;
+  onVerVisor: (url:string,nombre:string,mime?:string,uuid?:string)=>void;
+
 }) {
   return (
     <div style={{ padding: '7px 9px', borderRadius: 7,
@@ -203,22 +213,28 @@ function FileRowGuardado({ doc, onEliminar, eliminando }: {
               path="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
               color="#3b82f6" bg="rgba(96,165,250,.1)" bgHov="rgba(96,165,250,.25)"
               onClick={() => {
-                window.open(doc.url!, '_blank');
-                //api.get(`/api/documentos/${doc.uuid}/ver`).catch(() => {});
+                window.open(
+                  `${api.defaults.baseURL}/api/documentos/${doc.uuid}/ver?tipo=${doc.tipo_id}`,
+                  "_blank"
+                );
               }} />
             <IconBtn title="Descargar"
-              path="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              color="#2e7d46" bg="rgba(58,153,86,.1)" bgHov="rgba(58,153,86,.25)"
-              onClick={() => {
-                window.open(doc.url!, '_blank');
-                api.get(`/api/documentos/${doc.uuid}/descargar`).catch(() => {});
-              }} />
+            path="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            color="#2e7d46" bg="rgba(58,153,86,.1)" bgHov="rgba(58,153,86,.25)"
+            onClick={() => {
+              window.open(
+                `${api.defaults.baseURL}/api/documentos/${doc.uuid}/descargar?tipo=${doc.tipo_id}`,
+                "_blank"
+              );
+            }} />
           </>
         )}
+        {!soloLectura && (
         <IconBtn title="Eliminar"
           path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
           color="#ef4444" bg="rgba(239,68,68,.08)" bgHov="rgba(239,68,68,.2)"
           onClick={onEliminar} loading={eliminando} />
+          )}
       </div>
     </div>
   );
@@ -235,13 +251,13 @@ interface Props {
   propiedadId?: number;
   docsGuardados?: DocGuardado[];
   onDocsGuardadosChange?: (docs: DocGuardado[]) => void;
-
   tipoFiltro?: string; // Para pasar id separados de seguro y permiso
+  soloLectura?: boolean;
 }
 
 export default function DocumentosAdjuntos({
   docs: docsProp, onChange,
-  propiedadId, docsGuardados = [], onDocsGuardadosChange, tipoFiltro
+  propiedadId, docsGuardados = [], onDocsGuardadosChange, tipoFiltro,  soloLectura = false
 }: Props) {
   const docs       = docsProp ?? [];
   const modoEditar = !!propiedadId;
@@ -250,7 +266,8 @@ export default function DocumentosAdjuntos({
   const [eliminando, setEliminando] = useState<number | null>(null);  // docId eliminando
 
   const [resetKey, setResetKey] = useState(0);
-  
+  const [viewer, setViewer] = useState<{url:string;uuid?:string;nombre:string;mimeType?:string}|null>(null);  // docId eliminando
+
   const tiposDoc = ([
           {
             id: '1',
@@ -269,15 +286,42 @@ export default function DocumentosAdjuntos({
 
   // ── Modo CREAR — archivos locales ─────────────────────────────────────────
   const adjuntarLocal = (tipoId: string, files: FileList) => {
-    const nuevos: DocAdjunto[] = Array.from(files).map(file => ({
-      uid:        uid(),
+
+    const archivos = Array.from(files);
+
+    const invalidos = archivos.filter(file => !esArchivoPermitido(file));
+
+    if (invalidos.length) {
+      toast.error('No se permiten archivos DOC o DOCX. Solo PDF, JPG y PNG.');
+      
+      if (inputRefs.current[tipoId]) {
+        inputRefs.current[tipoId]!.value = '';
+      }
+
+      return;
+    }
+
+    const nuevos: DocAdjunto[] = archivos.map(file => ({
+      uid: uid(),
       tipoId,
-      archivo:    file,
-      previewUrl: isImage(file) ? URL.createObjectURL(file) : undefined,
+      archivo: file,
+      previewUrl: isImage(file)
+        ? URL.createObjectURL(file)
+        : undefined,
     }));
+
     onChange([...docs, ...nuevos]);
-    if (inputRefs.current[tipoId]) inputRefs.current[tipoId]!.value = '';
+
+    if (inputRefs.current[tipoId]) {
+      inputRefs.current[tipoId]!.value = '';
+    }
   };
+
+
+
+
+
+
 
   const eliminarLocal = (docUid: string) => {
     const doc = docs.find(d => d.uid === docUid);
@@ -285,34 +329,130 @@ export default function DocumentosAdjuntos({
     onChange(docs.filter(d => d.uid !== docUid));
   };
 
-  // ── Modo EDITAR — directo al API ──────────────────────────────────────────
-  const adjuntarRemoto = async (tipoId: string, files: FileList) => {
-    if (!propiedadId) return;
-    setSubiendo(tipoId);
-    const toastId = toast.loading(`Subiendo ${files.length} archivo${files.length > 1 ? 's' : ''}...`);
+   /* ESTO DEJA SIN POSIBILIDADES QUE EL USUARIO SUBA ARCHIVOS CON EXT DOC */
+  function esArchivoPermitido(file: File): boolean {
+    const mimePermitidos = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png'
+    ];
 
-    try {
-      const nuevos: DocGuardado[] = [];
-      for (const file of Array.from(files)) {
-        const fd = new FormData();
-        fd.append('archivo', file);
-        fd.append('tipo_documento_id', tipoId);
-        const { data } = await api.post(
-          `/api/predio/${propiedadId}/documentos`, fd,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
-        // Recargar lista completa
-        const res = await api.get(`/api/bienes/${propiedadId}/documentos`);
-        onDocsGuardadosChange?.(res.data.data ?? res.data);
-      }
-      toast.success('Documentos subidos correctamente', { id: toastId, duration: 2500 });
-    } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Error al subir documento', { id: toastId, duration: 5000 });
-    } finally {
-      setSubiendo(null);
-      if (inputRefs.current[tipoId]) inputRefs.current[tipoId]!.value = '';
+    const extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png'];
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+    // Bloquear doc y docx explícitamente
+    if (
+      file.type === 'application/msword' ||
+      file.type ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      ext === 'doc' ||
+      ext === 'docx'
+    ) {
+      return false;
     }
-  };
+
+    return (
+      mimePermitidos.includes(file.type) &&
+      extensionesPermitidas.includes(ext)
+    );
+  }
+
+  // ── Modo EDITAR — directo al API ──────────────────────────────────────────
+
+    const adjuntarRemoto = async (
+      tipoId: string,
+      files: FileList
+    ) => {
+
+      if (!propiedadId) return;
+
+      const archivos = Array.from(files);
+
+      const invalidos = archivos.filter(
+        file => !esArchivoPermitido(file)
+      );
+
+      if (invalidos.length) {
+        toast.error(
+          'No se permiten archivos DOC o DOCX. Solo PDF, JPG y PNG.'
+        );
+
+        if (inputRefs.current[tipoId]) {
+          inputRefs.current[tipoId]!.value = '';
+        }
+
+        return;
+      }
+
+      setSubiendo(tipoId);
+
+      const toastId = toast.loading(
+        `Subiendo ${archivos.length} archivo${archivos.length > 1 ? 's' : ''}...`
+      );
+
+      try {
+
+        for (const file of archivos) {
+
+          const fd = new FormData();
+
+          fd.append('archivo', file);
+          fd.append('tipo_documento_id', tipoId);
+
+          await api.post(
+            `/api/predio/${propiedadId}/documentos`,
+            fd,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+        }
+
+        const res = await api.get(
+          `/api/bienes/${propiedadId}/documentos`
+        );
+
+        onDocsGuardadosChange?.(
+          res.data.data ?? res.data
+        );
+
+        toast.success(
+          'Documentos subidos correctamente',
+          {
+            id: toastId,
+            duration: 2500
+          }
+        );
+
+      } catch (err: any) {
+
+        toast.error(
+          err.response?.data?.message ||
+          'Error al subir documento',
+          {
+            id: toastId,
+            duration: 5000
+          }
+        );
+
+      } finally {
+
+        setSubiendo(null);
+
+        if (inputRefs.current[tipoId]) {
+          inputRefs.current[tipoId]!.value = '';
+        }
+      }
+    };
+
+
+
+
+
+
    /* ELIMINAR */
     const eliminarRemoto = async (docId: number) => {
     const doc = docsGuardados.find(d => d.id === docId);
@@ -461,7 +601,10 @@ export default function DocumentosAdjuntos({
                     {guardados.map(doc => (
                       <FileRowGuardado key={doc.id} doc={doc}
                         onEliminar={() => eliminarRemoto(doc.id)}
+                        onVerVisor={(url,nombre,mime,uuid) => setViewer({url,uuid,nombre,mimeType:mime})}
+            
                         eliminando={eliminando === doc.id}
+                        soloLectura={soloLectura}
                       />
                     ))}
 
@@ -498,49 +641,97 @@ export default function DocumentosAdjuntos({
                   )}
 
                   {/* Zona de carga */}
-                  <div style={{ padding: '6px 10px 10px',
-                                borderTop: tiene ? '1px solid rgba(0,0,0,.05)' : 'none' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    gap: 6, padding: '7px 10px', borderRadius: 7,
-                                    cursor: estaSubiendo ? 'wait' : 'pointer',
-                                    border: '1.5px dashed rgba(58,153,86,.22)', background: 'transparent',
-                                    transition: 'border-color .18s, background .18s',
-                                    opacity: estaSubiendo ? .6 : 1 }}
-                      onMouseEnter={e => { if (!estaSubiendo) { e.currentTarget.style.borderColor = '#3a9956'; e.currentTarget.style.background = 'rgba(58,153,86,.05)'; } }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(58,153,86,.22)'; e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                                    background: 'rgba(58,153,86,.1)', border: '1px solid rgba(58,153,86,.2)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a9956' }}>
-                        <Ico path={estaSubiendo ? "M4 12a8 8 0 018-8v8z" : "M12 4v16m8-8H4"} size={11} />
-                      </div>
-                      <span style={{ fontFamily: 'monospace', fontSize: '.62rem', fontWeight: 600,
-                                      color: '#2e7d46', textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                        {estaSubiendo ? 'Subiendo...' : tiene ? 'Agregar otro' : 'Adjuntar archivo'}
-                      </span>
-                      <input
-                        key={resetKey}
-                        ref={el => { inputRefs.current[tipo.id] = el; }}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        multiple
-                        disabled={estaSubiendo}
-                        style={{ display: 'none' }}
-                        onChange={e => {
-                          if (!e.target.files?.length) return;
-
-                          if (modoEditar) {
-                            adjuntarRemoto(tipo.id, e.target.files);
-                          } else {
-                            adjuntarLocal(tipo.id, e.target.files);
-                          }
-
-                          // limpieza inmediata del input
-                          e.target.value = '';
+                  {!soloLectura && (
+                    <div style={{ 
+                      padding: '6px 10px 10px',
+                      borderTop: tiene ? '1px solid rgba(0,0,0,.05)' : 'none'
+                    }}>
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          padding: '7px 10px',
+                          borderRadius: 7,
+                          cursor: estaSubiendo ? 'wait' : 'pointer',
+                          border: '1.5px dashed rgba(58,153,86,.22)',
+                          background: 'transparent',
+                          transition: 'border-color .18s, background .18s',
+                          opacity: estaSubiendo ? .6 : 1
                         }}
-                      />
-                    </label>
-                  </div>
+                        onMouseEnter={e => {
+                          if (!estaSubiendo) {
+                            e.currentTarget.style.borderColor = '#3a9956';
+                            e.currentTarget.style.background = 'rgba(58,153,86,.05)';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = 'rgba(58,153,86,.22)';
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <div style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 5,
+                          flexShrink: 0,
+                          background: 'rgba(58,153,86,.1)',
+                          border: '1px solid rgba(58,153,86,.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#3a9956'
+                        }}>
+                          <Ico
+                            path={estaSubiendo
+                              ? "M4 12a8 8 0 018-8v8z"
+                              : "M12 4v16m8-8H4"}
+                            size={11}
+                          />
+                        </div>
+
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            fontSize: '.62rem',
+                            fontWeight: 600,
+                            color: '#2e7d46',
+                            textTransform: 'uppercase',
+                            letterSpacing: '.06em'
+                          }}
+                        >
+                          {estaSubiendo
+                            ? 'Subiendo...'
+                            : tiene
+                            ? 'Agregar otro'
+                            : 'Adjuntar archivo'}
+                        </span>
+
+                        <input
+                          key={resetKey}
+                          ref={el => { inputRefs.current[tipo.id] = el; }}
+                          type="file"
+                          /*accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"*/
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          multiple
+                          disabled={estaSubiendo}
+                          style={{ display: 'none' }}
+                          onChange={e => {
+                            if (!e.target.files?.length) return;
+
+                            if (modoEditar) {
+                              adjuntarRemoto(tipo.id, e.target.files);
+                            } else {
+                              adjuntarLocal(tipo.id, e.target.files);
+                            }
+
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             );
