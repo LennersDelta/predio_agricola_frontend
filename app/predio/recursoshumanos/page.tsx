@@ -7,27 +7,42 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
+import { usePredio } from '@/hooks/usePredio';
+import { useTipoGrado } from '@/hooks/useTipoGrado';
+
 // TIPOS — alineados con campos del backend
 
 interface RecursoHumano{
   
-  id: number;
-  orden: string;
+  orden: number;
+
+  predioId: number;
   predio: string;
 
-  nombresApellidos: string;
-  rut: string;
-  tipoContrato: string;
+  gradoId: number;
   grado: string;
-  cargoContratado: string;
+
+  nombres_apellidos: string;
+  rut: string;
+  tipo_contrato: string;
+  cargo_contratado: string;
   area: string;
-  funcionActual: string;
-  fechaInicioContrato: Date; 
-  aniosServicio: number;
-  ultimaCalificacion: string;
-  capacitadoPrevencionRiesgo: boolean; 
+  funcion_actual: string;
+  fecha_inicio_contrato: string;
+
+  anios_servicio: number;
+  ultima_calificacion: string;
+  capacitado_prevencion_riesgo: boolean;
   
 }
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
+
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
+
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
@@ -68,6 +83,7 @@ const lblStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
   textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5, fontFamily: 'monospace',
 };
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 function FI({ label, ...p }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
@@ -103,11 +119,13 @@ function RecursoHumanoPageInner() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
 // Filtros
-  const [fOrden, setFOrden] = useState('');
   const [fPredio, setFPredio] = useState('');
-  const [fTipoContrato, setTipoContrato] = useState('');
-  //const [fAnnio, setAnnio] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoContrato: ''});
+  const [fGrado, setFGrado] = useState('');
+  const [fTipoContrato, setFTipoContrato] = useState('');
+  const [applied, setApplied] = useState({ predio: '',  grado: '', tipoContrato: ''});
+
+  const { predios, loading: loadingPredios } = usePredio();
+  const { tipoGrado, loading: loadingGrado} = useTipoGrado();
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -116,58 +134,84 @@ function RecursoHumanoPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  //  Cargar datos 
-  const cargaRecursoHumano = useCallback(() => {
-    setLoading(true);
-    api.get('/api/predio')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar recursos humano'))
-      .finally(() => setLoading(false));
-  }, []);  
+  // ── Cargar datos ──────────────────────────────────────────────────────────
+const cargaRecursosHumanos = useCallback(() => {
+  setLoading(true);
 
-  useEffect(() => {
-    cargaRecursoHumano();
-  }, []);
+  api.get('/api/listaRecursosHumanos')
+    .then(({ data }) => {
+
+      let datos = [];
+
+      if (Array.isArray(data)) {
+        datos = data;
+      } else if (Array.isArray(data?.data)) {
+        datos = data.data;
+      } else {
+        console.warn('Formato inesperado del backend:', data);
+      }
+
+      setData(datos);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error('Error al cargar recursos humanos');
+      setData([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+
+}, []);
+
+useEffect(() => {
+  cargaRecursosHumanos();
+}, [cargaRecursosHumanos]);
 
   //  Opciones dinámicas para filtros 
   const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opTipoContrato = [...new Set(data.map(b => b.tipoContrato).filter(Boolean))].sort();
+  const opTipoContrato = [...new Set(data.map(b => b.tipo_contrato).filter(Boolean))].sort();
 
     //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, tipoContrato: fTipoContrato});
+    setApplied({predio: fPredio, grado:fGrado, tipoContrato: fTipoContrato});
     setPage(1);
   };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setTipoContrato(''); 
-    setApplied({orden: '', predio: '', tipoContrato: '' });
+    const limpiar = () => {(''); setFPredio(''); setFTipoContrato(''); 
+    setApplied({predio: '', grado: '',  tipoContrato: '' });
 
     setSearch('');
     setPage(1);
   };
    const filtrosActivos = Object.values(applied).filter(Boolean).length;
-
-       const filtered = useMemo(() => {
+   const filtered = useMemo(() => {
   return data
     .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const sigla = b.tipoContrato ?? '';
-      //const annio = b.annio ?? 0;
+
+      const predio = (b.predio ?? '').toLowerCase().trim();
+      const grado = (b.grado ?? '').toLowerCase().trim();
+      const tipoContrato = (b.tipo_contrato ?? '').toLowerCase().trim();
+      const searchText = (search ?? '').toLowerCase().trim();
 
       return (
-        (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.tipoContrato || predio.toLowerCase().includes(applied.tipoContrato.toLowerCase())) 
+        // filtros select
+        (!applied.predio || predio.includes(applied.predio.toLowerCase().trim())) &&
+        (!applied.tipoContrato || tipoContrato.includes(applied.tipoContrato.toLowerCase().trim())) &&
+        (!applied.grado || grado.includes(applied.grado.toLowerCase().trim())) &&
+
+        // 🔥 búsqueda global (faltaba)
+        (
+          !searchText ||
+          predio.includes(searchText) ||
+          grado.includes(searchText) ||
+          tipoContrato.includes(searchText) ||
+          (b.nombres_apellidos ?? '').toLowerCase().includes(searchText) ||
+          (b.rut ?? '').toLowerCase().includes(searchText)
+        )
       );
     })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    }, [data, applied, search, sortCol, sortDir]);
+}, [data, applied, search, sortCol, sortDir]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -178,7 +222,7 @@ function RecursoHumanoPageInner() {
     };
 
     // ── Eliminar 
-    const handleDelete = async () => {
+    /*const handleDelete = async () => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
@@ -190,7 +234,7 @@ function RecursoHumanoPageInner() {
       } finally {
         setDeleteId(null);
       }
-    };
+    };*/
 
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
@@ -255,28 +299,35 @@ function RecursoHumanoPageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FI 
-                label="Orden"
-                placeholder="111125"
-                value={fOrden}
-                onChange={e => setFOrden(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && aplicar()}
-              />
+              {/* Predio desde hook */}
+              <div>
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => { setFPredio(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
+                  {predios.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-              <FS             
-                label="Predio"
-                options={opPredios}
-                value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
-              />
-
-              <FS 
-                label="Tipo Contrato"
-                options={opTipoContrato}
-                value={fTipoContrato}
-                onChange={e => { setTipoContrato(e.target.value); aplicar(); }}
-              />
-            
+              {/* Grado desde hook */}
+              <div>
+                <label style={lblStyle}>Grado</label>
+                <select
+                  value={fGrado}
+                  onChange={e => { setFGrado(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingGrado ? 'Cargando...' : 'Todos'}</option>
+                  {tipoGrado.map(p => (
+                    <option key={p.id} value={p.descripcion}>{p.descripcion}</option>
+                  ))}
+                </select>
+              </div>            
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <button
@@ -377,11 +428,9 @@ function RecursoHumanoPageInner() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      {([
-                          ['id', 'ID', 'left'],
+                      {([                          
                           ['orden', 'N° Orden', 'left'],
                           ['predio', 'Predio', 'left'],
-
                           ['nombresApellidos', 'Nombres y Apellidos', 'left'],
                           ['rut', 'RUT', 'left'],
                           ['tipoContrato', 'Tipo Contrato', 'left'],
@@ -389,11 +438,9 @@ function RecursoHumanoPageInner() {
                           ['cargoContratado', 'Cargo Contratado', 'left'],
                           ['area', 'Área', 'left'],
                           ['funcionActual', 'Función Actual', 'left'],
-
                           ['fechaInicioContrato', 'F. Inicio Contrato', 'center'],
                           ['aniosServicio', 'Años Servicio', 'center'],
                           ['ultimaCalificacion', 'Últ. Calificación', 'left'],
-
                           ['capacitadoPrevencionRiesgo', 'Prevención de Riesgo', 'center'],
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
@@ -420,14 +467,54 @@ function RecursoHumanoPageInner() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.orden}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.siglaInstitucional}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>{b.predio}</span>
+                        </td>   
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>{b.nombres_apellidos}</span>
+                        </td>   
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>{b.rut}</span>
+                        </td>   
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>{b.tipo_contrato}</span>
+                        </td>     
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.grado ? b.grado : 'NO APLICA'}
+                          </span>
+                        </td>   
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>{b.cargo_contratado}</span>
                         </td>
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '.8rem', color: '#1a2e22' }}> {b.annio}</span>
-                        </td>        
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.area}</span>
+                        </td>    
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.funcion_actual}</span>
+                        </td>   
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.fecha_inicio_contrato 
+                              ? formatearFecha(b.fecha_inicio_contrato) 
+                              : ''
+                            }
+                          </span>
+                        </td>
+                      
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.anios_servicio}</span>
+                        </td>    
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.ultima_calificacion}</span>
+                        </td>  
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.capacitado_prevencion_riesgo ? 'Sí' : 'No'}
+                          </span>
+                        </td>                                                                                                                                                                                                                    
                       </tr>
                     ))}
                   </tbody>
@@ -464,9 +551,7 @@ function RecursoHumanoPageInner() {
 
           </> }
 
-      {deleteId !== null && (
-        <ModalEliminar onCancel={() => setDeleteId(null)} onConfirm={handleDelete} />
-      )}
+
     </div>
 
 
