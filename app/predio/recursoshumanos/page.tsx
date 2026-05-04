@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 
 import { usePredio } from '@/hooks/usePredio';
 import { useTipoGrado } from '@/hooks/useTipoGrado';
+import { useTipoContrato } from '@/hooks/useTipoContrato';
+
 
 // TIPOS — alineados con campos del backend
 
@@ -24,7 +26,11 @@ interface RecursoHumano{
 
   nombres_apellidos: string;
   rut: string;
+
+  tipo_contratoId: number;
   tipo_contrato: string;
+
+
   cargo_contratado: string;
   area: string;
   funcion_actual: string;
@@ -55,10 +61,11 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           </svg>
         </div>
         <h3 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.1rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>
-          ¿Eliminar registro?
+          ¿Eliminar recurso humano?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Estás a punto de eliminar este registro de recurso humano.<br />
+          Esta acción es permanente y no se puede deshacer.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -121,11 +128,14 @@ function RecursoHumanoPageInner() {
 // Filtros
   const [fPredio, setFPredio] = useState('');
   const [fGrado, setFGrado] = useState('');
-  const [fTipoContrato, setFTipoContrato] = useState('');
-  const [applied, setApplied] = useState({ predio: '',  grado: '', tipoContrato: ''});
+  const [fContrato, setFContrato] = useState('');
+
+  const [applied, setApplied] = useState({ predio: '',  grado: '', contrato: ''});
 
   const { predios, loading: loadingPredios } = usePredio();
   const { tipoGrado, loading: loadingGrado} = useTipoGrado();
+  const { tipoContrato, loading: loadingContrato} = useTipoContrato();
+
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -175,11 +185,11 @@ useEffect(() => {
 
     //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({predio: fPredio, grado:fGrado, tipoContrato: fTipoContrato});
+    setApplied({predio: fPredio, grado:fGrado, contrato: fContrato});
     setPage(1);
   };
-    const limpiar = () => {(''); setFPredio(''); setFTipoContrato(''); 
-    setApplied({predio: '', grado: '',  tipoContrato: '' });
+    const limpiar = () => {setFPredio(''); setFGrado(''); setFContrato(''); 
+    setApplied({predio: '', grado: '',  contrato: '' });
 
     setSearch('');
     setPage(1);
@@ -197,10 +207,8 @@ useEffect(() => {
       return (
         // filtros select
         (!applied.predio || predio.includes(applied.predio.toLowerCase().trim())) &&
-        (!applied.tipoContrato || tipoContrato.includes(applied.tipoContrato.toLowerCase().trim())) &&
+        (!applied.contrato || tipoContrato.includes(applied.contrato.toLowerCase().trim())) &&
         (!applied.grado || grado.includes(applied.grado.toLowerCase().trim())) &&
-
-        // 🔥 búsqueda global (faltaba)
         (
           !searchText ||
           predio.includes(searchText) ||
@@ -222,19 +230,19 @@ useEffect(() => {
     };
 
     // ── Eliminar 
-    /*const handleDelete = async () => {
+    const handleDelete = async () => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
-        await api.delete(`/api/bienes/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
+        await api.delete(`/api/deleteRecursosHumanos/${deleteId}`);
+        setData(prev => prev.filter(b => b.orden !== deleteId));
         toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {
         setDeleteId(null);
       }
-    };*/
+    };
 
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
@@ -329,6 +337,21 @@ useEffect(() => {
                 </select>
               </div>            
 
+              {/* Contrato desde hook */}
+              <div>
+                <label style={lblStyle}>Contrato</label>
+                <select
+                  value={fContrato}
+                  onChange={e => { setFContrato(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingContrato ? 'Cargando...' : 'Todos'}</option>
+                  {tipoContrato.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>     
+
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <button
                   onClick={aplicar}
@@ -378,7 +401,6 @@ useEffect(() => {
                   </svg>
                 </button>
               </div>
-
             </div>
           </div>
         </div>
@@ -514,7 +536,46 @@ useEffect(() => {
                           <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
                             {b.capacitado_prevencion_riesgo ? 'Sí' : 'No'}
                           </span>
-                        </td>                                                                                                                                                                                                                    
+                        </td>
+                        
+                        {/* ACCIONES */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <Link href={`/predio/parquevehicular/${b.uuid}/ver`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                              title="Ver detalle"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </Link>
+
+                            <Link href={`/predio/parquevehicular/${b.uuid}/edit`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                              title="Editar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </Link>
+                            <button onClick={() => setDeleteId(b.orden)}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                              title="Eliminar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+
                       </tr>
                     ))}
                   </tbody>
@@ -551,7 +612,9 @@ useEffect(() => {
 
           </> }
 
-
+      {deleteId !== null && (
+        <ModalEliminar onCancel={() => setDeleteId(null)} onConfirm={handleDelete} />
+      )}
     </div>
 
 

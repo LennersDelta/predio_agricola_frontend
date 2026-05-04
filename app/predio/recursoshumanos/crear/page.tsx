@@ -9,7 +9,16 @@ import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
 
+import { usePredio } from '@/hooks/usePredio';
+import { useTipoGrado } from '@/hooks/useTipoGrado';
+import { useTipoContrato} from '@/hooks/useTipoContrato';
 
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
 
 // ESTILOS REUTILIZABLES
 const inputStyle: React.CSSProperties = {
@@ -18,13 +27,15 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', fontFamily: '"Barlow",sans-serif', appearance: 'none',
   transition: 'border-color .18s, box-shadow .18s',
 };
-
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
   textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5,
   fontFamily: 'monospace',
 };
-
+const lblStyle: React.CSSProperties = {
+  display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
+  textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5, fontFamily: 'monospace',
+};
 // SUBCOMPONENTES
 function Field({ label, required, error, children }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode;
@@ -50,7 +61,6 @@ function Field({ label, required, error, children }: {
     </div>
   );
 }
-
 function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input {...props} style={inputStyle}
@@ -59,7 +69,6 @@ function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
     />
   );
 }
-
 function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraStyle }: {
   readOnly?: boolean;
   value: string | number;
@@ -89,7 +98,6 @@ function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraS
     </div>
   );
 }
-
 function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select {...props} style={{
@@ -104,7 +112,6 @@ function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEl
     </select>
   );
 }
-
 function SecTitle({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -118,7 +125,6 @@ function SecTitle({ label }: { label: string }) {
     </div>
   );
 }
-
 function Section({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)', ...style }}>
@@ -126,6 +132,62 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
     </div>
   );
 }
+/* SETEA RUT CON FORMATO CHILENO CON PUNTOS Y GUION */
+
+const formatearRut = (rut: string) => {
+  // limpiar todo lo inválido
+  let limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+
+  // evitar largo excesivo
+  if (limpio.length > 9) limpio = limpio.slice(0, 9);
+
+  // si es muy corto, no formatear aún
+  if (limpio.length <= 1) return limpio;
+
+  const cuerpo = limpio.slice(0, -1);
+  const dv = limpio.slice(-1);
+
+  // formatear con puntos
+  const cuerpoConPuntos = cuerpo
+    .split('')
+    .reverse()
+    .join('')
+    .match(/.{1,3}/g)
+    ?.join('.')
+    .split('')
+    .reverse()
+    .join('') ?? '';
+
+  return `${cuerpoConPuntos}-${dv}`;
+};
+
+const validarRut = (rut: string) => {
+  // limpiar formato
+  const limpio = rut.replace(/\./g, '').replace('-', '').toUpperCase();
+
+  if (limpio.length < 2) return false;
+
+  const cuerpo = limpio.slice(0, -1);
+  let dv = limpio.slice(-1);
+
+  let suma = 0;
+  let multiplo = 2;
+
+  // cálculo módulo 11
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += Number(cuerpo[i]) * multiplo;
+    multiplo = multiplo === 7 ? 2 : multiplo + 1;
+  }
+
+  const dvEsperadoNum = 11 - (suma % 11);
+  let dvEsperado = '';
+
+  if (dvEsperadoNum === 11) dvEsperado = '0';
+  else if (dvEsperadoNum === 10) dvEsperado = 'K';
+  else dvEsperado = String(dvEsperadoNum);
+
+  return dv === dvEsperado;
+};
 
 // COMPONENTE PRINCIPAL
 
@@ -139,20 +201,19 @@ export default function CrearRecursoHumanoPage() {
 
   const [form, setForm] = useState({
 
-  id: '',
   orden: '',
   predio: '',
   nombresApellidos: '',
   rut: '',
-  tipoContrato: '',
+  tipoContrato:  '',
   grado: '',
   cargoContratado: '',
   area: '',
   funcionActual: '',
-  fechaInicioContrato: '',
+  fechaInicioContrato:  '',
   aniosServicio: '',
   ultimaCalificacion: '',
-  capacitadoPrevencionRiesgo: '', 
+  capacitadoPrevencionRiesgo: '',
 
   });
 
@@ -163,6 +224,10 @@ export default function CrearRecursoHumanoPage() {
   const [errors,  setErrors]  = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+  const { tipoGrado, loading: loadingTipoGrado, error: errorTipoGrado } = useTipoGrado();
+  const { tipoContrato, loading: loadingTipoContrato, error: errorTipoContrato } = useTipoContrato();
+
   //  Submit 
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,10 +235,13 @@ export default function CrearRecursoHumanoPage() {
     const errsFront: Record<string, string> = {};
 
 // ─────  PERSONAL ─────
-  if (!form.orden) errsFront.orden = 'El orden es obligatorio.';
   if (!form.predio) errsFront.predio = 'Debe seleccionar un predio.';
   if (!form.nombresApellidos) errsFront.nombresApellidos = 'Los nombres y apellidos son obligatorios.';
-  if (!form.rut) errsFront.rut = 'El RUT es obligatorio.';
+  if (!form.rut) {
+    errsFront.rut = 'El RUT es obligatorio.';
+  } else if (!validarRut(form.rut)) {
+    errsFront.rut = 'El RUT no es válido.';
+  }
   if (!form.tipoContrato) errsFront.tipoContrato = 'Debe seleccionar tipo de contrato.';
   if (!form.grado) errsFront.grado = 'El grado es obligatorio.';
   if (!form.cargoContratado) errsFront.cargoContratado = 'El cargo contratado es obligatorio.';
@@ -198,6 +266,27 @@ export default function CrearRecursoHumanoPage() {
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         return;
+    }
+    try {
+      const fd = new FormData();
+
+      Object.entries(form).forEach(([key, value]) => {
+        fd.append(key, value ?? '');
+      });
+      
+      await api.post('/api/recursoshumanos/insert', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast.success('Guardado correctamente');
+      setTimeout(() => {
+        router.push('/predio/recursoshumanos'); 
+      }, 1000);
+
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Error al guardar', {
+        duration: 5000,
+      });
     }
 
 }; 
@@ -249,8 +338,6 @@ return (
         </div>
 
         {/* FORMULARIO */}
-
-        {/* FORMULARIO */}
         <form onSubmit={handleSubmit}>
             <div style={{
                 background: '#fff',
@@ -263,21 +350,16 @@ return (
              {/* SECCIÓN 1 — GENERAL */}
               <Section>
                 <SecTitle label="Información General" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                  
-                  <Field label="Orden" error={errors.orden}>
-                    <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
-                  </Field>
-
-                  <Field label="Predio" error={errors.predio}>
-                    <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
-                      <option value="">Seleccione predio</option>
-                      <option value="centinela">Centinela</option>
-                      <option value="curacavi">Curacaví</option>
-                      <option value="san_simon">San Simón</option>
-                    </FSelect>
-                  </Field>
-
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>   
+                  {/* Predio desde hook */}
+                    <Field label="Predio" error={errors.predio}>
+                      <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
+                        <option value="">
+                          {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
+                        </option>
+                        {predios.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                      </FSelect>
+                    </Field>    
                 </div>
               </Section>
               {/* SECCIÓN 2 — PERSONAL */}
@@ -290,23 +372,67 @@ return (
                     </Field>
 
                     <Field label="RUT" error={errors.rut}>
-                      <FInput value={form.rut} onChange={e => set('rut', e.target.value)} />
+                        <FInput
+                          value={form.rut}
+                          onChange={e => {
+                            const value = formatearRut(e.target.value);
+                            set('rut', value);
+
+                            if (value.length > 7) {
+                              if (!validarRut(value)) {
+                                setErrors(prev => ({ ...prev, rut: 'RUT inválido' }));
+                              } else {
+                                setErrors(prev => ({ ...prev, rut: '' }));
+                              }
+                            }
+                          }}
+                        />
                     </Field>
 
-                    <Field label="Tipo de Contrato" error={errors.tipoContrato}>
+                    <Field label="Tipo Contrato" error={errors.tipoContrato}>
                       <FSelect
                         value={form.tipoContrato}
                         onChange={e => set('tipoContrato', e.target.value)}
                       >
-                        <option value="">Seleccione</option>
-                        <option value="PLANTA">PLANTA</option>
-                        <option value="T/D">T/D</option>
-                        <option value="HONORARIO">HONORARIO</option>
+                        <option value="">
+                          {loadingTipoContrato
+                            ? 'Cargando...'
+                            : errorTipoContrato
+                            ? errorTipoContrato
+                            : 'Seleccione'}
+                        </option>
+
+                        {!loadingTipoContrato &&
+                          !errorTipoContrato &&
+                          tipoContrato.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.nombre}
+                            </option>
+                          ))}
                       </FSelect>
                     </Field>
 
                     <Field label="Grado" error={errors.grado}>
-                      <FInput value={form.grado} onChange={e => set('grado', e.target.value)} />
+                      <FSelect
+                        value={form.grado}
+                        onChange={e => set('grado', e.target.value)}
+                      >
+                        <option value="">
+                          {loadingTipoGrado
+                            ? 'Cargando...'
+                            : errorTipoGrado
+                            ? errorTipoGrado
+                            : 'Seleccione'}
+                        </option>
+
+                        {!loadingTipoGrado &&
+                          !errorTipoGrado &&
+                          tipoGrado.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.descripcion}
+                            </option>
+                          ))}
+                      </FSelect>
                     </Field>
 
                     <Field label="Cargo Contratado" error={errors.cargoContratado}>
@@ -395,9 +521,7 @@ return (
                 {loading ? 'Guardando...' : 'Guardar recurso humano'}
             </button>
             </div>
-
             </div>
-            
         </form>
       </div>
     </>
