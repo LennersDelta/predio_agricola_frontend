@@ -39,6 +39,8 @@ interface RecursoHumano{
   anios_servicio: number;
   ultima_calificacion: string;
   capacitado_prevencion_riesgo: boolean;
+
+   uuid:string;
   
 }
 // FORMATEO DE FECHAS //
@@ -553,7 +555,7 @@ useEffect(() => {
                               </svg>
                             </Link>
 
-                            <Link href={`/predio/parquevehicular/${b.uuid}/edit`}
+                            <Link href={`/predio/recursoshumanos/${b.uuid}/edit`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
