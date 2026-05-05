@@ -110,7 +110,7 @@ const validarRut = (rut: string) => {
 };
 
 
-function EditarRecursosHumanosPageInner() {
+function VerRecursosHumanosPageInner() {
     const router = useRouter();
     const params = useParams();
 
@@ -325,7 +325,7 @@ const set = (k: string, v: string) => {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
               <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Gestión Predio Agrícola</span>
             </div>
-            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar recursos humanos</h2>
+            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Ver recursos humanos</h2>
           </div>
           <Link href={`/predio/recursoshumanos/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
             <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -345,6 +345,7 @@ const set = (k: string, v: string) => {
                     <FSelect
                       value={form.predio_id}
                       onChange={e => set('predio_id', e.target.value)}
+                      disabled={true}  
                     >
                       <option value="">
                         {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
@@ -365,19 +366,22 @@ const set = (k: string, v: string) => {
                     <Field label="Nombres y Apellidos" error={errors.nombres_apellidos}>
                      <FInput
                           value={form.nombres_apellidos}
-                          onChange={e => set('nombres_apellidos', e.target.value)}                          
+                          onChange={e => set('nombres_apellidos', e.target.value)} 
+                          disabled={true}                         
                         />
                     </Field>
 
                     <Field label="RUT" error={errors.rut}>
                         <FInput
+                          disabled
                           value={form.rut}
                           onChange={e => {
                             const value = formatearRut(e.target.value);
+                            
                             set('rut', value);
 
                             if (!value) {
-                              setErrors(prev => ({ ...prev, rut: 'RUT obligatorio' }));
+                              setErrors(prev => ({ ...prev, rut: 'RUT obligatorio' }) );
                               return;
                             }
 
@@ -392,6 +396,7 @@ const set = (k: string, v: string) => {
                       <FSelect
                         value={form.tipo_contrato_id}
                         onChange={e => set('tipo_contrato_id', e.target.value)}
+                        disabled={true}
                       >
                         <option value="">
                           {loadingTipoContrato
@@ -415,6 +420,7 @@ const set = (k: string, v: string) => {
                       <FSelect
                         value={form.grado_id}
                         onChange={e => set('grado_id', e.target.value)}
+                        disabled={true}
                       >
                         <option value="">
                           {loadingTipoGrado
@@ -435,15 +441,15 @@ const set = (k: string, v: string) => {
                     </Field>
 
                     <Field label="Cargo Contratado" error={errors.cargo_contratado}>
-                      <FInput value={form.cargo_contratado} onChange={e => set('cargo_contratado', e.target.value)} />
+                      <FInput value={form.cargo_contratado} onChange={e => set('cargo_contratado', e.target.value)} disabled={true}/>
                     </Field>
 
                     <Field label="Área" error={errors.area_funciones}>
-                      <FInput value={form.area_funciones} onChange={e => set('area_funciones', e.target.value)} />
+                      <FInput value={form.area_funciones} onChange={e => set('area_funciones', e.target.value)} disabled={true}/>
                     </Field>
 
                     <Field label="Función Actual" error={errors.funcion_actual}>
-                      <FInput value={form.funcion_actual} onChange={e => set('funcion_actual', e.target.value)} />
+                      <FInput value={form.funcion_actual} onChange={e => set('funcion_actual', e.target.value)} disabled={true}/>
                     </Field>
 
                     <Field label="Fecha Inicio Contrato" error={errors.fecha_inicio_contrato}>
@@ -451,6 +457,7 @@ const set = (k: string, v: string) => {
                         type="date"
                         value={form.fecha_inicio_contrato}
                         onChange={e => set('fecha_inicio_contrato', e.target.value)}
+                        disabled={true}
                       />
                     </Field>
 
@@ -459,17 +466,19 @@ const set = (k: string, v: string) => {
                         type="number"
                         value={form.anios_servicio}
                         onChange={e => set('anios_servicio', e.target.value)}
+                        disabled={true}
                       />
                     </Field>
 
                     <Field label="Última Calificación" error={errors.ultima_calificacion}>
-                      <FInput value={form.ultima_calificacion} onChange={e => set('ultima_calificacion', e.target.value)} />
+                      <FInput value={form.ultima_calificacion} onChange={e => set('ultima_calificacion', e.target.value)} disabled={true} />
                     </Field>
 
                     <Field label="Capacitado en Prevención de Riesgo" error={errors.capacitado_prevencion_riesgo}>
                       <FSelect
                         value={form.capacitado_prevencion_riesgo}
                         onChange={e => set('capacitado_prevencion_riesgo', e.target.value)}
+                        disabled={true}
                       >
                         <option value="">Seleccione</option>
                         <option value="1">Sí</option>
@@ -498,35 +507,6 @@ const set = (k: string, v: string) => {
                             border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
                   Cancelar
                 </Link>
-                
-                <button type="submit" 
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
-                            padding: '10px 24px', borderRadius: 9, border: 'none',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
-                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
-                            color: '#0d2318',
-                            background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
-                            boxShadow: '0 4px 14px rgba(76,202,122,.28)',
-                            opacity: loading ? .7 : 1 }}
-                  onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
-                >
-                  {loading ? (
-                    <svg className="animate-spin" style={{ width: 14, height: 14 }}
-                      fill="none" viewBox="0 0 24 24">
-                      <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
-                        stroke="currentColor" strokeWidth="4" />
-                      <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                  ) : (
-                    <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                  {loading ? 'Guardando...' : 'Guardar cambios'}
-                </button>
               </div>
             </div>  
           </div>
@@ -536,6 +516,6 @@ const set = (k: string, v: string) => {
   );
 }
 
-export default function EditarRecursosHumanosPage() {
-  return <Suspense><EditarRecursosHumanosPageInner /></Suspense>;
+export default function VerRecursosHumanosPage() {
+  return <Suspense><VerRecursosHumanosPageInner /></Suspense>;
 }

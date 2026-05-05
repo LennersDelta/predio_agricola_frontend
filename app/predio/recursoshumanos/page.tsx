@@ -543,7 +543,7 @@ useEffect(() => {
                         {/* ACCIONES */}
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <Link href={`/predio/parquevehicular/${b.uuid}/ver`}
+                            <Link href={`/predio/recursoshumanos/${b.uuid}/ver`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}

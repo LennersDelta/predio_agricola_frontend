@@ -41,25 +41,37 @@ const breadcrumbs: Record<string, string> = {
   '/configuracion':      'Configuración',
 };
 
-const dynamicBreadcrumbs: { pattern: RegExp; label: string }[] = [
+  const dynamicBreadcrumbs: { pattern: RegExp; label: string }[] = [
 
-  {
-    pattern: /^\/predio\/parquevehicular\/[^/]+\/edit$/,
-    label: 'Editar Parque Vehicular'
-  },
-  {
-    pattern: /^\/predio\/parquevehicular\/[^/]+\/ver$/,
-    label: 'Ver Parque Vehicular'
-  },
-  {
-    pattern: /^\/predio\/.+\/edit$/,
-    label: 'Editar adquisición de insumos y productos'
-  },
+    {
+      pattern: /^\/predio\/parquevehicular\/[^/]+\/edit$/,
+      label: 'Editar Parque Vehicular'
+    },
+    {
+      pattern: /^\/predio\/parquevehicular\/[^/]+\/ver$/,
+      label: 'Ver Parque Vehicular'
+    },
 
-  { pattern: /^\/bienes\/.+$/,           label: 'Ver Bien' },
-  { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
-  { pattern: /^\/usuarios\/.+$/,         label: 'Ver Usuario' },
-];
+    // más específico primero
+    {
+      pattern: /^\/predio\/recursoshumanos\/[^/]+\/edit$/,
+      label: 'Editar Recursos Humanos'
+    },
+
+    {
+      pattern: /^\/predio\/recursoshumanos\/[^/]+\/ver$/,
+      label: 'Ver Recurso Humano'
+    },
+    // genérico después
+    {
+      pattern: /^\/predio\/.+\/edit$/,
+      label: 'Editar adquisición de insumos y productos'
+    },
+
+    { pattern: /^\/bienes\/.+$/, label: 'Ver Bien' },
+    { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
+    { pattern: /^\/usuarios\/.+$/, label: 'Ver Usuario' },
+  ];
 
 function getLabel(pathname: string): string {
   const path = pathname.split('?')[0]; // quitar query string
