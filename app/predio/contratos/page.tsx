@@ -7,25 +7,45 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-// TIPOS — alineados con campos del backend
+import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
 
 interface ContratosEfectuados{
   
-  id: number;
-  orden: string;
-  predio: string;
+  orden: number;
+  predio_id: number;
+  predio_nombre: string;
+
   contrato: string;
   fecha: string;
-  empresaPersona: string;
+
+  empresa_persona: string;
   rut: string;
-  valorRenta: string; 
-  tipoRenta: 'mensual' | 'anual' | 'unica';
-  fechaVencimiento: string;
-  vigenciaContrato: string;
-  doeRespuestaB5: string;
+
+  valor_renta: number;
+
+  renta_id: number;
+  renta_nombre: number;
+
+  fecha_vencimiento: string;
+  vigencia_contrato: string;
+
+  doe_respuesta_b5: string;
   observaciones: string;
+
+  fecha_creacion: string;
+  fecha_modificacion: string;
   
 }
+
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
+
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
+
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
@@ -89,23 +109,23 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
   );
 }
 const PAGE_SIZES = [10, 25, 50, 100];
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 
 // COMPONENTE PRINCIPAL
 function ContratosEfectuadosPageInner() {
   const searchParams = useSearchParams();
   const [tab,          setTab]          = useState<'predio'|'borradores'>(searchParams.get('tab') === 'borradores' ? 'borradores' : 'predio');
   const [data,         setData]         = useState<ContratosEfectuados[]>([]);
-  const [borradores,   setBorradores]   = useState<any[]>([]);
   const [loading,      setLoading]      = useState(true);
-  const [loadingBorr,  setLoadingBorr]  = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-// Filtros
-  const [fOrden, setFOrden] = useState('');
+  // Filtros
   const [fPredio, setFPredio] = useState('');
   const [fTipoRenta, setFTipoRenta] = useState('');
-  //const [fAnnio, setAnnio] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoRenta: ''});
+  const [applied, setApplied] = useState({ predio: '',  tipoRenta: ''});
+
+  const { estados: TipoRenta, loading: loadingTipoRenta, error: errorTipoRenta } = useEstados('rentaContrato');
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -114,57 +134,87 @@ function ContratosEfectuadosPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  //  Cargar datos 
-  const cargaContratosEfectuados = useCallback(() => {
-    setLoading(true);
-    api.get('/api/predio')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar contratos efectuados'))
-      .finally(() => setLoading(false));
-  }, []);  
 
-  useEffect(() => {
-    cargaContratosEfectuados();
-  }, []);
+  // ── Cargar datos ──────────────────────────────────────────────────────────
+const cargaContratosEfectuados = useCallback(() => {
+  setLoading(true);
+
+  api.get('/api/listaContratosEfectuados')
+    .then(({ data }) => {
+
+      let datos = [];
+
+      if (Array.isArray(data)) {
+        datos = data;
+      } else if (Array.isArray(data?.data)) {
+        datos = data.data;
+      } else {
+        console.warn('Formato inesperado del backend:', data);
+      }
+
+      setData(datos);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error('Error al cargar contratos efectuados');
+      setData([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+
+}, []);
+
+useEffect(() => {
+  cargaContratosEfectuados();
+}, [cargaContratosEfectuados]);
 
   //  Opciones dinámicas para filtros 
-  const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
-  const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opTipoRenta = [...new Set(data.map(b => b.tipoRenta).filter(Boolean))].sort();
+  const opPredios = [...new Set(data.map(b => b.predio_nombre).filter(Boolean))].sort();
+  const opTipoRenta = [...new Set(data.map(b => b.renta_nombre).filter(Boolean))].sort();
 
     //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, tipoRenta: fTipoRenta});
+    setApplied({predio: fPredio, tipoRenta: fTipoRenta});
     setPage(1);
   };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setFTipoRenta(''); 
-    setApplied({orden: '', predio: '', tipoRenta: '' });
+    const limpiar = () => {setFPredio(''); setFTipoRenta(''); 
+    setApplied({predio: '', tipoRenta: '' });
 
     setSearch('');
     setPage(1);
   };
-   const filtrosActivos = Object.values(applied).filter(Boolean).length;
+    const filtrosActivos = Object.values(applied).filter(Boolean).length;
 
-       const filtered = useMemo(() => {
-  return data
-    .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const tipoRenta = b.tipoRenta ?? '';
-      //const annio = b.annio ?? 0;
+    const filtered = useMemo(() => {
+      return data
+        .filter(b => {
+          return (
+            (!applied.predio || String(b.predio_nombre) === String(applied.predio)) &&
+            (!applied.tipoRenta || String(b.renta_nombre) === String(applied.tipoRenta)) &&
 
-      return (
-        (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.tipoRenta || predio.toLowerCase().includes(applied.tipoRenta.toLowerCase())) 
-      );
-    })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
+            (!search ||
+              [
+                b.predio_nombre,
+                b.contrato,
+                b.empresa_persona,
+                b.rut,
+                b.renta_nombre,
+                b.vigencia_contrato,
+                b.observaciones
+              ]
+                .join(' ')
+                .toLowerCase()
+                .includes(search.toLowerCase()))
+          );
+        })
+        .sort((a, b) => {
+          const av = String((a as any)[sortCol] ?? '');
+          const bv = String((b as any)[sortCol] ?? '');
+          return sortDir === 'asc'
+            ? av.localeCompare(bv, 'es', { numeric: true })
+            : bv.localeCompare(av, 'es', { numeric: true });
+        });
     }, [data, applied, search, sortCol, sortDir]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -181,7 +231,7 @@ function ContratosEfectuadosPageInner() {
       const toastId = toast.loading('Eliminando...');
       try {
         await api.delete(`/api/bienes/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
+        setData(prev => prev.filter(b => b.orden !== deleteId));
         toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
@@ -253,27 +303,35 @@ function ContratosEfectuadosPageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FI 
-                label="Orden"
-                placeholder="111125"
-                value={fOrden}
-                onChange={e => setFOrden(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && aplicar()}
-              />
+              {/* Predio desde hook */}
+              <div>
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => { setFPredio(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
+                  {predios.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-              <FS             
-                label="Predio"
-                options={opPredios}
-                value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
-              />
-
-              <FS 
-                label="Tipo Contrato"
-                options={opTipoRenta}
-                value={fTipoRenta}
-                onChange={e => { setFTipoRenta(e.target.value); aplicar(); }}
-              />
+              {/* Renta desde hook */}
+              <div>
+                <label style={lblStyle}>Tipo Renta</label>
+                <select
+                  value={fTipoRenta}
+                  onChange={e => { setFTipoRenta(e.target.value); aplicar(); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingTipoRenta ? 'Cargando...' : 'Todos'}</option>
+                  {TipoRenta.map(p => (
+                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>   
             
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
@@ -376,19 +434,18 @@ function ContratosEfectuadosPageInner() {
                   <thead>
                     <tr>
                       {([
-                            ['id', 'ID', 'left'],
-                            ['orden', 'N° Orden', 'left'],
-                            ['fundo', 'Fundo', 'left'],
-                            ['contrato', 'Contrato', 'left'],
-                            ['fecha', 'Fecha', 'center'],
-                            ['empresaPersona', 'Empresa / Persona Natural', 'left'],
-                            ['rut', 'RUT', 'left'],
-                            ['valorRenta', 'Valor Renta $', 'right'],
-                            ['tipoRenta', 'Tipo Renta', 'center'],
-                            ['fechaVencimiento', 'F. Vencimiento', 'center'],
-                            ['vigenciaContrato', 'Vigencia', 'center'],
-                            ['doeRespuestaB5', 'DOE Resp. B.5', 'center'],
-                            ['observaciones', 'Observaciones', 'left'],
+                          ['orden', 'N° Orden', 'left'],
+                          ['predio_nombre', 'Predio', 'left'],
+                          ['contrato', 'Contrato', 'left'],
+                          ['fecha', 'Fecha', 'center'],
+                          ['empresa_persona', 'Empresa / Persona Natural', 'left'],
+                          ['rut', 'RUT', 'left'],
+                          ['valor_renta', 'Valor Renta $', 'right'],
+                          ['renta_nombre', 'Tipo Renta', 'center'],
+                          ['fecha_vencimiento', 'F. Vencimiento', 'center'],
+                          ['vigencia_contrato', 'Vigencia', 'center'],
+                          ['doe_respuesta_b5', 'DOE Resp. B.5', 'center'],
+                          ['observaciones', 'Observaciones', 'left'],
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                           {label}
@@ -413,12 +470,53 @@ function ContratosEfectuadosPageInner() {
                         onMouseEnter={e => (e.currentTarget.style.background = '#f5faf6')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.orden}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.tipoRenta}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.predio_nombre}</span>
                         </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.contrato}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.fecha 
+                              ? formatearFecha(b.fecha) 
+                              : ''
+                            }
+                          </span>
+                        </td>  
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.empresa_persona}</span>
+                        </td>               
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.rut}</span>
+                        </td>               
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>${Number(b.valor_renta).toLocaleString('es-CL')}</span>
+                        </td>               
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.renta_nombre}</span>
+                        </td>               
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.fecha_vencimiento 
+                              ? formatearFecha(b.fecha_vencimiento) 
+                              : ''
+                            }
+                          </span>
+                        </td>             
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.vigencia_contrato}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.doe_respuesta_b5}</span>
+                        </td>                                     
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.observaciones}</span>
+                        </td>                                         
                     </tr>
                     ))}
                   </tbody>
