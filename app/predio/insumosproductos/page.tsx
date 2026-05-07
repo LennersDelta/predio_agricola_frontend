@@ -611,17 +611,6 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                     {/* ACCIONES */}
                     <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                        {/* <Link href={b.orden === 'sub_propiedad' ? `/bienes/sub/${b.id}` : `/bienes/${b.uuid}`}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
-                          title="Ver detalle"
-                        >
-                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </Link>*/}
 
                         <Link href={`/predio/insumosproductos/${b.uuid}/edit`}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}

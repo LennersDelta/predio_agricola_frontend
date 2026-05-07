@@ -40,7 +40,7 @@ interface RecursoHumano{
   ultima_calificacion: string;
   capacitado_prevencion_riesgo: boolean;
 
-   uuid:string;
+  uuid:string;
   
 }
 // FORMATEO DE FECHAS //
@@ -238,7 +238,7 @@ useEffect(() => {
       try {
         await api.delete(`/api/deleteRecursosHumanos/${deleteId}`);
         setData(prev => prev.filter(b => b.orden !== deleteId));
-        toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
+        toast.success('Recurso humano eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {

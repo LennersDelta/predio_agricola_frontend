@@ -9,7 +9,8 @@ import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
 
-
+import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
 
 // ESTILOS REUTILIZABLES
 const inputStyle: React.CSSProperties = {
@@ -18,20 +19,17 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', fontFamily: '"Barlow",sans-serif', appearance: 'none',
   transition: 'border-color .18s, box-shadow .18s',
 };
-
-const labelStyle: React.CSSProperties = {
+const lblStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
-  textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5,
-  fontFamily: 'monospace',
+  textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5, fontFamily: 'monospace',
 };
-
 // SUBCOMPONENTES
 function Field({ label, required, error, children }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode;
 }) {
   return (
     <div data-field={label}>
-      <label style={labelStyle}>
+      <label style={lblStyle}>
         {label}
         {required && <span style={{ color: '#fca5a5', marginLeft: 2 }}>*</span>}
       </label>
@@ -50,7 +48,6 @@ function Field({ label, required, error, children }: {
     </div>
   );
 }
-
 function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input {...props} style={inputStyle}
@@ -59,7 +56,6 @@ function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
     />
   );
 }
-
 function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraStyle }: {
   readOnly?: boolean;
   value: string | number;
@@ -89,7 +85,6 @@ function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraS
     </div>
   );
 }
-
 function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select {...props} style={{
@@ -104,7 +99,6 @@ function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEl
     </select>
   );
 }
-
 function SecTitle({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -118,7 +112,6 @@ function SecTitle({ label }: { label: string }) {
     </div>
   );
 }
-
 function Section({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)', ...style }}>
@@ -126,6 +119,60 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
     </div>
   );
 }
+/* SETEA RUT CON FORMATO CHILENO CON PUNTOS Y GUION */
+const formatearRut = (rut: string) => {
+  // limpiar todo lo inválido
+  let limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+
+  // evitar largo excesivo
+  if (limpio.length > 9) limpio = limpio.slice(0, 9);
+
+  // si es muy corto, no formatear aún
+  if (limpio.length <= 1) return limpio;
+
+  const cuerpo = limpio.slice(0, -1);
+  const dv = limpio.slice(-1);
+
+  // formatear con puntos
+  const cuerpoConPuntos = cuerpo
+    .split('')
+    .reverse()
+    .join('')
+    .match(/.{1,3}/g)
+    ?.join('.')
+    .split('')
+    .reverse()
+    .join('') ?? '';
+
+  return `${cuerpoConPuntos}-${dv}`;
+};
+const validarRut = (rut: string) => {
+  // limpiar formato
+  const limpio = rut.replace(/\./g, '').replace('-', '').toUpperCase();
+
+  if (limpio.length < 2) return false;
+
+  const cuerpo = limpio.slice(0, -1);
+  let dv = limpio.slice(-1);
+
+  let suma = 0;
+  let multiplo = 2;
+
+  // cálculo módulo 11
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += Number(cuerpo[i]) * multiplo;
+    multiplo = multiplo === 7 ? 2 : multiplo + 1;
+  }
+
+  const dvEsperadoNum = 11 - (suma % 11);
+  let dvEsperado = '';
+
+  if (dvEsperadoNum === 11) dvEsperado = '0';
+  else if (dvEsperadoNum === 10) dvEsperado = 'K';
+  else dvEsperado = String(dvEsperadoNum);
+
+  return dv === dvEsperado;
+};
 
 // COMPONENTE PRINCIPAL
 
@@ -139,27 +186,39 @@ export default function CrearContratoEfectuadosPage() {
 
   const [form, setForm] = useState({
 
-    id: 0,
-    orden: '',
-    predio: '',
-    contrato: '',
-    fecha: '',
-    empresaPersona: '',
-    rut: '',
-    valorRenta: '',
-    tipoRenta: '',
-    fechaVencimiento: '',
-    vigenciaContrato: '',
-    doeRespuestaB5: '',
-    observaciones: '',
+  orden: '',
+  predio_id: '',
+  predio_nombre: '',
+
+  contrato: '',
+  fecha: '',
+
+  empresa_persona: '',
+  rut: '',
+
+  valor_renta: '',
+
+  renta_id: '',
+  renta_nombre: '',
+
+  fecha_vencimiento: '',
+  vigencia_contrato: '',
+
+  doe_respuesta_b5: '',
+  observaciones: '',
+
+
+  uuid:'',
 
   });
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const [errors,  setErrors]  = useState<Record<string, string>>({});
+  const { estados: TipoRenta, loading: loadingTipoRenta, error: errorTipoRenta } = useEstados('rentaContrato');
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
   const { administrador, loading: loadingAdministrador } = useAdministrador();
   const { uso, loading: loadingUso } = useUso();
-  const [errors,  setErrors]  = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   //  Submit 
@@ -169,17 +228,20 @@ export default function CrearContratoEfectuadosPage() {
     const errsFront: Record<string, string> = {};
 
 // ─────  PERSONAL ─────
-    if (!form.orden) errsFront.orden = 'El orden es obligatorio.';
-    if (!form.predio) errsFront.fundo = 'Debe ingresar el predio.';
+    if (!form.predio_id) errsFront.predio_id = 'Debe ingresar el predio.';
     if (!form.contrato) errsFront.contrato = 'El tipo de contrato es obligatorio.';
     if (!form.fecha) errsFront.fecha = 'La fecha es obligatoria.';
-    if (!form.empresaPersona) errsFront.empresaPersona = 'Debe ingresar la empresa o persona.';
-    if (!form.rut) errsFront.rut = 'El RUT es obligatorio.';
-    if (!form.valorRenta) errsFront.valorRenta = 'El valor de renta es obligatorio.';
-    if (!form.tipoRenta) errsFront.tipoRenta = 'Debe seleccionar el tipo de renta.';
-    if (!form.fechaVencimiento) errsFront.fechaVencimiento = 'La fecha de vencimiento es obligatoria.';
-    if (!form.vigenciaContrato) errsFront.vigenciaContrato = 'La vigencia del contrato es obligatoria.';
-    if (!form.doeRespuestaB5) errsFront.doeRespuestaB5 = 'Debe ingresar el DOE B.5.';
+    if (!form.empresa_persona) errsFront.empresa_persona = 'Debe ingresar la empresa o persona.';
+    if (!form.rut) {
+    errsFront.rut = 'El RUT es obligatorio.';
+    } else if (!validarRut(form.rut)) {
+      errsFront.rut = 'El RUT no es válido.';
+    }
+    if (!form.valor_renta) errsFront.valor_renta = 'El valor de renta es obligatorio.';
+    if (!form.renta_id) errsFront.renta_id = 'Debe seleccionar el tipo de renta.';
+    if (!form.fecha_vencimiento) errsFront.fecha_vencimiento = 'La fecha de vencimiento es obligatoria.';
+    if (!form.vigencia_contrato) errsFront.vigencia_contrato = 'La vigencia del contrato es obligatoria.';
+    if (!form.doe_respuesta_b5) errsFront.doe_respuesta_b5 = 'Debe ingresar el DOE B.5.';
 
    
     // ───── VALIDACIÓN FINAL ─────
@@ -197,6 +259,27 @@ export default function CrearContratoEfectuadosPage() {
         return;
     }
 
+    try{
+      const fd = new FormData();
+        
+      Object.entries(form).forEach(([key, value]) => {
+        fd.append(key, value ?? '');
+      });
+
+      await api.post('/api/contratos/insert', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast.success('Guardado correctamente');
+      setTimeout(() => {
+        router.push('/predio/contratos'); 
+      }, 1000);
+      
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Error al guardar', {
+        duration:5000,
+      });
+    }
 }; 
 return (
     <>
@@ -221,7 +304,7 @@ return (
             <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem',
                           fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase',
                           letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-              Nueva Contratos Efectuados
+              Nuevo Contrato 
             </h2>
             <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>
               Complete la información de la ficha de contratos efectuados
@@ -258,95 +341,133 @@ return (
             <Section>
               <SecTitle label="Información General" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                
-                <Field label="Orden" error={errors.orden}>
-                  <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
-                </Field>
+              
+                {/* hook PREDIO */}
+                <Field label="Predio" error={errors.predio_id}>
+                  <FSelect
+                    value={form.predio_id}
+                    onChange={e => set('predio_id', e.target.value)}
+                  >
+                    <option value="">
+                      {loadingPredios
+                        ? 'Cargando...'
+                        : errorPredios
+                        ? errorPredios
+                        : 'Seleccione'}
+                    </option>
 
-                <Field label="Predio" error={errors.predio}>
-                  <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
-                    <option value="">Seleccione predio</option>
-                    <option value="centinela">Centinela</option>
-                    <option value="curacavi">Curacaví</option>
-                    <option value="san_simon">San Simón</option>
+                    {predios.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
                   </FSelect>
                 </Field>
 
-               <Field label="Contrato" error={errors.contrato}>
-                    <FInput value={form.contrato} onChange={e => set('contrato', e.target.value)} />
+                <Field label="Contrato" error={errors.contrato}>
+                  <FInput
+                    value={form.contrato}
+                    onChange={e => set('contrato', e.target.value)}
+                  />
                 </Field>
 
                 <Field label="Fecha" error={errors.fecha}>
-                <FInput
+                  <FInput
                     type="date"
                     value={form.fecha}
                     onChange={e => set('fecha', e.target.value)}
-                />
+                  />
                 </Field>
 
-                <Field label="Empresa o Persona" error={errors.empresaPersona}>
-                <FInput
-                    value={form.empresaPersona}
-                    onChange={e => set('empresaPersona', e.target.value)}
-                />
+                <Field label="Empresa o Persona" error={errors.empresa_persona}>
+                  <FInput
+                    value={form.empresa_persona}
+                    onChange={e => set('empresa_persona', e.target.value)}
+                  />
                 </Field>
 
                 <Field label="RUT" error={errors.rut}>
-                <FInput value={form.rut} onChange={e => set('rut', e.target.value)} />
+                    <FInput
+                      value={form.rut}
+                      onChange={e => {
+                        const value = formatearRut(e.target.value);
+                        set('rut', value);
+
+                        if (value.length > 7) {
+                          if (!validarRut(value)) {
+                            setErrors(prev => ({ ...prev, rut: 'RUT inválido' }));
+                          } else {
+                            setErrors(prev => ({ ...prev, rut: '' }));
+                          }
+                        }
+                      }}
+                    />
                 </Field>
 
-                <Field label="Valor Renta ($)" error={errors.valorRenta}>
-                <FInput
+                <Field label="Valor Renta ($)" error={errors.valor_renta}>
+                  <FInput
                     type="number"
-                    value={form.valorRenta}
-                    onChange={e => set('valorRenta', e.target.value)}
-                />
+                    value={form.valor_renta}
+                    onChange={e => set('valor_renta', e.target.value)}
+                  />
                 </Field>
 
-                <Field label="Tipo Renta" error={errors.tipoRenta}>
-                <FSelect
-                    value={form.tipoRenta}
-                    onChange={e => set('tipoRenta', e.target.value)}
-                >
-                    <option value="">Seleccione</option>
-                    <option value="mensual">Mensual</option>
-                    <option value="anual">Anual</option>
-                    <option value="unica">Única</option>
-                </FSelect>
+                <Field label="Tipo Renta" error={errors.renta_id}>
+                  <FSelect
+                    value={form.renta_id}
+                    onChange={e => set('renta_id', e.target.value)}
+                  >
+                    <option value="">
+                      {loadingTipoRenta
+                        ? 'Cargando...'
+                        : errorTipoRenta
+                        ? errorTipoRenta
+                        : 'Seleccione'}
+                    </option>
+
+                    {TipoRenta.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </FSelect>
                 </Field>
 
-                <Field label="Fecha Vencimiento" error={errors.fechaVencimiento}>
-                <FInput
+                <Field label="Fecha Vencimiento" error={errors.fecha_vencimiento}>
+                  <FInput
                     type="date"
-                    value={form.fechaVencimiento}
-                    onChange={e => set('fechaVencimiento', e.target.value)}
-                />
+                    value={form.fecha_vencimiento}
+                    onChange={e => set('fecha_vencimiento', e.target.value)}
+                  />
                 </Field>
 
-                <Field label="Vigencia Contrato" error={errors.vigenciaContrato}>
-                <FInput
-                    value={form.vigenciaContrato}
-                    onChange={e => set('vigenciaContrato', e.target.value)}
+                <Field label="Vigencia Contrato" error={errors.vigencia_contrato}>
+                  <FInput
+                    value={form.vigencia_contrato}
+                    onChange={e => set('vigencia_contrato', e.target.value)}
                     placeholder="Ej: 12 meses"
-                />
+                  />
                 </Field>
+              </div>
+              </Section>
 
-                <Field label="DOE Respuesta B.5" error={errors.doeRespuestaB5}>
-                <FInput
-                    value={form.doeRespuestaB5}
-                    onChange={e => set('doeRespuestaB5', e.target.value)}
-                />
-                </Field>
+              <Section>
+              <SecTitle label="Otros" />
+              
+              <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doe_respuesta_b5}>
+                  <FInput value={form.doe_respuesta_b5} onChange={e => set('doe_respuesta_b5', e.target.value)} />
+              </Field>
 
-                <Field label="Observaciones" error={errors.observaciones}>
-                <FInput
-                    value={form.observaciones}
-                    onChange={e => set('observaciones', e.target.value)}
-                />
-                </Field>
-
-            </div>
-            </Section>
+              <div style={{ marginTop: 16 }}>
+                  <Field label="Observación">
+                  <textarea
+                      value={form.observaciones}
+                      onChange={e => set('observaciones', e.target.value)}
+                      style={{ ...inputStyle, minHeight: 80 }}
+                  />
+                  </Field>
+              </div>
+              </Section>
             
 
             {/* BOTÓN GUARDAR (DERECHA) */}

@@ -177,9 +177,9 @@ function CombustiblePageInner() {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
-        await api.delete(`/api/bienes/${deleteId}`);
+        await api.delete(`/api/combustible/${deleteId}`);
         setData(prev => prev.filter(b => b.id !== deleteId));
-        toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
+        toast.success('Combustible eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {

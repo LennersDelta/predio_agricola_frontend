@@ -334,9 +334,6 @@ if (!form.doerespuesta)
                 boxShadow: '0 4px 24px rgba(0,0,0,.1)'
             }}>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 1 — GENERAL */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Información General" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
@@ -357,9 +354,6 @@ if (!form.doerespuesta)
             </div>
             </Section>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 2 — COTIZACIÓN */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Cotización" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
@@ -379,9 +373,6 @@ if (!form.doerespuesta)
             </div>
             </Section>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 3 — COMPRA */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Compra" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
@@ -405,9 +396,6 @@ if (!form.doerespuesta)
             </div>
             </Section>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 4 — ORDEN DE COMPRA */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Orden de Compra" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
@@ -436,13 +424,9 @@ if (!form.doerespuesta)
                 <Field label="Valor Total" error={errors.valor_total_orden}>
                 <FInputMoney value={form.valor_total} onChange={e => set('valor_total', e.target.value)} />
                 </Field>
-
             </div>
             </Section>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 5 — FACTURA */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Factura" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
@@ -470,17 +454,9 @@ if (!form.doerespuesta)
                     {EstadoFactura.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </FSelect>
                 </Field>
-
-                
-
-
-
             </div>
             </Section>
 
-            {/* ───────────────────────────── */}
-            {/* SECCIÓN 6 — OTROS */}
-            {/* ───────────────────────────── */}
             <Section>
             <SecTitle label="Otros" />
             

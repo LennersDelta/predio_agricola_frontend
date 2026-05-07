@@ -35,7 +35,8 @@ interface ContratosEfectuados{
 
   fecha_creacion: string;
   fecha_modificacion: string;
-  
+
+  uuid:string;
 }
 
 // FORMATEO DE FECHAS //
@@ -61,7 +62,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />El contrato será eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -230,9 +231,9 @@ useEffect(() => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
-        await api.delete(`/api/bienes/${deleteId}`);
+        await api.delete(`/api/deleteContratos/${deleteId}`);
         setData(prev => prev.filter(b => b.orden !== deleteId));
-        toast.success('Bien eliminado correctamente', { id: toastId, duration: 3000 });
+        toast.success('Contrato eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {
@@ -516,7 +517,49 @@ useEffect(() => {
                         </td>                                     
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.observaciones}</span>
-                        </td>                                         
+                        </td>  
+
+                        {/* ACCIONES */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <Link href={`/predio/contratos/${b.uuid}/ver`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                              title="Ver detalle"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </Link>
+
+                            <Link href={`/predio/contratos/${b.uuid}/edit`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                              title="Editar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </Link>
+                            <button onClick={() => setDeleteId(b.orden)}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                              title="Eliminar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+
+
+
+
                     </tr>
                     ))}
                   </tbody>
