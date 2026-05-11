@@ -410,6 +410,7 @@ return (
                     value={form.valor_renta}
                     onChange={e => set('valor_renta', e.target.value)}
                   />
+                  
                 </Field>
 
                 <Field label="Tipo Renta" error={errors.renta_id}>

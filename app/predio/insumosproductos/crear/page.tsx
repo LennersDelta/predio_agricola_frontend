@@ -422,7 +422,7 @@ if (!form.doerespuesta)
                 </Field>
 
                 <Field label="Valor Total" error={errors.valor_total_orden}>
-                <FInputMoney value={form.valor_total} onChange={e => set('valor_total', e.target.value)} />
+                  <FInputMoney value={form.valor_total} onChange={e => set('valor_total', e.target.value)} />
                 </Field>
             </div>
             </Section>
