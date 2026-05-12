@@ -433,7 +433,7 @@ function VerContratosPageInner() {
 
           </Section>
 
-          <Section>
+          {/*<Section>
             <SecTitle label="Otros" />
             <Field label="DOE de respuesta B.5">
               <FInput
@@ -443,7 +443,6 @@ function VerContratosPageInner() {
             </Field>
 
             <div style={{ marginTop: 16 }}>
-
               <Field label="Observaciones">
                 <textarea
                   readOnly
@@ -455,7 +454,24 @@ function VerContratosPageInner() {
                 />
               </Field>
             </div>
-          </Section>
+          </Section>*/}
+
+            <Section>
+                <SecTitle label="Otros" />
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+                    <Field label="DOE DE RESPUESTA B.5 POR PAGO" required error={errors.doe_respuesta_b5}>
+                      <FInput readOnly value={form.doe_respuesta_b5} /></Field>
+                        <Field label="observaciones">
+                        <textarea
+                            readOnly
+                            value={form.observaciones}                           
+                            style={{ ...inputStyle, minHeight: 80 }}
+                        />
+                        </Field>
+                  </div>             
+            </Section>
+
+
             {/* FOOTER */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           flexWrap: 'wrap', gap: 12, padding: '20px 28px',

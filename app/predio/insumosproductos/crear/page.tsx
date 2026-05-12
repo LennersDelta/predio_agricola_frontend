@@ -457,24 +457,36 @@ if (!form.doerespuesta)
             </div>
             </Section>
 
-            <Section>
-            <SecTitle label="Otros" />
-            
-            <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doerespuesta}>
-                <FInput value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} />
-            </Field>
-
-            <div style={{ marginTop: 16 }}>
-                <Field label="Observación">
-                <textarea
-                    value={form.observaciones}
-                    onChange={e => set('observaciones', e.target.value)}
-                    style={{ ...inputStyle, minHeight: 80 }}
-                />
+            {/*<Section>
+            <SecTitle label="Otros" />            
+                <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doerespuesta}>
+                    <FInput value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} />
                 </Field>
-            </div>
+                <div style={{ marginTop: 16 }}>
+                    <Field label="Observación">
+                    <textarea
+                        value={form.observaciones}
+                        onChange={e => set('observaciones', e.target.value)}
+                        style={{ ...inputStyle, minHeight: 80 }}
+                    />
+                    </Field>
+                </div>
+            </Section>  */}              
 
-            </Section>                
+            <Section>
+                <SecTitle label="Otros" />
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+                    <Field label="DOE DE RESPUESTA B.5 POR PAGO DE FACTURA" required error={errors.doerespuesta}>
+                      <FInput value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
+                        <Field label="observaciones">
+                        <textarea
+                            value={form.observaciones}
+                            onChange={e => set('observaciones', e.target.value)}
+                            style={{ ...inputStyle, minHeight: 80 }}
+                        />
+                        </Field>
+                 </div>             
+            </Section>
             
            {/* FOOTER */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',

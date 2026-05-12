@@ -352,7 +352,8 @@ function EditarInsumoProductoPageInner() {
             <Section>
                 <SecTitle label="Otros" />
                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="DOE DE RESPUESTA B.5 POR PAGO DE FACTURA" required error={errors.doerespuesta}><FInput placeholder="#" value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
+                    <Field label="DOE DE RESPUESTA B.5 POR PAGO DE FACTURA" required error={errors.doerespuesta}>
+                      <FInput value={form.doerespuesta} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
                         <Field label="observaciones">
                         <textarea
                             value={form.observaciones}

@@ -289,9 +289,9 @@ const set = (k: string, v: string) => {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
               <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Gestión Predio Agrícola</span>
             </div>
-            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar recursos humanos</h2>
+            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar contratos</h2>
           </div>
-          <Link href={`/predio/recursoshumanos/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
+          <Link href={`/predio/contratos/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
             <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Volver
           </Link>
@@ -431,23 +431,35 @@ const set = (k: string, v: string) => {
               </div>
               </Section>
 
-              <Section>
-              <SecTitle label="Otros" />
-              
-              <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doe_respuesta_b5}>
-                  <FInput value={form.doe_respuesta_b5} onChange={e => set('doe_respuesta_b5', e.target.value)} />
-              </Field>
-
-              <div style={{ marginTop: 16 }}>
-                  <Field label="Observación">
-                  <textarea
-                      value={form.observaciones}
-                      onChange={e => set('observaciones', e.target.value)}
-                      style={{ ...inputStyle, minHeight: 80 }}
-                  />
-                  </Field>
-              </div>
-              </Section>
+              {/*<Section>
+              <SecTitle label="Otros" />              
+                <Field label="DOE de respuesta B.5 por pago de factura" error={errors.doe_respuesta_b5}>
+                    <FInput value={form.doe_respuesta_b5} onChange={e => set('doe_respuesta_b5', e.target.value)} />
+                </Field>
+                <div style={{ marginTop: 16 }}>
+                    <Field label="Observación">
+                    <textarea
+                        value={form.observaciones}
+                        onChange={e => set('observaciones', e.target.value)}
+                        style={{ ...inputStyle, minHeight: 80 }}
+                    />
+                    </Field>
+                </div>
+              </Section>*/}
+            <Section>
+                <SecTitle label="Otros" />
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+                    <Field label="DOE DE RESPUESTA B.5 POR PAGO" required error={errors.doe_respuesta_b5}>
+                      <FInput value={form.doe_respuesta_b5} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
+                        <Field label="observaciones">
+                        <textarea
+                            value={form.observaciones}
+                            onChange={e => set('observaciones', e.target.value)}
+                            style={{ ...inputStyle, minHeight: 80 }}
+                        />
+                        </Field>
+                  </div>             
+            </Section>              
             
 
             {/* FOOTER */}

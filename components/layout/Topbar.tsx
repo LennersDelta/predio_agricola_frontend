@@ -62,11 +62,22 @@ const breadcrumbs: Record<string, string> = {
       pattern: /^\/predio\/recursoshumanos\/[^/]+\/ver$/,
       label: 'Ver Recurso Humano'
     },
+
+    {
+      pattern: /^\/predio\/contratos\/[^/]+\/edit$/,
+      label: 'Editar Contratos'
+    },
+    {
+      pattern: /^\/predio\/contratos\/[^/]+\/ver$/,
+      label: 'Ver Contratos'
+    },
+
     // genérico después
     {
       pattern: /^\/predio\/.+\/edit$/,
       label: 'Editar adquisición de insumos y productos'
     },
+
 
     { pattern: /^\/bienes\/.+$/, label: 'Ver Bien' },
     { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
