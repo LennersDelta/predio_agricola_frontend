@@ -27,15 +27,15 @@ const navGroups = [
     group: 'Gestión de Predio Agrícola',
     adminOnly: false,
     items: [
-      { href: '/predio/insumosproductos',       label: 'Adquisición de insumos y productos', icon: 'package' },
-      { href: '/predio/parquevehicular',       label: 'Parque  Vehicular', icon: 'car' },
-      { href: '/predio/recursoshumanos',  label:'Recursos Humano', icon: 'users'},
-      { href: '/predio/factura/luz',  label:'Factura Luz', icon: 'FileText'},
-      { href: '/predio/factura/agua',  label:'Factura Agua', icon: 'FileText'},
-      { href: '/predio/anticipo',  label:'Anticipo Rendir Cuenta', icon: 'report'},
-      { href: '/predio/combustible',  label:'Combustible', icon: 'fuel'},
-      { href: '/predio/contratos',  label:'Contratos efectuados', icon: 'report'},
-      
+      { href: '/predio/insumosproductos', label: 'Adquisición de insumos y productos', icon: 'package' },
+      { href: '/predio/parquevehicular', label: 'Parque  Vehicular', icon: 'car' },
+      { href: '/predio/recursoshumanos', label: 'Recursos Humano', icon: 'users' },
+      { href: '/predio/factura/luz', label: 'Factura Luz', icon: 'FileText' },
+      { href: '/predio/factura/agua', label: 'Factura Agua', icon: 'FileText' },
+      { href: '/predio/anticipo', label: 'Anticipo Rendir Cuenta', icon: 'report' },
+      { href: '/predio/combustible', label: 'Combustible', icon: 'fuel' },
+      { href: '/predio/contratos', label: 'Contratos efectuados', icon: 'report' },
+
     ],
   },
   {
@@ -50,7 +50,7 @@ const navGroups = [
     group: 'Administración',
     adminOnly: true,
     items: [
-      { href: '/usuarios',      label: 'Usuarios',      icon: 'users'  },
+      { href: '/usuarios', label: 'Usuarios', icon: 'users' },
       { href: '/configuracion', label: 'Configuración', icon: 'config' },
     ],
   },
@@ -60,19 +60,19 @@ const navGroups = [
 // ICONOS
 // ─────────────────────────────────────────────
 const icons: Record<string, React.ReactNode> = {
-  home:     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>,
-  building: <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>,
-  plus:     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>,
-  report:   <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>,
-  users:    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>,
-  config:   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>,
-  user:     <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
-  logout:   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>,
-  shield:   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>,
-  draft:    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>,
-  fuel:     <path strokeLinecap="round" strokeLinejoin="round" d="M3 6a2 2 0 012-2h6a2 2 0 012 2v14H5a2 2 0 01-2-2V6zm10 3h2l2 2v7a1 1 0 002 0v-5"  />,
-  package:  <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
-  car:      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM5 17H3v-6l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5v6h-2M5 17h10M7 11h10" />
+  home: <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
+  building: <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />,
+  plus: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />,
+  report: <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+  users: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
+  config: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />,
+  user: <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+  logout: <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+  shield: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
+  draft: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />,
+  fuel: <path strokeLinecap="round" strokeLinejoin="round" d="M3 6a2 2 0 012-2h6a2 2 0 012 2v14H5a2 2 0 01-2-2V6zm10 3h2l2 2v7a1 1 0 002 0v-5" />,
+  package: <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
+  car: <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM5 17H3v-6l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5v6h-2M5 17h10M7 11h10" />
 };
 
 function NavIcon({ name }: { name: string }) {
@@ -110,13 +110,13 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────
 export default function Sidebar() {
-  const pathname                     = usePathname();
-  const router                       = useRouter();
-  const [collapsed, setCollapsed]    = useState(false);
-  const [mobileOpen, setMobileOpen]  = useState(false);
-  const [loggingOut, setLoggingOut]  = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [borradoresCount, setBorradoresCount] = useState(0);
-  const { user, isAdmin, loading }   = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   useEffect(() => {
     const saved = localStorage.getItem('sgbr_sidebar');
@@ -146,8 +146,12 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    try { await logout(); } catch {}
-    finally { router.push('/login'); }
+    try {
+      await logout(); // ← logout ya redirige con window.location.replace
+    } catch {
+      window.location.replace('/login');
+    }
+    // ← sin finally ni router.push
   };
 
   const initials = user?.name
@@ -155,7 +159,7 @@ export default function Sidebar() {
     : '?';
 
   const sbW = collapsed ? 64 : 256;
- // const isBorradoresActive = pathname === '/bienes' && typeof window !== 'undefined' && window.location.search.includes('tab=borradores');
+  // const isBorradoresActive = pathname === '/bienes' && typeof window !== 'undefined' && window.location.search.includes('tab=borradores');
 
   return (
     <>
@@ -169,7 +173,7 @@ export default function Sidebar() {
       <button onClick={() => setMobileOpen(true)} className="hamburger-btn" aria-label="Abrir menú"
         style={{ display: 'none', position: 'fixed', top: 12, left: 12, zIndex: 70, background: '#2e7d46', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: 8, cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}>
         <svg style={{ width: 18, height: 18, color: '#fff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
 
@@ -188,16 +192,16 @@ export default function Sidebar() {
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle at 50% 0%,rgba(255,255,255,.06) 0%,transparent 55%), linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px)', backgroundSize: '100% 100%,32px 32px,32px 32px' }} />
 
         {/* Toggle desktop */}
-        <button onClick={toggle} style={{ position: 'absolute', top: 22, right: -11, width: 22, height: 22, background: '#3a9956', border: '1px solid rgba(0,0,0,.2)', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, boxShadow: '0 2px 8px rgba(0,0,0,.4)', transition: 'background .2s,transform .32s', transform: collapsed ? 'rotate(180deg)' : 'none' }}>
+        <button onClick={toggle} style={{ position: 'absolute', top: 60, right: 2, width: 22, height: 22, background: '#3a9956', border: '1px solid rgba(0,0,0,.2)', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, boxShadow: '0 2px 8px rgba(0,0,0,.4)', transition: 'background .2s,transform .32s', transform: collapsed ? 'rotate(180deg)' : 'none' }}>
           <svg style={{ width: 11, height: 11, color: '#fff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '20px 16px 14px', flexShrink: 0, position: 'relative' }}>
           <div style={{ flexShrink: 0, filter: 'drop-shadow(0 0 8px rgba(255,255,255,.2))' }}>
-            <Image src="/images/bienestar-logo.png" width={38} height={38} alt="SIGBI"/>
+            <Image src="/images/bienestar-logo.png" width={38} height={38} alt="SIGBI" />
           </div>
           {!collapsed && (
             <div style={{ overflow: 'hidden' }}>
@@ -210,8 +214,8 @@ export default function Sidebar() {
 
         {/* Separador dorado */}
         <div style={{ margin: '0 14px 12px', flexShrink: 0 }}>
-          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,#d4a832,transparent)', opacity: .5 }}/>
-          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,#ecc84a,transparent)', opacity: .15, marginTop: 2 }}/>
+          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,#d4a832,transparent)', opacity: .5 }} />
+          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,#ecc84a,transparent)', opacity: .15, marginTop: 2 }} />
         </div>
 
         {/* ── TARJETA USUARIO ── */}
@@ -221,7 +225,7 @@ export default function Sidebar() {
               <div style={{ width: 36, height: 36, borderRadius: 8, background: isAdmin ? 'rgba(212,168,50,.25)' : 'rgba(255,255,255,.15)', border: `1px solid ${isAdmin ? 'rgba(212,168,50,.5)' : 'rgba(255,255,255,.3)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 800, fontSize: '.95rem', color: isAdmin ? '#d4a832' : '#fff' }}>
                 {loading ? '…' : initials}
               </div>
-              <div style={{ position: 'absolute', bottom: -1, right: -1, width: 8, height: 8, borderRadius: '50%', background: '#7fffa0', border: '2px solid #1a3d2b' }}/>
+              <div style={{ position: 'absolute', bottom: -1, right: -1, width: 8, height: 8, borderRadius: '50%', background: '#7fffa0', border: '2px solid #1a3d2b' }} />
             </div>
             {!collapsed && (
               <div style={{ minWidth: 0, overflow: 'hidden' }}>
@@ -233,7 +237,7 @@ export default function Sidebar() {
                     {user.grado}
                   </p>
                 )}
-                <RoleBadge role={user?.role ?? ''} collapsed={collapsed}/>
+                <RoleBadge role={user?.role ?? ''} collapsed={collapsed} />
               </div>
             )}
           </div>
@@ -273,16 +277,16 @@ export default function Sidebar() {
                         transition: 'background .15s,color .15s',
                         width: 'calc(100% - 16px)',
                       }}>
-                      <NavIcon name={item.icon}/>
+                      <NavIcon name={item.icon} />
                       {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
                       {!collapsed && isActive && (
-                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }}/>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }} />
                       )}
                     </Link>
                   );
                 })}
 
-        
+
               </div>
             );
           })}
@@ -292,19 +296,19 @@ export default function Sidebar() {
         <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', padding: '8px 8px 12px', flexShrink: 0 }}>
           <Link href="/dashboard/perfil"
             style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '9px 0' : '8px 12px', margin: '1px 0', borderRadius: 7, color: 'rgba(255,255,255,.7)', fontSize: '.8rem', textDecoration: 'none', width: '100%', border: '1px solid transparent', transition: 'background .15s' }}>
-            <NavIcon name="user"/>
+            <NavIcon name="user" />
             {!collapsed && <span>Mi Perfil</span>}
           </Link>
 
           <button onClick={handleLogout} disabled={loggingOut}
             style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '9px 0' : '8px 12px', margin: '1px 0', borderRadius: 7, color: 'rgba(255,180,180,.85)', fontSize: '.8rem', fontWeight: 500, background: 'none', border: '1px solid transparent', cursor: loggingOut ? 'wait' : 'pointer', width: '100%', fontFamily: '"Barlow",sans-serif', opacity: loggingOut ? 0.6 : 1, transition: 'opacity .2s' }}>
-            <NavIcon name="logout"/>
+            <NavIcon name="logout" />
             {!collapsed && <span>{loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}</span>}
           </button>
 
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px 0' }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }}/>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }} />
               <p style={{ color: 'rgba(255,255,255,.3)', fontSize: '.54rem', letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>
                 SIGPA v1.0 · {new Date().getFullYear()}
               </p>

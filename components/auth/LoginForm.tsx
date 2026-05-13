@@ -20,7 +20,7 @@ function formatearRut(raw: string): string {
   const limpio = limpiarRut(raw);
   if (limpio.length < 2) return limpio;
   const cuerpo = limpio.slice(0, -1);
-  const dv     = limpio.slice(-1).toUpperCase();
+  const dv = limpio.slice(-1).toUpperCase();
   // Agregar puntos cada 3 dígitos desde la derecha
   const conPuntos = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return `${conPuntos}-${dv}`;
@@ -53,16 +53,16 @@ function validarRut(rut: string): boolean {
 export default function LoginForm() {
   const router = useRouter();
 
-  const [rut,          setRut]          = useState('163228149');
-  const [rutValido,    setRutValido]    = useState<boolean | null>(null); // null = sin tocar
-  const [password,     setPassword]     = useState('12345678');
+  const [rut, setRut] = useState('163228149');
+  const [rutValido, setRutValido] = useState<boolean | null>(null); // null = sin tocar
+  const [password, setPassword] = useState('12345678');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // ── Manejo de input RUT ─────────────────────────────────────────────────
   const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw    = e.target.value;
+    const raw = e.target.value;
     const limpio = limpiarRut(raw);
 
     // Formatear solo si tiene suficientes caracteres
@@ -86,7 +86,6 @@ export default function LoginForm() {
     e.preventDefault();
     setError('');
 
-    // Validar RUT antes de enviar
     if (!validarRut(limpiarRut(rut))) {
       setError('El RUT ingresado no es válido');
       setRutValido(false);
@@ -95,13 +94,23 @@ export default function LoginForm() {
 
     setLoading(true);
     try {
-      // Enviar RUT sin formato (solo dígitos + dv) al backend
       const rutLimpio = limpiarRut(rut);
       const user = await login(rutLimpio, password);
+
       localStorage.setItem('user', JSON.stringify({
         name: user.name, email: user.email, grado: user.grado, role: user.role,
       }));
-      router.push('/dashboard');
+
+      // ← FALTABA ESTO — setear cookies para el middleware
+      await fetch('/api/session', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ role: user.role }),
+});
+
+// ← fuerza recarga completa para que el navegador procese las cookies de Laravel
+window.location.href = '/dashboard';
+
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Credenciales incorrectas';
       setError(msg);
@@ -112,9 +121,9 @@ export default function LoginForm() {
 
   // ── Colores de estado del RUT ───────────────────────────────────────────
   const rutBorderColor =
-    rutValido === null  ? 'border-verde-medio/50' :
-    rutValido           ? 'border-verde-acento/70' :
-                          'border-red-500/60';
+    rutValido === null ? 'border-verde-medio/50' :
+      rutValido ? 'border-verde-acento/70' :
+        'border-red-500/60';
 
   return (
     <div
@@ -263,9 +272,8 @@ export default function LoginForm() {
             </div>
 
             {/* Hint / error inline */}
-            <p className={`text-xs font-body mt-1.5 transition-colors duration-200 ${
-              rutValido === false ? 'text-red-400' : 'text-gris-claro/30'
-            }`}>
+            <p className={`text-xs font-body mt-1.5 transition-colors duration-200 ${rutValido === false ? 'text-red-400' : 'text-gris-claro/30'
+              }`}>
               {rutValido === false
                 ? 'RUT inválido — verifica el dígito verificador'
                 : 'Formato: 12.345.678-9'}
