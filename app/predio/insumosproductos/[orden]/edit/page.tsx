@@ -311,7 +311,7 @@ function EditarInsumoProductoPageInner() {
                         required
                       />
                     </Field>
-                    <Field label="Valor" required error={errors.valor_total}>
+                    <Field label="Valor Total Pagado" required error={errors.valor_total}>
                       <FInput
                         type="number"
                         inputMode="decimal"

@@ -224,7 +224,7 @@ if (!form.estado_orden)
 if (!form.fecha_orden)
   errsFront.fecha_orden = 'La fecha de orden es obligatoria.';
 if (!form.valor_total || Number(form.valor_total) === 0)
-  errsFront.valor_total = 'El valor total es obligatorio.';
+  errsFront.valor_total = 'El valor total pagado es obligatorio.';
 
 // ───── FACTURA ─────
 if (!form.numero_factura)
@@ -421,7 +421,7 @@ if (!form.doerespuesta)
                 <FInput type="date" value={form.fecha_orden} onChange={e => set('fecha_orden', e.target.value)} />
                 </Field>
 
-                <Field label="Valor Total" error={errors.valor_total_orden}>
+                <Field label="Valor Total Pagado" error={errors.valor_total_orden}>
                   <FInputMoney value={form.valor_total} onChange={e => set('valor_total', e.target.value)} />
                 </Field>
             </div>
