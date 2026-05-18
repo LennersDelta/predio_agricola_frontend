@@ -149,6 +149,7 @@ export default function CrearParqueVehicularPage() {
     ultima_mantencion: '',
     //permiso_circulacion_img: '',
     //seguro_obligatorio_img: ''
+    condicion: '',
 
   });
 
@@ -386,6 +387,10 @@ return (
                     <Field label="Marca" error={errors.marca}>
                         <FInput value={form.marca} onChange={e => set('marca', e.target.value)} />
                     </Field>
+
+                    <Field label="Condición" error={errors.condicion}>
+                        <FInput value={form.condicion} onChange={e => set('condicion', e.target.value)} />
+                    </Field>    
 
                     <Field label="Modelo" error={errors.modelo}>
                         <FInput value={form.modelo} onChange={e => set('modelo', e.target.value)} />

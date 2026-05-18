@@ -108,6 +108,7 @@ function VerParqueVehicularPageInner() {
 
       permiso_img: '',
       seguro_img:'',
+      condicion:'',
     
   });
 
@@ -141,6 +142,7 @@ function VerParqueVehicularPageInner() {
           ultima_mantencion: b.ultima_mantencion ?? '',
           permiso_img: b.permiso_circulacion_img ?? '',
           seguro_img: b.seguro_obligatorio_img ?? '',
+          condicion: b.condicion ?? '',
         });
 
     // documentos existentes
@@ -211,6 +213,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     formData.append('sigla_institucional', form.sigla_institucional);
     formData.append('marca', form.marca);
     formData.append('modelo', form.modelo);
+    formData.append('condicion', form.condicion);
     formData.append('anio', form.anio);
 
     formData.append('fecha_adquisicion', form.fecha_adquisicion);
@@ -361,7 +364,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <Field label="Modelo" error={errors.modelo}>
                         <FInput value={form.modelo} onChange={e => set('modelo', e.target.value)} disabled={true}/>
                     </Field>    
-
+                    <Field label="Condición" error={errors.condicion}>
+                        <FInput value={form.condicion} onChange={e => set('condicion', e.target.value)} disabled={true}/>
+                    </Field>    
                     <Field label="Año" error={errors.anio}>
                         <FInput type="number" value={form.anio} onChange={e => set('anio', e.target.value)} disabled={true} />
                     </Field>

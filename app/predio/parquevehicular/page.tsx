@@ -26,6 +26,7 @@ interface ParqueVehicular{
 
   marca: string;
   modelo: string;
+  condicion: string;
 
   anio: number; 
   fecha_adquisicion: string; // formato YYYY-MM-DD
@@ -427,6 +428,7 @@ useEffect(() => {
                           ['siglaInstitucional', 'Sigla', 'left'],
                           ['marca', 'Marca', 'left'],
                           ['modelo', 'Modelo', 'left'],
+                          ['condicion', 'Condición', 'left'],
                           ['anio', 'Año', 'center'], 
                           ['fechaAdquisicion', 'Fecha Adq.', 'center'],
                           ['fondoAdquisicion', 'Fondo', 'left'],
@@ -478,6 +480,9 @@ useEffect(() => {
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.modelo}</span>
                         </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.condicion}</span>
+                        </td>                        
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.anio}</span>
                         </td>

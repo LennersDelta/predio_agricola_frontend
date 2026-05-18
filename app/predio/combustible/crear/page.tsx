@@ -153,9 +153,7 @@ export default function CrearRecursoHumanoPage() {
    
   });
 
-const set = <K extends keyof FormType>(key: K, value: FormType[K]) => {
-  setForm(prev => ({ ...prev, [key]: value }));
-};
+ const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const { administrador, loading: loadingAdministrador } = useAdministrador();
   const { uso, loading: loadingUso } = useUso();
@@ -354,7 +352,7 @@ return (
                 />
                 </Field>
 
-                <Field label="Comprobante" error={errors.comprobante}>
+              {/*  <Field label="Comprobante" error={errors.comprobante}>
                     <FInput
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -363,7 +361,7 @@ return (
                         set('comprobante', file); 
                     }}
                  />
-                </Field>
+                </Field>*/}
                 
             </div>
             </Section>

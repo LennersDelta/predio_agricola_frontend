@@ -30,8 +30,8 @@ const breadcrumbs: Record<string, string> = {
   '/predio/combustible/crear': 'Ingreso combustible',
 
 
-'/predio/contratos' : 'Contratos efectuados',
-'/predio/contratos/crear' : 'Ingreso contratos efectuados',
+  '/predio/contratos' : 'Contratos efectuados',
+  '/predio/contratos/crear' : 'Ingreso contratos efectuados',
 
 
   '/reportes/provincia': 'Reportes por Provincia',
