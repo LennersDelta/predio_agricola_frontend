@@ -26,8 +26,11 @@ const breadcrumbs: Record<string, string> = {
   '/predio/anticipo': 'Anticipo rendir cuenta',
   '/predio/anticipo/crear': 'Ingreso anticipo rendir cuenta',
 
-  '/predio/combustible': 'Combustible',
-  '/predio/combustible/crear': 'Ingreso combustible',
+  '/predio/combustible/asignacion': 'Combustible asignacion',
+  '/predio/combustible/asignacion/crear': 'Ingreso asignacion combustible vehiculo',
+
+  '/predio/combustible/ingreso': 'Combustible gestion ',
+  '/predio/combustible/ingreso/crear': 'Ingreso gestion combustible vehiculo',
 
 
   '/predio/contratos' : 'Contratos efectuados',
@@ -41,48 +44,118 @@ const breadcrumbs: Record<string, string> = {
   '/configuracion':      'Configuración',
 };
 
-  const dynamicBreadcrumbs: { pattern: RegExp; label: string }[] = [
+// ======================================================
+// BREADCRUMBS DINÁMICOS
+// ======================================================
 
-    {
-      pattern: /^\/predio\/parquevehicular\/[^/]+\/edit$/,
-      label: 'Editar Parque Vehicular'
-    },
-    {
-      pattern: /^\/predio\/parquevehicular\/[^/]+\/ver$/,
-      label: 'Ver Parque Vehicular'
-    },
+export const dynamicBreadcrumbs: {pattern: RegExp;label: string;}[] = 
+[
+  
+  // INSUMOS Y PRODUCTOS
+  {
+    pattern:/^\/predio\/insumosproductos\/[^/]+\/edit$/,
+    label:'Editar adquisición de insumos y productos',
+  },
+  {
+    pattern:/^\/predio\/insumosproductos\/[^/]+\/ver$/,
+    label:'Ver adquisición de insumos y productos',
+  },
+  // PARQUE VEHICULAR
+  {
+    pattern:/^\/predio\/parquevehicular\/[^/]+\/edit$/,
+    label:'Editar Parque Vehicular',
+  },
+  {
+    pattern:/^\/predio\/parquevehicular\/[^/]+\/ver$/,
+    label:'Ver Parque Vehicular',
+  },
+  // RECURSOS HUMANOS
+  {
+    pattern:/^\/predio\/recursoshumanos\/[^/]+\/edit$/,
+    label:'Editar Recursos Humanos',
+  },
+  {
+    pattern:/^\/predio\/recursoshumanos\/[^/]+\/ver$/,
+    label:'Ver Recursos Humanos',
+  },
+  // FACTURA LUZ
+  {
+    pattern:/^\/predio\/factura\/luz\/[^/]+\/edit$/,
+    label:'Editar Factura Luz',
+  },
+  {
+    pattern:/^\/predio\/factura\/luz\/[^/]+\/ver$/,
+    label:'Ver Factura Luz',
+  },
+  // FACTURA AGUA
+  {
+    pattern:/^\/predio\/factura\/agua\/[^/]+\/edit$/,
+    label:'Editar Factura Agua',
+  },
+  {
+    pattern:/^\/predio\/factura\/agua\/[^/]+\/ver$/,
+    label:'Ver Factura Agua',
+  },
+  // ANTICIPO
+  {
+    pattern:/^\/predio\/anticipo\/[^/]+\/edit$/,
+    label:'Editar Anticipo Rendir Cuenta',
+  },
+  {
+    pattern:/^\/predio\/anticipo\/[^/]+\/ver$/,
+    label:'Ver Anticipo Rendir Cuenta',
+  },
+  // COMBUSTIBLE ASIGNACIÓN
+  {
+    pattern:/^\/predio\/combustible\/asignacion\/[^/]+\/edit$/,
+    label:'Editar Asignación Combustible',
+  },
+  {
+    pattern:/^\/predio\/combustible\/asignacion\/[^/]+\/ver$/,
+    label: 'Ver Asignación Combustible',
+  },
+  // COMBUSTIBLE INGRESO
+  {
+    pattern:/^\/predio\/combustible\/ingreso\/[^/]+\/edit$/,
+    label:'Editar Gestión Combustible',
+  },
+  {
+    pattern:/^\/predio\/combustible\/ingreso\/[^/]+\/ver$/,
+    label:'Ver Gestión Combustible',
+  },
+  // CONTRATOS
+  {
+    pattern:/^\/predio\/contratos\/[^/]+\/edit$/,
+    label:'Editar Contratos',
+  },
+  {
+    pattern:/^\/predio\/contratos\/[^/]+\/ver$/,
+    label:'Ver Contratos',
+  },
+  // REPORTES
+  {
+    pattern:/^\/reportes\/provincia\/[^/]+$/,
+    label:'Detalle Reporte Provincia',
+  },
+  {
+    pattern:/^\/reportes\/comuna\/[^/]+$/,
+    label: 'Detalle Reporte Comuna',
+  },
 
-    // más específico primero
-    {
-      pattern: /^\/predio\/recursoshumanos\/[^/]+\/edit$/,
-      label: 'Editar Recursos Humanos'
-    },
-
-    {
-      pattern: /^\/predio\/recursoshumanos\/[^/]+\/ver$/,
-      label: 'Ver Recurso Humano'
-    },
-
-    {
-      pattern: /^\/predio\/contratos\/[^/]+\/edit$/,
-      label: 'Editar Contratos'
-    },
-    {
-      pattern: /^\/predio\/contratos\/[^/]+\/ver$/,
-      label: 'Ver Contratos'
-    },
-
-    // genérico después
-    {
-      pattern: /^\/predio\/.+\/edit$/,
-      label: 'Editar adquisición de insumos y productos'
-    },
-
-
-    { pattern: /^\/bienes\/.+$/, label: 'Ver Bien' },
-    { pattern: /^\/usuarios\/.+\/editar$/, label: 'Editar Usuario' },
-    { pattern: /^\/usuarios\/.+$/, label: 'Ver Usuario' },
-  ];
+  // USUARIOS
+  {
+    pattern:/^\/usuarios\/[^/]+\/editar$/,
+    label:'Editar Usuario',
+  },
+  {
+    pattern:/^\/usuarios\/[^/]+\/ver$/,
+    label:'Ver Usuario',
+  },
+  {
+    pattern:/^\/usuarios\/[^/]+$/,
+    label:'Detalle Usuario',
+  },
+];
 
 function getLabel(pathname: string): string {
   const path = pathname.split('?')[0]; // quitar query string

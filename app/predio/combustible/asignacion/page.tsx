@@ -1,4 +1,3 @@
-// app/predio/combustible/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
@@ -215,7 +214,7 @@ function CombustiblePageInner() {
           </h2>
           <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Combustible</p>
         </div>
-        <Link href="/predio/combustible/crear"
+        <Link href="/predio/combustible/asignacion/crear"
           style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
           onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
           onMouseLeave={e => (e.currentTarget.style.filter = '')}
@@ -223,7 +222,7 @@ function CombustiblePageInner() {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo combustible
+          Nueva asignacion
         </Link>
       </div>    
 

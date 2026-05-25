@@ -357,12 +357,6 @@ export default function UsuariosPage() {
                       <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', gap: 5 }}>
                           <ActionBtn
-                            title="Imprimir PDF"
-                            color="#6b8f75" bg="rgba(0,0,0,.06)" bgHov="rgba(0,0,0,.12)"
-                            onClick={() => toast.info('PDF en desarrollo')}
-                            path="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                          <ActionBtn
                             title="Editar"
                             color="#3b82f6" bg="rgba(96,165,250,.1)" bgHov="rgba(96,165,250,.22)"
                             onClick={() => router.push(`/usuarios/${u.id}/editar`)}

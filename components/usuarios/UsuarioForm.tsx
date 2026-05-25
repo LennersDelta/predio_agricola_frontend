@@ -3,18 +3,23 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { AREAS, GRADOS, TIPOS_CONTRATACION, ROLES } from '@/lib/usuarios-config';
+import { AREAS,  ROLES } from '@/lib/usuarios-config';
 import { Usuario } from '@/hooks/useUsuarios';
+
+import { useTipoGrado } from '@/hooks/useTipoGrado';
+import { useTipoContrato} from '@/hooks/useTipoContrato';
+import { useTipoRol} from  '@/hooks/useTipoRol';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS
 // ─────────────────────────────────────────────────────────────────────────────
 export interface UsuarioFormData {
+  rut: string;
   name: string;
   apellido_ap: string;
   apellido_mat: string;
   email: string;
-  grado: string;
+  grado_id: string;
   tipo_contratacion: string;
   telefono: string;
   area_id: string;
@@ -138,11 +143,23 @@ function Section({ children }: { children: React.ReactNode }) {
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 const EMPTY: UsuarioFormData = {
-  name: '', apellido_ap: '', apellido_mat: '',
-  email: '', grado: '', tipo_contratacion: '',
-  telefono: '', area_id: '', role: 'usuario',
-  password: '', password_confirmation: '',
+  rut: '',
+  name: '',
+  apellido_ap: '',
+  apellido_mat: '',
+  email: '',
+  grado_id: '',
+  tipo_contratacion: '',
+  telefono: '',
+  area_id: '',
+  role: 'usuario',
+  password: '',
+  password_confirmation: '',
 };
+
+
+
+
 
 export default function UsuarioForm({
   modo, inicial, rutSoloLectura, errors, loading, onSubmit,
@@ -157,11 +174,16 @@ export default function UsuarioForm({
   const [form, setForm] = useState<UsuarioFormData>({ ...EMPTY, ...inicialNormalizado });
   const [showPass, setShowPass] = useState(false);
 
+  const { tipoGrado, loading: loadingTipoGrado, error: errorTipoGrado } = useTipoGrado();
+  const { tipoContrato, loading: loadingTipoContrato, error: errorTipoContrato } = useTipoContrato();
+  const { tipoRol, loading: loadingTipoRol, error: errorTipoRol } = useTipoRol();
+
   const set = (k: keyof UsuarioFormData, v: string) =>
     setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); 
+    console.log(form);
     onSubmit(form);
   };
 
@@ -218,18 +240,63 @@ export default function UsuarioForm({
           <div style={{ display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
 
-            <Field label="Grado" error={errors.grado}>
+            {/*<Field label="Grado" error={errors.grado}>
               <FSelect value={form.grado} onChange={e => set('grado', e.target.value)}>
                 <option value="">Seleccione grado</option>
                 {GRADOS.map(g => <option key={g} value={g}>{g}</option>)}
               </FSelect>
-            </Field>
+            </Field>*/}
 
-            <Field label="Tipo Contratación" error={errors.tipo_contratacion}>
+            <Field label="Grado" error={errors.grado_id}>
+              <FSelect
+                value={form.grado_id}
+                onChange={e => set('grado_id', e.target.value)}
+              >
+                <option value="">
+                  {loadingTipoGrado
+                    ? 'Cargando...'
+                    : errorTipoGrado
+                    ? errorTipoGrado
+                    : 'Seleccione'}
+                </option>
+
+                {!loadingTipoGrado &&
+                  !errorTipoGrado &&
+                  tipoGrado.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.descripcion}
+                    </option>
+                  ))}
+              </FSelect>
+            </Field>
+            {/*<Field label="Tipo Contratación" error={errors.tipo_contratacion}>
               <FSelect value={form.tipo_contratacion}
                 onChange={e => set('tipo_contratacion', e.target.value)}>
                 <option value="">Seleccione tipo</option>
                 {TIPOS_CONTRATACION.map(t => <option key={t} value={t}>{t}</option>)}
+              </FSelect>
+            </Field>*/}
+
+            <Field label="Tipo Contrato" error={errors.tipo_contratacion}>
+              <FSelect
+                value={form.tipo_contratacion}
+                onChange={e => set('tipo_contratacion', e.target.value)}
+              >
+                <option value="">
+                  {loadingTipoContrato
+                    ? 'Cargando...'
+                    : errorTipoContrato
+                    ? errorTipoContrato
+                    : 'Seleccione'}
+                </option>
+
+                {!loadingTipoContrato &&
+                  !errorTipoContrato &&
+                  tipoContrato.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
+                  ))}
               </FSelect>
             </Field>
 
@@ -241,8 +308,24 @@ export default function UsuarioForm({
             </Field>
 
             <Field label="Rol en el Sistema" required error={errors.role}>
-              <FSelect value={form.role} onChange={e => set('role', e.target.value)}>
-                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              <FSelect
+                value={form.role}
+                onChange={e => set('role', e.target.value)}
+              >
+                <option value="">
+                  {loadingTipoRol
+                    ? 'Cargando...'
+                    : errorTipoRol
+                    ? errorTipoRol
+                    : 'Seleccione'}
+                </option>
+                  {!loadingTipoRol &&
+                  !errorTipoRol &&
+                  tipoRol.map(p => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}                
               </FSelect>
             </Field>
           </div>
@@ -259,8 +342,8 @@ export default function UsuarioForm({
                           gap: 16, marginBottom: 16 }}>
               <Field label="RUT" required error={errors.rut}
                 hint="Sin puntos ni guión — Ej: 123456789">
-                <FInput placeholder="123456789" value={(form as any).rut ?? ''}
-                  onChange={e => set('rut' as any, e.target.value)} required />
+                <FInput placeholder="123456789" value={form.rut}
+                  onChange={e => set('rut', e.target.value)} required />
               </Field>
             </div>
           )}

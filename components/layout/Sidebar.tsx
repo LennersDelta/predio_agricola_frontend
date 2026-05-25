@@ -10,52 +10,114 @@ import { logout } from '@/lib/auth';
 import api from '@/lib/axios';
 import { group } from 'console';
 
+
+// ─────────────────────────────────────────────
+// COMPONENTE PRINCIPAL
+// ─────────────────────────────────────────────
+export default function Sidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [borradoresCount, setBorradoresCount] = useState(0);
+  const { user, isAdmin, loading } = useAuth();
+
 // ─────────────────────────────────────────────
 // NAVEGACIÓN — filtrada por rol en el render
 // ─────────────────────────────────────────────
 
 
-const navGroups = [
-  {
-    group: 'Principal',
-    adminOnly: false,
-    items: [
-      { href: '/dashboard', label: 'Dashboard', icon: 'home' },
-    ],
-  },
-  {
-    group: 'Gestión de Predio Agrícola',
-    adminOnly: false,
-    items: [
-      { href: '/predio/insumosproductos', label: 'Adquisición de insumos y productos', icon: 'package' },
-      { href: '/predio/parquevehicular', label: 'Parque  Vehicular', icon: 'car' },
-      { href: '/predio/recursoshumanos', label: 'Recursos Humano', icon: 'users' },
-      { href: '/predio/factura/luz', label: 'Factura Luz', icon: 'FileText' },
-      { href: '/predio/factura/agua', label: 'Factura Agua', icon: 'FileText' },
-      { href: '/predio/anticipo', label: 'Anticipo Rendir Cuenta', icon: 'report' },
-      { href: '/predio/combustible', label: 'Combustible', icon: 'fuel' },
-      { href: '/predio/contratos', label: 'Contratos efectuados', icon: 'report' },
+  const navGroups = [
+    {
+      group: 'Principal',
+      adminOnly: false,
+      items: [
+        {
+          href: '/dashboard', label: 'Dashboard', icon: 'home',
+        },
+      ],
+    },
+    {
+      group:'Gestión de Predio Agrícola',
+      adminOnly: false,
+      items: [
+        {
+          href:'/predio/insumosproductos', label: 'Adquisición de insumos y productos', icon: 'package',
+        },
+        {
+          href:'/predio/parquevehicular', label: 'Parque Vehicular', icon: 'car',
+        },
+        {
+          href:'/predio/recursoshumanos',  label: 'Recursos Humanos', icon: 'users',
+        },
+        {
+          href:'/predio/factura/luz', label: 'Factura Luz', icon: 'report',
+        },
+        {
+          href: '/predio/factura/agua', label: 'Factura Agua', icon: 'report',
+        },
+        {
+          href: '/predio/anticipo', label: 'Anticipo Rendir Cuenta', icon: 'report',
+        },
 
-    ],
-  },
-  {
-    group: 'Reportes',
-    adminOnly: false,
-    items: [
-      { href: '/reportes/Definir', label: 'Por Definir', icon: 'report' },
+        // ─────────────────────────────
+        // COMBUSTIBLE SEGÚN ROL
+        // ─────────────────────────────
 
-    ],
-  },
-  {
-    group: 'Administración',
-    adminOnly: true,
-    items: [
-      { href: '/usuarios', label: 'Usuarios', icon: 'users' },
-      { href: '/configuracion', label: 'Configuración', icon: 'config' },
-    ],
-  },
-];
+        ...(isAdmin
+          ? [
+              {
+                href: '/predio/combustible/asignacion',
+                label:'Asignación Combustible',
+                icon: 'fuel',
+              },
+            ]
+          : [
+              {
+                href:'/predio/combustible/ingreso',
+                label:'Ingreso Combustible',
+                icon: 'fuel',
+              },
+            ]),
 
+        {
+          href:'/predio/contratos',
+          label:'Contratos efectuados',
+          icon: 'report',
+        },
+      ],
+    },
+
+    {
+      group: 'Reportes',
+      adminOnly: false,
+      items: [
+        {
+          href:'/reportes/Definir',
+          label: 'Por Definir',
+          icon: 'report',
+        },
+      ],
+    },
+
+    {
+      group: 'Administración',
+      adminOnly: true,
+      items: [
+        {
+          href: '/usuarios',
+          label: 'Usuarios',
+          icon: 'users',
+        },
+        {
+          href: '/configuracion',
+          label:'Configuración',
+          icon: 'config',
+        },
+      ],
+    },
+  ];
 // ─────────────────────────────────────────────
 // ICONOS
 // ─────────────────────────────────────────────
@@ -106,17 +168,7 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// COMPONENTE PRINCIPAL
-// ─────────────────────────────────────────────
-export default function Sidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [borradoresCount, setBorradoresCount] = useState(0);
-  const { user, isAdmin, loading } = useAuth();
+
 
   useEffect(() => {
     const saved = localStorage.getItem('sgbr_sidebar');
