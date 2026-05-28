@@ -9,19 +9,17 @@ import { toast } from 'sonner';
 // TIPOS — alineados con campos del backend
 
 interface Combustible{
-  
   id: number;
-  orden: string;
   predio: string;
-  nroFactura: string;
-  mesConsumo: string;
-  valorTotal: number;
+  numero_factura: string;
+  mes: string;
+  monto: number;
   proveedor: string;
-  estadoFactura: string;
-  doeRespuestaB5: string;
-  cantidadConsumoLitros: number;
-  
-  comprobante: File | null;
+  estado_factura: string;
+  doe_respuesta: string;
+  litros: number;
+  comprobante: string | null;
+  patente: string;
 }
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
@@ -98,10 +96,9 @@ function CombustiblePageInner() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
 // Filtros
-  const [fOrden, setFOrden] = useState('');
   const [fPredio, setFPredio] = useState('');
   const [fmesConsumo, setFMesConsumo] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  mesConsumo: ''});
+  const [applied, setApplied] = useState({ predio: '',  mesConsumo: ''});
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -113,7 +110,7 @@ function CombustiblePageInner() {
   //  Cargar datos 
   const cargaCombustible = useCallback(() => {
     setLoading(true);
-    api.get('/api/predio')
+    api.get('/api/combustible')
       .then(({ data: r }) => setData(r.data ?? r))
       .catch(() => toast.error('Error al cargar combustible'))
       .finally(() => setLoading(false));
@@ -124,43 +121,68 @@ function CombustiblePageInner() {
   }, []);
 
   //  Opciones dinámicas para filtros 
-  const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opMesConsumo = [...new Set(data.map(b => b.mesConsumo).filter(Boolean))].sort();
+  const opMesConsumo = [
+    ...new Set(
+      data
+        .map(b =>
+          b.mes
+            ? new Date(b.mes)
+                .toLocaleString('es-CL', { month: 'long' })
+                .replace(/^./, c => c.toUpperCase())
+            : ''
+        )
+        .filter(Boolean)
+    )
+  ].sort();
 
-    //  Aplicar filtros 
+  //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, mesConsumo: fmesConsumo});
+    setApplied({predio: fPredio, mesConsumo: fmesConsumo});
     setPage(1);
   };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setFMesConsumo(''); 
-    setApplied({orden: '', predio: '', mesConsumo: '' });
-
+    const limpiar = () => {setFPredio(''); setFMesConsumo(''); 
+    setApplied({ predio: '', mesConsumo: '' });
     setSearch('');
     setPage(1);
   };
-   const filtrosActivos = Object.values(applied).filter(Boolean).length;
+    const filtrosActivos = Object.values(applied).filter(Boolean).length;
+    const filtered = useMemo(() => {
+      return data
+        .filter(b => {
+          const predio = b.predio ?? '';
+          const mesConsumo = b.mes
+          ? new Date(b.mes)
+              .toLocaleString('es-CL', { month: 'long' })
+              .replace(/^./, c => c.toUpperCase())
+          : '';
+          const matchFiltros =
+            (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
+            (!applied.mesConsumo || mesConsumo.toLowerCase().includes(applied.mesConsumo.toLowerCase()));
+          const txt = search.toLowerCase();
+          const matchSearch =
+            !txt ||
+            b.predio?.toLowerCase().includes(txt) ||
+            b.numero_factura?.toLowerCase().includes(txt) ||
+            b.proveedor?.toLowerCase().includes(txt) ||
+            b.estado_factura?.toLowerCase().includes(txt) ||
+            b.patente?.toLowerCase().includes(txt);
 
-       const filtered = useMemo(() => {
-  return data
-    .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const mesConsumo = b.mesConsumo ?? '';
-      //const annio = b.annio ?? 0;
+          return matchFiltros && matchSearch;
+        })
+        .sort((a, b) => {
+          const av = String((a as any)[sortCol] ?? '');
+          const bv = String((b as any)[sortCol] ?? '');
+          const cmp = av.localeCompare(
+            bv,
+            'es',
+            { numeric: true }
+          );
+          return sortDir === 'asc'
+            ? cmp
+            : -cmp;
+        });
 
-      return (
-        (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.mesConsumo || predio.toLowerCase().includes(applied.mesConsumo.toLowerCase())) 
-      );
-    })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
     }, [data, applied, search, sortCol, sortDir]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -185,20 +207,17 @@ function CombustiblePageInner() {
         setDeleteId(null);
       }
     };
-
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
         {sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
       </span>
     );
-
     const thS = (align = 'left'): React.CSSProperties => ({
       padding: '9px 14px', fontSize: '.56rem', fontWeight: 600, letterSpacing: '.16em',
       textTransform: 'uppercase', color: '#9ab8a2', borderBottom: '1px solid rgba(0,0,0,.1)',
       whiteSpace: 'nowrap', textAlign: align as any, fontFamily: 'monospace',
       background: 'rgba(0,0,0,.03)', cursor: 'pointer', userSelect: 'none',
     });
-
     // ─────────────────────────────────────────────────────────────────────────
   return (
     <div style={{ fontFamily: '"Barlow",sans-serif' }}>
@@ -222,7 +241,7 @@ function CombustiblePageInner() {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nueva asignacion
+          Nuevo ingreso combustible
         </Link>
       </div>    
 
@@ -248,26 +267,31 @@ function CombustiblePageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FI 
-                label="Orden"
-                placeholder="111125"
-                value={fOrden}
-                onChange={e => setFOrden(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && aplicar()}
-              />
 
               <FS             
                 label="Predio"
                 options={opPredios}
                 value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
+                onChange={e => {const value = e.target.value; setFPredio(value);
+                  setApplied(prev => ({
+                    ...prev,
+                    predio: value
+                  }));
+                  setPage(1);
+                }}
               />
 
               <FS 
                 label="Mes Consumo"
                 options={opMesConsumo}
                 value={fmesConsumo}
-                onChange={e => { setFMesConsumo(e.target.value); aplicar(); }}
+                onChange={e => {const value = e.target.value; setFMesConsumo(value);
+                  setApplied(prev => ({ 
+                    ...prev,
+                    mesConsumo: value
+                  }));
+                  setPage(1);
+                }}
               />
             
 
@@ -371,16 +395,16 @@ function CombustiblePageInner() {
                   <thead>
                     <tr>
                       {([
-                        ['id', 'ID', 'left'],
-                        ['orden', 'N° Orden', 'left'],
-                        ['predio', 'Predio', 'left'],
-                        ['nroFactura', 'N° de Factura', 'left'],
-                        ['mesConsumo', 'Mes de Consumo', 'center'],
-                        ['valorTotal', 'Valor Total $', 'right'],
-                        ['proveedor', 'Proveedor', 'left'],
-                        ['estadoFactura', 'Estado Factura', 'center'],
-                        ['doeRespuestaB5', 'DOE Resp. B.5 Pago Factura', 'center'],
-                        ['cantidadConsumoLitros', 'Consumo (Litros)', 'right'],
+                          ['id', 'ID', 'left'],
+                          ['predio', 'Predio', 'left'],
+                          ['numero_factura', 'N° Factura', 'left'],
+                          ['mes', 'Mes Consumo', 'left'],
+                          ['monto', 'Valor Total $', 'left'],
+                          ['proveedor', 'Proveedor', 'left'],
+                          ['estado_factura', 'Estado Factura', 'left'],
+                          ['doe_respuesta', 'DOE Resp. B.5', 'left'],
+                          ['patente', 'PPU', 'left'],
+                          ['litros', 'Consumo (Litros)', 'left'],
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                           {label}
@@ -400,17 +424,53 @@ function CombustiblePageInner() {
                         </td>
                       </tr>
                     ) : paginated.map(b => (
-                      <tr key={b.orden}
+                      <tr key={b.id}
                         style={{ borderBottom: '1px solid rgba(0,0,0,.04)', transition: 'background .12s' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#f5faf6')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.id}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.mesConsumo}</span>
-                        </td> 
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.predio}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.numero_factura}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span
+                            style={{
+                              fontFamily: 'monospace',
+                              fontSize: '.82rem',
+                              fontWeight: 700,
+                              color: '#1a2e22'
+                            }}
+                          >
+                            {new Date(b.mes)
+                            .toLocaleString('es-CL', { month: 'long' })
+                            .replace(/^./, c => c.toUpperCase())}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>${Number(b.monto).toLocaleString('es-CL')}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.proveedor}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.estado_factura}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.doe_respuesta}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.patente}</span>
+                        </td>                                                         
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.litros}</span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

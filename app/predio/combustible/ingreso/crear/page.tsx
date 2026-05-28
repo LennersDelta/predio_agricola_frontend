@@ -17,8 +17,14 @@ interface Asignacion {
   saldo: number;
   monto_asignado?: number;
   monto_utilizado?: number;
+  nombre: string;
 }
 
+interface Patente {
+  orden: number;
+  ppu: string;
+  nombre: string;
+}
 // ======================================================
 // ESTILOS
 // ======================================================
@@ -205,15 +211,18 @@ export default function CrearIngresoPage() {
   const [file, setFile] =  useState<File | null>(null);
   const [asignaciones, setAsignaciones] =  useState<Asignacion[]>([]);
 
+  const [patentes, setPatentes] = useState<Patente[]>([]);
+  const [loadingPatentes, setLoadingPatentes] = useState(false);
+
   const [form, setForm] = useState({
     asignacion_id: '',
-    orden: '',
     nroFactura: '',
     proveedor: '',
     estadoFactura: '',
     doeRespuestaB5: '',
     cantidadConsumoLitros: '',
     monto: '',
+    patente: '',
   });
 
   // MODAL
@@ -237,6 +246,32 @@ export default function CrearIngresoPage() {
       console.error(error);
     }
   };
+ 
+  // SE AGREGAN LAS PATENTES SEGUN PREDIO SELECCIONADO
+  const loadPatentes = async (
+    asignacionId: string
+  ) => {
+    if (!asignacionId) {
+      setPatentes([]);
+      return;
+    }
+    try {
+      setLoadingPatentes(true);
+      const { data } = await api.get(
+        `/api/combustible/asignacion/${asignacionId}/patentes`
+      );
+      setPatentes(data);
+    } catch (error) {
+      console.error(error);
+      setPatentes([]);
+
+    } finally {
+      setLoadingPatentes(false);
+    }
+  };
+
+
+
 
   // ======================================================
   // SET
@@ -281,10 +316,6 @@ export default function CrearIngresoPage() {
         'Debe seleccionar una asignación.';
     }
 
-    if (!form.orden) {
-      errs.orden =
-        'Debe ingresar una orden.';
-    }
 
     if (!form.nroFactura) {
       errs.nroFactura =
@@ -321,6 +352,10 @@ export default function CrearIngresoPage() {
         'Debe adjuntar comprobante.';
     }
 
+    if (!form.patente) {
+      errs.patente =
+        'Debe ingresar patente.';
+    }
     setErrors(errs);
 
     return Object.keys(errs).length === 0;
@@ -572,9 +607,9 @@ export default function CrearIngresoPage() {
                 gap: 16,
               }}
             >
-              {/* ASIGNACIÓN */}
+              {/* ASIGNACIÓN ESTO SOLO MUESTRA EL PREDIO | FECHA --> CENTINELA | 2026-01-25 */}
 
-              <Field
+             {/* <Field
                 label="Asignación"
                 error={
                   errors.asignacion_id
@@ -608,6 +643,81 @@ export default function CrearIngresoPage() {
                   )}
                 </FSelect>
               </Field>
+            */}
+
+              {/* ASIGNACIÓN */}
+              <Field
+                label="Asignación"
+                error={errors.asignacion_id}
+              >
+                <FSelect
+                  value={form.asignacion_id}
+                  onChange={(e) => {
+
+                    const value =
+                      e.target.value;
+
+                    // guardar asignación
+                    set(
+                      'asignacion_id',
+                      value
+                    );
+
+                    // limpiar patente seleccionada
+                    set(
+                      'patente',
+                      ''
+                    );
+
+                    // limpiar lista anterior
+                    setPatentes([]);
+
+                    // cargar nuevas patentes
+                    loadPatentes(value);
+                  }}
+                >
+                  <option value="">
+                    Seleccione
+                  </option>
+
+                  {asignaciones.map((a) => (
+                    <option
+                      key={a.id}
+                      value={a.id}
+                    >
+                      {a.nombre}
+                    </option>
+                  ))}
+                </FSelect>
+              </Field>
+              
+              {/*<Field
+                label="Asignación"
+                error={errors.asignacion_id}
+              >
+                <FSelect
+                  value={form.asignacion_id}
+                  onChange={(e) =>
+                    set(
+                      'asignacion_id',
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    Seleccione
+                  </option>
+
+                  {asignaciones.map((a) => (
+                    <option
+                      key={a.id}
+                      value={a.id}
+                    >
+                      {a.nombre}
+                    </option>
+                  ))}
+                </FSelect>
+              </Field>*/}
 
               {/* PRESUPUESTO */}
 
@@ -754,20 +864,6 @@ export default function CrearIngresoPage() {
                 </div>
               )}
 
-              <Field
-                label="Orden"
-                error={errors.orden}
-              >
-                <FInput
-                  value={form.orden}
-                  onChange={(e) =>
-                    set(
-                      'orden',
-                      e.target.value
-                    )
-                  }
-                />
-              </Field>
 
               <Field
                 label="N° Factura"
@@ -839,11 +935,11 @@ export default function CrearIngresoPage() {
               </Field>
 
               <Field
-                label="DOE"
+                label="DOE DE RESPUESTA B.5"
                 error={
                   errors.doeRespuestaB5
                 }
-              >
+              >                
                 <FInput
                   value={
                     form.doeRespuestaB5
@@ -856,6 +952,41 @@ export default function CrearIngresoPage() {
                   }
                 />
               </Field>
+
+              <Field
+                label="PPU"
+                error={errors.patente}
+              >
+                <FSelect
+                  value={form.patente}
+                  disabled={
+                    !form.asignacion_id ||
+                    loadingPatentes
+                  }
+                  onChange={(e) =>
+                    set(
+                      'patente',
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    {loadingPatentes
+                      ? 'Cargando...'
+                      : 'Seleccione'}
+                  </option>
+
+                  {patentes.map((p) => (
+                    <option
+                      key={p.orden}
+                      value={p.ppu}
+                    >
+                      {p.nombre}
+                    </option>
+                  ))}
+                </FSelect>
+              </Field>
+
 
               <Field
                 label="Litros"
