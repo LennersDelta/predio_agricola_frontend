@@ -252,78 +252,117 @@ function ModalDetalleCombustible({
                     ))}
                   </tr>
                 </thead>
-                  <tbody>
-                    
-                    {(() => {
-                      let saldoDisponible = Number(info.monto_asignado);
+                <tbody>
+                  {(() => {
+                    let saldoDisponible = Number(info.monto_asignado);
 
-                      return data.map((item) => {
-                        saldoDisponible -= Number(item.monto);
+                    return (
+                      <>
+                        {/* FILA INICIAL */}
+                        <tr
+                          style={{
+                            background: '#f8faf8',
+                            borderBottom: '1px solid rgba(0,0,0,.08)',
+                          }}
+                        >
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>-</td>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <strong>Asignación Inicial</strong>
+                          </td>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>-</td>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>-</td>
 
-                        return (
-                          <tr
-                            key={item.id}
-                            style={{
-                              borderBottom: '1px solid rgba(0,0,0,.05)',
-                            }}
-                          >
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {item.numero_factura}
-                              </span>
-                            </td>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span
+                              style={{
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                color: '#16a34a',
+                              }}
+                            >
+                              +${Number(info.monto_asignado).toLocaleString('es-CL')}
+                            </span>
+                          </td>
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {item.proveedor}
-                              </span>
-                            </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            <span
+                              style={{
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                color: '#1a2e22',
+                              }}
+                            >
+                              ${saldoDisponible.toLocaleString('es-CL')}
+                            </span>
+                          </td>
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {item.patente}
-                              </span>
-                            </td>
+                          <td colSpan={3}></td>
+                        </tr>
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {Number(item.litros).toLocaleString('es-CL')}
-                              </span>
-                            </td>
+                        {/* MOVIMIENTOS */}
+                        {data.map((item) => {
+                          saldoDisponible -= Number(item.monto);
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#991b1b' }}>
-                                ${Number(item.monto).toLocaleString('es-CL')}
-                              </span>
-                            </td>
+                          return (
+                            <tr
+                              key={item.id}
+                              style={{
+                                borderBottom: '1px solid rgba(0,0,0,.05)',
+                              }}
+                            >
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {item.numero_factura}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {item.proveedor}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {item.patente}
+                                </span>
+                              </td>
 
-                            {/* SALDO ACUMULADO */}
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span
-                                style={{
-                                  fontFamily: 'monospace',
-                                  fontSize: '.82rem',
-                                  fontWeight: 700,
-                                  color: saldoDisponible < 0 ? '#dc2626' : '#1a2e22',
-                                }}
-                              >
-                                ${saldoDisponible.toLocaleString('es-CL')}
-                              </span>
-                            </td>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {Number(item.litros).toLocaleString('es-CL')}
+                                </span>
+                              </td>
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {item.estado_factura}
-                              </span>
-                            </td>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#991b1b' }}>
+                                  ${Number(item.monto).toLocaleString('es-CL')}
+                                </span>
+                              </td>
 
-                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
-                                {item.doe_respuesta}
-                              </span>
-                            </td>
+                              {/* SALDO ACUMULADO */}
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span
+                                  style={{
+                                    fontFamily: 'monospace',
+                                    fontSize: '.82rem',
+                                    fontWeight: 700,
+                                    color: saldoDisponible < 0 ? '#dc2626' : '#1a2e22',
+                                  }}
+                                >
+                                  ${saldoDisponible.toLocaleString('es-CL')}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {item.estado_factura}
+                                </span>
+                              </td>
 
-                            <td style={{ padding: 12 }}>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                  {item.doe_respuesta}
+                                </span>
+                              </td>
+                              <td style={{ padding: 12 }}>
                               {item.comprobante ? (
                                 <a
                                   href={item.comprobante}
@@ -359,12 +398,15 @@ function ModalDetalleCombustible({
                               ) : (
                                 '-'
                               )}
-                            </td>
-                          </tr>
-                        );
-                      });
-                    })()}
-                  </tbody>
+                              </td>
+
+                            </tr>
+                          );
+                        })}
+                      </>
+                    );
+                  })()}
+                </tbody>
               </table>
             </div>
           )}
