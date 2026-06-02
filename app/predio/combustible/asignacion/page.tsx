@@ -17,7 +17,21 @@ interface Combustible{
   monto_utilizado: number;
   saldo: number;
 }
+interface IngresoCombustible {
+  id: number;
+  numero_factura: string;
+  proveedor: string;
+  estado_factura: string;
+  doe_respuesta: string;
+  litros: number;
+  monto: number;
+  comprobante: string;
+  patente: string;
+  created_at: string;
+}
 // MODAL ELIMINAR
+
+
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
@@ -81,6 +95,286 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
 }
 const PAGE_SIZES = [10, 25, 50, 100];
 
+/* MODAL */
+
+function ModalDetalleCombustible({
+  open,
+  onClose,
+  data,
+  loading,
+  info,
+}: {
+  open: boolean;
+  onClose: () => void;
+  data: IngresoCombustible[];
+  loading: boolean;
+  info: {
+    predio: string;
+    mes: string;
+    monto_asignado: number;
+    monto_utilizado: number;
+    saldo: number;
+  };
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.65)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 1200,
+          maxHeight: '90vh',
+          overflow: 'auto',
+          background: '#fff',
+          borderRadius: 16,
+          boxShadow: '0 20px 60px rgba(0,0,0,.25)',
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            padding: '20px 24px',
+            borderBottom: '1px solid rgba(0,0,0,.08)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                fontFamily: '"Barlow Condensed",sans-serif',
+                fontSize: '1.4rem',
+                fontWeight: 700,
+                margin: 0,
+                color: '#1a2e22',
+              }}
+            >
+              Detalle Combustible
+            </h2>
+
+            <p
+              style={{
+                marginTop: 6,
+                fontSize: '.75rem',
+                color: '#6b8f75',
+                fontFamily: 'monospace',
+                
+              }}
+            >
+                     <b style={{ color: '#2b3831' }}>Predio:</b>      <b>{info.predio}</b>
+              {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {new Date(info.mes) .toLocaleString('es-CL', { month: 'long', }) .replace(/^./, (c) => c.toUpperCase())}
+              {' | '}<b style={{ color: '#2b3831' }}>Asignado:</b> <b  style={{ color: '#000' }}>${Number(info.monto_asignado).toLocaleString('es-CL')}</b>
+              {' | '}<b style={{ color: '#2b3831' }}>Utilizado:</b> <b style={{ color: '#991b1b' }}>${Number(info.monto_utilizado).toLocaleString('es-CL')}</b>
+              {' | '}<b style={{ color: '#2b3831' }}>Saldo:</b> <b style={{ color: '#000' }}>${Number(info.saldo).toLocaleString('es-CL')}</b>
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 8,
+              border: '1px solid rgba(0,0,0,.1)',
+              background: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* BODY */}
+        <div style={{ padding: 24 }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              Cargando detalle...
+            </div>
+          ) : data.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              No existen registros
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      background: '#f6f8f7',
+                    }}
+                  >
+                    {[
+                      'Factura',
+                      'Proveedor',
+                      'Patente',
+                      'Litros',
+                      'Monto Utilizado',
+                      'Saldo Disponible',
+                      'Estado',
+                      'DOE',
+                      'Comprobante',
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          padding: 12,
+                          textAlign: 'left',
+                          fontSize: '.7rem',
+                          fontFamily: 'monospace',
+                          color: '#6b8f75',
+                          borderBottom:
+                            '1px solid rgba(0,0,0,.08)',
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                  <tbody>
+                    
+                    {(() => {
+                      let saldoDisponible = Number(info.monto_asignado);
+
+                      return data.map((item) => {
+                        saldoDisponible -= Number(item.monto);
+
+                        return (
+                          <tr
+                            key={item.id}
+                            style={{
+                              borderBottom: '1px solid rgba(0,0,0,.05)',
+                            }}
+                          >
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {item.numero_factura}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {item.proveedor}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {item.patente}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {Number(item.litros).toLocaleString('es-CL')}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#991b1b' }}>
+                                ${Number(item.monto).toLocaleString('es-CL')}
+                              </span>
+                            </td>
+
+                            {/* SALDO ACUMULADO */}
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span
+                                style={{
+                                  fontFamily: 'monospace',
+                                  fontSize: '.82rem',
+                                  fontWeight: 700,
+                                  color: saldoDisponible < 0 ? '#dc2626' : '#1a2e22',
+                                }}
+                              >
+                                ${saldoDisponible.toLocaleString('es-CL')}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {item.estado_factura}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
+                                {item.doe_respuesta}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: 12 }}>
+                              {item.comprobante ? (
+                                <a
+                                  href={item.comprobante}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title="Ver archivo"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 34,
+                                    height: 34,
+                                    borderRadius: 8,
+                                    background: 'rgba(46,125,70,.1)',
+                                    color: '#2e7d46',
+                                    border: '1px solid rgba(46,125,70,.2)',
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                </a>
+                              ) : (
+                                '-'
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // COMPONENTE PRINCIPAL
 function CombustiblePageInner() {
   const searchParams = useSearchParams();
@@ -92,6 +386,17 @@ function CombustiblePageInner() {
   const [data, setData] = useState<Combustible[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  /* MODAL */
+  const [modalDetalle, setModalDetalle] = useState(false);
+  const [detalleLoading, setDetalleLoading] = useState(false);
+  const [detalleData, setDetalleData] = useState<IngresoCombustible[]>([]);
+  const [detalleInfo, setDetalleInfo] = useState({ predio: '',
+  mes: '',
+  monto_asignado: 0,
+  monto_utilizado: 0,
+  saldo: 0,});
+ /*-------------------*/
 
 // Filtros
   const [fPredio, setFPredio] = useState('');
@@ -105,47 +410,65 @@ function CombustiblePageInner() {
   const [search,   setSearch]   = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [page,     setPage]     = useState(1);
-  const [sortCol,  setSortCol]  = useState('created_at');
+  const [sortCol, setSortCol]   = useState<keyof Combustible>('id');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
   //  Cargar datos 
-const cargaCombustible = useCallback(() => {
-    setLoading(true);
+  const cargaCombustible = useCallback(() => {
+      setLoading(true);
 
-    api.get('/api/combustible/asignacion')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() =>
-        toast.error('Error al cargar asignaciones')
-      )
-      .finally(() => setLoading(false));
-  }, []);
+      api.get('/api/combustible/asignacion')
+        .then(({ data: r }) => setData(r.data ?? r))
+        .catch(() =>
+          toast.error('Error al cargar asignaciones')
+        )
+        .finally(() => setLoading(false));
+    }, []);
 
   useEffect(() => {
     cargaCombustible();
   }, [cargaCombustible]);
 
+  /* MODAL */
+  const abrirDetalle = async (item: Combustible) => {
+    try {
+      setDetalleLoading(true);
+      setModalDetalle(true);
+      setDetalleInfo({
+        predio: item.predio,
+        mes: item.mes,
+        monto_asignado: item.monto_asignado,
+        monto_utilizado: item.monto_utilizado,
+        saldo: item.saldo,
+      });
+      const response = await api.get(
+        `/api/combustible/asignacion/${item.id}/detalle`
+      );
+      setDetalleData(response.data.data ?? []);
+    } catch (error) {
+      toast.error('Error al cargar detalle');
+      setModalDetalle(false);
+    } finally {
+      setDetalleLoading(false);
+    }
+  };
+
+
   //  Opciones dinámicas para filtros 
   const opPredios = [
     ...new Set(data.map(b => b.predio).filter(Boolean)),
   ].sort();
-
   const opMeses = [
     ...new Set(
       data
-        .map(b => {
-          if (!b.mes) return '';
-
-          return new Date(b.mes)
-            .toLocaleString('es-CL', {
-              month: 'long'
-            })
-            .replace(/^./, c =>
-              c.toUpperCase()
-            );
-        })
+        .map(b =>
+          new Date(b.mes)
+            .toLocaleString('es-CL', { month: 'long' })
+            .replace(/^./, c => c.toUpperCase())
+        )
         .filter(Boolean)
     ),
-  ];
+  ].sort();
 
   //  Aplicar filtros 
   const aplicar = () => {
@@ -175,25 +498,16 @@ const cargaCombustible = useCallback(() => {
     return data
       .filter(b => {
         const predio = b.predio ?? '';
-        const mes = b.mes
-          ? new Date(b.mes)
-              .toLocaleString('es-CL', {
-                month: 'long'
-              })
-              .toLowerCase()
-          : '';
+        const mes = new Date(b.mes)
+          .toLocaleString('es-CL', { month: 'long' })
+          .replace(/^./, c => c.toUpperCase());
 
         const textSearch = search.toLowerCase();
 
         return (
           (!applied.predio ||
-            predio
-              .toLowerCase()
-              .includes(applied.predio.toLowerCase())) &&
-          (!applied.mes ||
-            mes
-              .toLowerCase()
-              .includes(applied.mes.toLowerCase())) &&
+            predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
+          (!applied.mes || mes === applied.mes) &&
           (!search ||
             [
               b.id,
@@ -223,9 +537,13 @@ const cargaCombustible = useCallback(() => {
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-    const handleSort = (col: string) => {
-      if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-      else { setSortCol(col); setSortDir('asc'); }
+    const handleSort = (col: keyof Combustible) => {
+      if (sortCol === col) {
+        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortCol(col);
+        setSortDir('asc');
+      }
     };
 
     // ── Eliminar 
@@ -430,7 +748,7 @@ const cargaCombustible = useCallback(() => {
                   <thead>
                     <tr>
                       {([
-                          ['id', 'ID', 'center'],
+                          ['id', 'ID', 'left'],
                           ['predio', 'Predio', 'left'],
                           ['mes', 'Mes', 'left'],
                           ['monto_asignado','Monto Asignado', 'left', ],
@@ -495,7 +813,7 @@ const cargaCombustible = useCallback(() => {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
 
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.id}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
@@ -523,6 +841,24 @@ const cargaCombustible = useCallback(() => {
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>${Number(b.saldo).toLocaleString('es-CL')}</span>
+                        </td>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <button
+                              onClick={() => abrirDetalle(b)}
+                              style={{
+                                border: 'none',
+                                cursor: 'pointer',
+                                borderRadius: 8,
+                                padding: '7px 12px',
+                                background:
+                                  'linear-gradient(135deg,#3aaf64,#7dd494)',
+                                color: '#0d2318',
+                                fontWeight: 700,
+                                fontSize: '.72rem',
+                              }}
+                            >
+                              Ver detalle
+                            </button>
                         </td>
                       </tr>
                     ))}
@@ -563,6 +899,13 @@ const cargaCombustible = useCallback(() => {
       {deleteId !== null && (
         <ModalEliminar onCancel={() => setDeleteId(null)} onConfirm={handleDelete} />
       )}
+        <ModalDetalleCombustible
+        open={modalDetalle}
+        onClose={() => setModalDetalle(false)}
+        data={detalleData}
+        loading={detalleLoading}
+        info={detalleInfo}
+      />
     </div>
 
 
