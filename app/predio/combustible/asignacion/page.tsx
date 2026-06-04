@@ -8,8 +8,7 @@ import { toast } from 'sonner';
 
 // TIPOS — alineados con campos del backend
 
-interface Combustible{
-  
+interface Combustible{  
   id: number;
   predio: string;
   mes: string;
@@ -29,9 +28,8 @@ interface IngresoCombustible {
   patente: string;
   created_at: string;
 }
+
 // MODAL ELIMINAR
-
-
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
@@ -177,7 +175,7 @@ function ModalDetalleCombustible({
                 
               }}
             >
-                     <b style={{ color: '#2b3831' }}>Predio:</b>      <b>{info.predio}</b>
+                     <b style={{ color: '#2b3831' }}>Predio:</b> <b>{info.predio}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {new Date(info.mes) .toLocaleString('es-CL', { month: 'long', }) .replace(/^./, (c) => c.toUpperCase())}
               {' | '}<b style={{ color: '#2b3831' }}>Asignado:</b> <b  style={{ color: '#000' }}>${Number(info.monto_asignado).toLocaleString('es-CL')}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Utilizado:</b> <b style={{ color: '#991b1b' }}>${Number(info.monto_utilizado).toLocaleString('es-CL')}</b>
@@ -271,7 +269,6 @@ function ModalDetalleCombustible({
                           </td>
                           <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>-</td>
                           <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>-</td>
-
                           <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                             <span
                               style={{
@@ -283,7 +280,6 @@ function ModalDetalleCombustible({
                               +${Number(info.monto_asignado).toLocaleString('es-CL')}
                             </span>
                           </td>
-
                           <td style={{ padding: '10px 14px' }}>
                             <span
                               style={{
@@ -295,14 +291,11 @@ function ModalDetalleCombustible({
                               ${saldoDisponible.toLocaleString('es-CL')}
                             </span>
                           </td>
-
                           <td colSpan={3}></td>
                         </tr>
-
                         {/* MOVIMIENTOS */}
                         {data.map((item) => {
                           saldoDisponible -= Number(item.monto);
-
                           return (
                             <tr
                               key={item.id}
@@ -325,19 +318,16 @@ function ModalDetalleCombustible({
                                   {item.patente}
                                 </span>
                               </td>
-
                               <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                                 <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
                                   {Number(item.litros).toLocaleString('es-CL')}
                                 </span>
                               </td>
-
                               <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                                 <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#991b1b' }}>
                                   ${Number(item.monto).toLocaleString('es-CL')}
                                 </span>
                               </td>
-
                               {/* SALDO ACUMULADO */}
                               <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                                 <span
@@ -356,7 +346,6 @@ function ModalDetalleCombustible({
                                   {item.estado_factura}
                                 </span>
                               </td>
-
                               <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                                 <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>
                                   {item.doe_respuesta}
@@ -399,7 +388,6 @@ function ModalDetalleCombustible({
                                 '-'
                               )}
                               </td>
-
                             </tr>
                           );
                         })}
@@ -433,20 +421,13 @@ function CombustiblePageInner() {
   const [modalDetalle, setModalDetalle] = useState(false);
   const [detalleLoading, setDetalleLoading] = useState(false);
   const [detalleData, setDetalleData] = useState<IngresoCombustible[]>([]);
-  const [detalleInfo, setDetalleInfo] = useState({ predio: '',
-  mes: '',
-  monto_asignado: 0,
-  monto_utilizado: 0,
-  saldo: 0,});
+  const [detalleInfo, setDetalleInfo] = useState({ predio: '',  mes: '',  monto_asignado: 0,  monto_utilizado: 0,  saldo: 0,});
  /*-------------------*/
 
 // Filtros
   const [fPredio, setFPredio] = useState('');
   const [fMes, setFMes] = useState('');
-  const [applied, setApplied] = useState({
-    predio: '',
-    mes: '',
-  });
+  const [applied, setApplied] = useState({ predio: '', mes: '', });
 
 // Tabla
   const [search,   setSearch]   = useState('');
