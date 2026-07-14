@@ -1,4 +1,4 @@
-// app/predio/contratos/page.tsx
+// app/predio/compra3utm/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
@@ -7,36 +7,28 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-import { useEstados } from '@/hooks/useEstado';
 import { usePredio } from '@/hooks/usePredio';
+import { useEstados } from '@/hooks/useEstado';
 
-interface ContratosEfectuados{
-  
-  orden: number;
-  predio_id: number;
-  predio_nombre: string;
+interface Compra3UTM {
+    orden: number;
+    predio_id: number;
+    predio_nombre: string;
 
-  contrato: string;
-  fecha: string;
+    proveedor: string;
+    factura: string;
+    fecha: string;
 
-  empresa_persona: string;
-  rut: string;
+    monto: number;
+    materia: string;
 
-  valor_renta: number;
+    estado_id: number;
+    estado_nombre: string;
 
-  renta_id: number;
-  renta_nombre: number;
+    doe_envio_ab5: string;
+    observaciones: string;
 
-  fecha_vencimiento: string;
-  vigencia_contrato: string;
-
-  doe_respuesta_b5: string;
-  observaciones: string;
-
-  fecha_creacion: string;
-  fecha_modificacion: string;
-
-  uuid:string;
+    uuid: string;
 }
 
 // FORMATEO DE FECHAS //
@@ -62,7 +54,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El contrato será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />El compra 3 UTM será eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -113,20 +105,21 @@ const PAGE_SIZES = [10, 25, 50, 100];
 const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 
 // COMPONENTE PRINCIPAL
-function ContratosEfectuadosPageInner() {
+function Compra3UTMPageInner() {
   const searchParams = useSearchParams();
   const [tab,          setTab]          = useState<'predio'|'borradores'>(searchParams.get('tab') === 'borradores' ? 'borradores' : 'predio');
-  const [data,         setData]         = useState<ContratosEfectuados[]>([]);
+  const [data,         setData]         = useState<Compra3UTM[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Filtros
   const [fPredio, setFPredio] = useState('');
-  const [fTipoRenta, setFTipoRenta] = useState('');
-  const [applied, setApplied] = useState({ predio: '',  tipoRenta: ''});
+  //const [fEstado, setFEstado] = useState('');
+  const [fEstado, setFEstado] = useState<string>('');
+  const [applied, setApplied] = useState({ predio: '',  estado: ''});
 
-  const { estados: TipoRenta, loading: loadingTipoRenta, error: errorTipoRenta } = useEstados('rentaContrato');
   const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+  const { estados: EstadoCompra, loading: loadingEstadosCompra, error: errorEstadosCompra } = useEstados('estadoFactura');
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -137,14 +130,12 @@ function ContratosEfectuadosPageInner() {
 
 
   // ── Cargar datos ──────────────────────────────────────────────────────────
-const cargaContratosEfectuados = useCallback(() => {
+const cargaCompra3UTM = useCallback(() => {
   setLoading(true);
 
-  api.get('/api/listaContratosEfectuados')
+  api.get('/api/listaCompra3UTM')
     .then(({ data }) => {
-
       let datos = [];
-
       if (Array.isArray(data)) {
         datos = data;
       } else if (Array.isArray(data?.data)) {
@@ -152,35 +143,32 @@ const cargaContratosEfectuados = useCallback(() => {
       } else {
         console.warn('Formato inesperado del backend:', data);
       }
-
       setData(datos);
     })
     .catch((err) => {
       console.error(err);
-      toast.error('Error al cargar contratos efectuados');
+      toast.error('Error al cargar compra 3 UTM efectuados');
       setData([]);
     })
     .finally(() => {
       setLoading(false);
     });
-
 }, []);
 
 useEffect(() => {
-  cargaContratosEfectuados();
-}, [cargaContratosEfectuados]);
+  cargaCompra3UTM();
+}, [cargaCompra3UTM]);
 
   //  Opciones dinámicas para filtros 
   const opPredios = [...new Set(data.map(b => b.predio_nombre).filter(Boolean))].sort();
-  const opTipoRenta = [...new Set(data.map(b => b.renta_nombre).filter(Boolean))].sort();
-
+  
     //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({predio: fPredio, tipoRenta: fTipoRenta});
+    setApplied({predio: fPredio, estado: fEstado});
     setPage(1);
   };
-    const limpiar = () => {setFPredio(''); setFTipoRenta(''); 
-    setApplied({predio: '', tipoRenta: '' });
+    const limpiar = () => {setFPredio(''); setFEstado(''); 
+    setApplied({predio: '', estado: '' });
 
     setSearch('');
     setPage(1);
@@ -192,16 +180,16 @@ useEffect(() => {
         .filter(b => {
           return (
             (!applied.predio || String(b.predio_nombre) === String(applied.predio)) &&
-            (!applied.tipoRenta || String(b.renta_nombre) === String(applied.tipoRenta)) &&
+            (!applied.estado || Number(b.estado_id) === Number(applied.estado)) &&
 
             (!search ||
               [
                 b.predio_nombre,
-                b.contrato,
-                b.empresa_persona,
-                b.rut,
-                b.renta_nombre,
-                b.vigencia_contrato,
+                b.proveedor,
+                b.factura,
+                b.materia,
+                b.estado_id,
+                b.doe_envio_ab5,
                 b.observaciones
               ]
                 .join(' ')
@@ -231,9 +219,9 @@ useEffect(() => {
       if (deleteId === null) return;
       const toastId = toast.loading('Eliminando...');
       try {
-        await api.delete(`/api/deleteContratos/${deleteId}`);
+        await api.delete(`/api/deleteCompra3UTM/${deleteId}`);
         setData(prev => prev.filter(b => b.orden !== deleteId));
-        toast.success('Contrato eliminado correctamente', { id: toastId, duration: 3000 });
+        toast.success('Compra 3 UTM eliminado correctamente', { id: toastId, duration: 3000 });
       } catch (err: any) {
         toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
       } finally {
@@ -263,14 +251,14 @@ useEffect(() => {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: '3px 10px 3px 8px', borderRadius: 999, background: 'rgba(58,153,86,.1)', border: '1px solid rgba(58,153,86,.25)' }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Contratos Efectuados</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Compras 3 UTM</span>
           </div>
           <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-            Contratos Efectuados
+            Compras 3 UTM
           </h2>
-          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Contratos Efectuados</p>
+          <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Compras 3 UTM</p>
         </div>
-        <Link href="/predio/contratos/crear"
+        <Link href="/predio/compra3utm/crear"
           style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
           onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
           onMouseLeave={e => (e.currentTarget.style.filter = '')}
@@ -278,7 +266,7 @@ useEffect(() => {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo contratos efectuados
+          Nueva compras 3 UTM
         </Link>
       </div>    
 
@@ -319,20 +307,20 @@ useEffect(() => {
                 </select>
               </div>
 
-              {/* Renta desde hook */}
+              {/* Compra desde hook */}
               <div>
-                <label style={lblStyle}>Tipo Renta</label>
+                <label style={lblStyle}>Estado Compra</label>
                 <select
-                  value={fTipoRenta}
-                  onChange={e => { setFTipoRenta(e.target.value); aplicar(); }}
+                  value={fEstado}
+                  onChange={e => { setFEstado(e.target.value); aplicar(); }}
                   style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
                 >
-                  <option value="">{loadingTipoRenta ? 'Cargando...' : 'Todos'}</option>
-                  {TipoRenta.map(p => (
-                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  <option value="">{loadingEstadosCompra ? 'Cargando...' : 'Todos'}</option>
+                  {EstadoCompra.map(p => (
+                    <option key={p.id} value={p.id}>{p.nombre}</option>
                   ))}
                 </select>
-              </div>   
+              </div>
             
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
@@ -396,7 +384,7 @@ useEffect(() => {
             {/* Header tabla */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '13px 20px', borderBottom: '1px solid rgba(0,0,0,.06)', background: 'rgba(0,0,0,.02)' }}>
               <div>
-                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Contratos</p>
+                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Compras 3 UTM</p>
                 <p style={{ fontSize: '.65rem', color: '#6b8f75', marginTop: 2, fontFamily: 'monospace' }}>
                   <span style={{ fontWeight: 600, color: '#2e7d46' }}>{filtered.length.toLocaleString('es-CL')}</span> registros encontrados
                 </p>
@@ -435,18 +423,16 @@ useEffect(() => {
                   <thead>
                     <tr>
                       {([
-                          ['orden', 'N° Orden', 'left'],
-                          ['predio_nombre', 'Predio', 'left'],
-                          ['contrato', 'Contrato', 'left'],
-                          ['fecha', 'Fecha', 'center'],
-                          ['empresa_persona', 'Empresa / Persona Natural', 'left'],
-                          ['rut', 'RUT', 'left'],
-                          ['valor_renta', 'Valor Renta $', 'right'],
-                          ['renta_nombre', 'Tipo Renta', 'center'],
-                          ['fecha_vencimiento', 'F. Vencimiento', 'center'],
-                          ['vigencia_contrato', 'Vigencia', 'center'],
-                          ['doe_respuesta_b5', 'DOE Resp. B.5', 'center'],
-                          ['observaciones', 'Observaciones', 'left'],
+                            ['orden', 'Orden Compra', 'center'],
+                            ['predio_nombre', 'Predio', 'left'],
+                            ['proveedor', 'Proveedor', 'left'],
+                            ['factura', 'Factura', 'center'],
+                            ['fecha', 'Fecha', 'center'],
+                            ['monto', 'Monto $', 'right'],
+                            ['materia', 'Materia', 'left'],
+                            ['estado', 'Estado', 'center'],
+                            ['doe_envio_ab5', 'DOE Envío Pago A.B.5', 'center'],
+                            ['observaciones', 'Observaciones', 'left'],
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                           {label}
@@ -473,56 +459,78 @@ useEffect(() => {
                       >
 
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>#{b.orden}</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>
+                            #{b.orden}
+                        </span>
                         </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.predio_nombre}</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.predio_nombre}
+                        </span>
                         </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.contrato}</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.proveedor}
+                        </span>
                         </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
-                            {b.fecha 
-                              ? formatearFecha(b.fecha) 
-                              : ''
-                            }
-                          </span>
-                        </td>  
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.empresa_persona}</span>
-                        </td>               
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.rut}</span>
-                        </td>               
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>${Number(b.valor_renta).toLocaleString('es-CL')}</span>
-                        </td>               
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.renta_nombre}</span>
-                        </td>               
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
-                            {b.fecha_vencimiento 
-                              ? formatearFecha(b.fecha_vencimiento) 
-                              : ''
-                            }
-                          </span>
-                        </td>             
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.vigencia_contrato}</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.factura}
+                        </span>
                         </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.doe_respuesta_b5}</span>
-                        </td>                                     
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.fecha ? formatearFecha(b.fecha) : ''}
+                        </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'right' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                            ${Number(b.monto).toLocaleString('es-CL')}
+                        </span>
+                        </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem',  fontWeight: 600 }}>{b.observaciones}</span>
-                        </td>  
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.materia}
+                        </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <div style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                background:
+                                  b.estado_id === 6 ? '#16a34a' : '#dc2626'                                   
+                              }} />
+                              <span style={{ fontSize: '.78rem' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>{b.estado_nombre}</span>
+                              </span>
+                            </div>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' , textAlign: 'center' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.doe_envio_ab5}
+                        </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                            {b.observaciones}
+                        </span>
+                        </td>
 
                         {/* ACCIONES */}
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <Link href={`/predio/contratos/${b.uuid}/ver`}
+                            <Link href={`/predio/compra3utm/${b.uuid}/ver`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
@@ -534,7 +542,7 @@ useEffect(() => {
                               </svg>
                             </Link>
 
-                            <Link href={`/predio/contratos/${b.uuid}/edit`}
+                            <Link href={`/predio/compra3utm/${b.uuid}/edit`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
@@ -556,10 +564,6 @@ useEffect(() => {
                             </button>
                           </div>
                         </td>
-
-
-
-
                     </tr>
                     ))}
                   </tbody>
@@ -607,7 +611,7 @@ useEffect(() => {
 export default function PredioPage() {
   return (
     <Suspense>
-      <ContratosEfectuadosPageInner />
+      <Compra3UTMPageInner />
     </Suspense>
   );
 }

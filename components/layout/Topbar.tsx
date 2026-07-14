@@ -9,8 +9,20 @@ const breadcrumbs: Record<string, string> = {
    // MODULO DE ADQUISICIÓN INSUMOS Y PRODUCTOS //
   '/predio/insumosproductos':             'Adquisición de insumos y productos',
   '/predio/insumosproductos/crear':       'Ingreso adquisición de insumos y productos',
-  
+
+  '/predio/compra3utm' : 'Compra 3 UTM',
+  '/predio/compra3utm/crear' : 'Ingreso compras 3 UTM',
+
+  '/predio/rendicionmensual' : 'Rendición mensual',
+  '/predio/rendicionmensual/crear' : 'Ingreso rendición mensual',
+
+  '/predio/boletashonorarios' : 'Boletas honorario',
+  '/predio/boletashonorarios/crear' : 'Ingreso boletas honorarios',
    
+  '/predio/ingresosextras' : 'Ingresos extras',
+  '/predio/ingresosextras/crear' : 'Ingresos extras',
+
+
   '/predio/parquevehicular':    'Parque Vehicular',
   '/predio/parquevehicular/crear': 'Ingreso parque vehicular', 
   
@@ -42,6 +54,8 @@ const breadcrumbs: Record<string, string> = {
   '/usuarios':           'Usuarios',
   '/usuarios/crear':     'Nuevo Usuario',
   '/configuracion':      'Configuración',
+
+  
 };
 
 // ======================================================
@@ -60,6 +74,47 @@ export const dynamicBreadcrumbs: {pattern: RegExp;label: string;}[] =
     pattern:/^\/predio\/insumosproductos\/[^/]+\/ver$/,
     label:'Ver adquisición de insumos y productos',
   },
+
+  // COMPRAS 3 UTM
+  {
+    pattern:/^\/predio\/compra3utm\/[^/]+\/edit$/,
+    label:'Editar compra 3 utm',
+  },
+  {
+    pattern:/^\/predio\/compra3utm\/[^/]+\/ver$/,
+    label:'Ver compra 3 utm',
+  },
+
+  // RENDICION MENSUAL
+  {
+    pattern:/^\/predio\/rendicionmensual\/[^/]+\/edit$/,
+    label:'Editar rendición mensual',
+  },
+  {
+    pattern:/^\/predio\/rendicionmensual\/[^/]+\/ver$/,
+    label:'Ver rendición mensual',
+  },
+  // BOLETAS HONORARIOS
+  {
+    pattern:/^\/predio\/boletashonorarios\/[^/]+\/edit$/,
+    label:'Editar boletas honorarios',
+  },
+  {
+    pattern:/^\/predio\/boletashonorarios\/[^/]+\/ver$/,
+    label:'Ver boletas honorarios',
+  },
+
+  //  INGRESOS EXTRAS
+  {
+    pattern:/^\/predio\/ingresosextras\/[^/]+\/edit$/,
+    label:'Editar ingresos extras',
+  },
+  {
+    pattern:/^\/predio\/ingresosextras\/[^/]+\/ver$/,
+    label:'Ver ingresos extras',
+  },
+
+
   // PARQUE VEHICULAR
   {
     pattern:/^\/predio\/parquevehicular\/[^/]+\/edit$/,

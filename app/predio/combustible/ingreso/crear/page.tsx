@@ -312,52 +312,41 @@ export default function CrearIngresoPage() {
       {};
 
     if (!form.asignacion_id) {
-      errs.asignacion_id =
-        'Debe seleccionar una asignación.';
+      errs.asignacion_id =  'Debe seleccionar una asignación.';
     }
 
-
     if (!form.nroFactura) {
-      errs.nroFactura =
-        'Debe ingresar número factura.';
+      errs.nroFactura = 'Debe ingresar número factura.';
     }
 
     if (!form.proveedor) {
-      errs.proveedor =
-        'Debe ingresar proveedor.';
+      errs.proveedor = 'Debe ingresar proveedor.';
     }
 
     if (!form.estadoFactura) {
-      errs.estadoFactura =
-        'Debe seleccionar estado.';
+      errs.estadoFactura = 'Debe seleccionar estado.';
     }
 
     if (!form.doeRespuestaB5) {
-      errs.doeRespuestaB5 =
-        'Debe ingresar DOE.';
+      errs.doeRespuestaB5 = 'Debe ingresar DOE.';
     }
 
     if (!form.cantidadConsumoLitros) {
-      errs.cantidadConsumoLitros =
-        'Debe ingresar litros.';
+      errs.cantidadConsumoLitros = 'Debe ingresar litros.';
     }
 
     if (!form.monto) {
-      errs.monto =
-        'Debe ingresar monto.';
+      errs.monto =  'Debe ingresar monto.';
     }
 
     if (!file) {
-      errs.comprobante =
-        'Debe adjuntar comprobante.';
+      errs.comprobante = 'Debe adjuntar comprobante.';
     }
 
     if (!form.patente) {
-      errs.patente =
-        'Debe ingresar patente.';
+      errs.patente =  'Debe ingresar patente.';
     }
     setErrors(errs);
-
     return Object.keys(errs).length === 0;
   };
 
@@ -369,78 +358,51 @@ export default function CrearIngresoPage() {
     e: React.FormEvent
   ) => {
     e.preventDefault();
-
     if (!validate()) {
       toast.error(
         'Complete los campos requeridos.'
       );
       return;
     }
-
     try {
       setLoading(true);
-
       const fd = new FormData();
-
       Object.entries(form).forEach(
         ([k, v]) => {
           fd.append(k, v);
         }
       );
-
       if (file) {
         fd.append(
           'comprobante',
           file
         );
       }
-
       await api.post(
         '/api/combustible/ingreso',
         fd,
         {
           headers: {
             'Content-Type':
-              'multipart/form-data',
+            'multipart/form-data',
           },
         }
       );
-
-      toast.success(
-        'Ingreso registrado correctamente'
-      );
-
-      router.push(
-        '/predio/combustible/ingreso'
-      );
-
+      toast.success('Ingreso registrado correctamente');
+      router.push('/predio/combustible/ingreso');
     } catch (error: any) {
-
-      if (
-        error?.response?.data?.message
-      ) {
-        setModalMessage(
-          error.response.data.message
-        );
-
+      if (error?.response?.data?.message) {
+        setModalMessage(error.response.data.message);
         setOpenModal(true);
-
       } else {
-
-        toast.error(
-          'Error al guardar'
-        );
+        toast.error('Error al guardar');
       }
-
     } finally {
       setLoading(false);
     }
   };
-
-  // ======================================================
+  
   // RENDER
-  // ======================================================
-
   return (
     <div
       style={{

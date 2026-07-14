@@ -1,0 +1,487 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import api from '@/lib/axios';
+import { useRouter, useParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { toast } from 'sonner';
+
+import { usePredio } from '@/hooks/usePredio';
+import { useEstados } from '@/hooks/useEstado';
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#fff',
+  border: '1px solid rgba(0,0,0,.1)',
+  borderRadius: 8,
+  color: '#1a2e22',
+  fontSize: '.82rem',
+  padding: '9px 13px',
+  outline: 'none',
+  fontFamily: '"Barlow",sans-serif',
+  appearance: 'none',
+  transition: 'border-color .18s, box-shadow .18s',
+};
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '.58rem',
+  fontWeight: 600,
+  color: '#9ab8a2',
+  textTransform: 'uppercase',
+  letterSpacing: '.14em',
+  marginBottom: 5,
+  fontFamily: 'monospace',
+};
+function Field({
+  label,
+  required,
+  error,
+  children
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div data-field={label}>
+      <label style={labelStyle}>
+        {label}
+        {required && (
+          <span style={{ color: '#fca5a5', marginLeft: 2 }}>
+            *
+          </span>
+        )}
+      </label>
+      {children}
+      {error && (
+        <p
+          style={{
+            fontFamily: 'monospace',
+            fontSize: '.6rem',
+            color: '#ef4444',
+            marginTop: 4
+          }}
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+function FInput({
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      style={inputStyle}
+    />
+  );
+}
+function FSelect({
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      style={{
+        ...inputStyle,
+        paddingRight: 34
+      }}
+    >
+      {children}
+    </select>
+  );
+}
+function SecTitle({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 20
+      }}
+    >
+      <div
+        style={{
+          width: 3,
+          height: 16,
+          borderRadius: 2,
+          background: 'linear-gradient(180deg,#3aaf64,#3a9956)'
+        }}
+      />
+
+      <span
+        style={{
+          fontFamily: '"Barlow Condensed",sans-serif',
+          fontSize: '.8rem',
+          fontWeight: 700,
+          color: '#2e7d46',
+          textTransform: 'uppercase',
+          letterSpacing: '.12em'
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+function Section({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)' }} >
+      {children}
+    </div>
+  );
+}
+
+function VerCompra3utmPageInner() {
+
+  const router = useRouter();
+  const params = useParams();
+
+  const uuid = Array.isArray(params?.orden)
+    ? params.orden[0]
+    : params?.orden;
+
+  const [errors] = useState<Record<string, string>>({});
+  const [cargando, setCargando] = useState(true);
+
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+  const { estados: EstadoCompra, loading: loadingEstadosCompra, error: errorEstadosCompra } = useEstados('estadoFactura');
+
+  const [form, setForm] = useState({
+        orden: '',
+        predio_id: '',
+        predio_nombre: '',
+
+        proveedor: '',
+        factura: '',
+        fecha: '',
+
+        monto: '',
+
+        materia: '',
+
+        estado_id: '',
+        estado: '',
+
+        doe_envio_ab5: '',
+        observaciones: '',
+
+        uuid: '',
+    });
+
+  useEffect(() => {
+    if (!uuid) return;
+    const cargar = async () => {
+      try {
+        const { data } = await api.get(`/api/compra3utm/${uuid}`);
+        const b = data.data ?? data;
+        setForm({
+            orden: data.data.orden ?? '',
+            predio_id: String(data.data.predio_id ?? ''),
+            predio_nombre: data.data.predio_nombre ?? '',
+            proveedor: data.data.proveedor ?? '',
+            factura: data.data.factura ?? '',
+            fecha: data.data.fecha ?? '',
+            monto: String(data.data.monto ?? ''),
+            materia: data.data.materia ?? '',
+            estado_id: String(data.data.estado_id ?? ''),
+            estado: data.data.estado ?? '',
+            doe_envio_ab5: data.data.doe_envio_ab5 ?? '',
+            observaciones: data.data.observaciones ?? '',
+            uuid: data.data.uuid ?? '',
+        });
+
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudo cargar el contrato');
+      } finally {
+        setCargando(false);
+      }
+    };cargar();
+  }, [uuid]);
+
+  if (cargando) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 300,
+          fontFamily: 'monospace',
+          fontSize: '.7rem',
+          color: '#9ab8a2'
+        }}
+      >
+        Cargando contrato...
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontFamily: '"Barlow",sans-serif' }}>
+
+      {/* HEADER */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+          marginBottom: 24,
+          padding: '0 4px'
+        }}
+      >
+
+        <div>
+
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 8,
+              padding: '3px 10px 3px 8px',
+              borderRadius: 999,
+              background: 'rgba(58,153,86,.1)',
+              border: '1px solid rgba(58,153,86,.25)'
+            }}
+          >
+            <span
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: '#3a9956'
+              }}
+            />
+
+            <span
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '.58rem',
+                fontWeight: 500,
+                color: '#2e7d46',
+                letterSpacing: '.12em',
+                textTransform: 'uppercase'
+              }}
+            >
+              Gestión Predio Agrícola
+            </span>
+
+          </div>
+
+          <h2
+            style={{
+              fontFamily: '"Barlow Condensed",sans-serif',
+              fontSize: '2.2rem',
+              fontWeight: 800,
+              color: '#1a2e22',
+              textTransform: 'uppercase',
+              letterSpacing: '.06em'
+            }}
+          >
+            Ver compra 3 UTM
+          </h2>
+
+        </div>
+
+        <Link
+          href={`/predio/compra3utm/`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            padding: '9px 18px',
+            borderRadius: 8,
+            fontFamily: '"Barlow Condensed",sans-serif',
+            fontSize: '.8rem',
+            fontWeight: 700,
+            letterSpacing: '.07em',
+            textTransform: 'uppercase',
+            color: '#1a2e22',
+            textDecoration: 'none',
+            background: 'linear-gradient(135deg,#8a6a18,#d4a832)'
+          }}
+        >
+          Volver
+        </Link>
+
+      </div>
+
+      {/* FORM */}
+      <form>
+            <div
+            style={{
+                background: '#fff',
+                border: '1px solid rgba(0,0,0,.1)',
+                borderRadius: 14,
+                overflow: 'hidden',
+                boxShadow: '0 4px 24px rgba(0,0,0,.1)'
+            }}
+            >
+            <Section>
+            <SecTitle label="Información General" />
+
+            <div
+                style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))',
+                gap: 16
+                }}
+            >
+
+                <Field label="Predio">
+                <FSelect
+                    disabled
+                    value={form.predio_id}
+                >
+                    <option value="">
+                    {loadingPredios
+                        ? 'Cargando...'
+                        : errorPredios
+                        ? errorPredios
+                        : 'Seleccione'}
+                    </option>
+
+                    {predios.map(p => (
+                    <option key={p.id} value={p.id}>
+                        {p.nombre}
+                    </option>
+                    ))}
+                </FSelect>
+                </Field>
+
+                <Field label="Proveedor">
+                <FInput
+                    readOnly
+                    value={form.proveedor}
+                />
+                </Field>
+
+                <Field label="Factura">
+                <FInput
+                    readOnly
+                    value={form.factura}
+                />
+                </Field>
+
+                <Field label="Fecha">
+                <FInput
+                    readOnly
+                    type="date"
+                    value={form.fecha}
+                />
+                </Field>
+
+                <Field label="Monto ($)">
+                <FInput
+                    readOnly
+                    value={Number(form.monto || 0).toLocaleString('es-CL')}
+                />
+                </Field>
+
+                <Field label="Materia">
+                <FInput
+                    readOnly
+                    value={form.materia}
+                />
+                </Field>
+
+                <Field label="Estado">
+                <FSelect
+                    disabled
+                    value={form.estado_id}
+                >
+                    <option value="">
+                    {loadingEstadosCompra
+                        ? 'Cargando...'
+                        : errorEstadosCompra
+                        ? errorEstadosCompra
+                        : 'Seleccione'}
+                    </option>
+
+                    {EstadoCompra.map(e => (
+                    <option key={e.id} value={e.id}>
+                        {e.nombre}
+                    </option>
+                    ))}
+                </FSelect>
+                </Field>
+
+            </div>
+            </Section>
+
+            <Section>
+            <SecTitle label="Otros" />
+
+            <div
+                style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))',
+                gap: 16
+                }}
+            >
+
+                <Field label="DOE ENVÍO PAGO A.B.5">
+                <FInput
+                    readOnly
+                    value={form.doe_envio_ab5}
+                />
+                </Field>
+
+                <Field label="Observaciones">
+                <textarea
+                    readOnly
+                    value={form.observaciones}
+                    style={{
+                    ...inputStyle,
+                    minHeight: 80
+                    }}
+                />
+                </Field>
+
+            </div>
+            </Section>
+          
+
+
+            {/* FOOTER */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                          background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+              <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+                <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Link href="/predio/compra3utm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 20px', borderRadius: 9,
+                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                            color: '#6b8f75', background: '#eaf3ec',
+                            border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                  Cancelar
+                </Link>
+              </div>
+            </div>  
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default function VerCompra3utmPage() {
+  return (
+    <Suspense>
+      <VerCompra3utmPageInner />
+    </Suspense>
+  );
+}

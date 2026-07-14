@@ -180,7 +180,8 @@ export default function CrearAsignacionPage() {
   const { predios } = usePredio();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [form, setForm] = useState({predio: '', mes: '',  monto: '',});
+  const [form, setForm] = useState({predio: '', mes: '',  monto: '', });
+  //const [form, setForm] = useState({predio: '', mes: '',  monto: '', doeRespuestaB5:'',});
 
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -201,6 +202,7 @@ export default function CrearAsignacionPage() {
     if (!form.predio) {errs.predio ='Debe seleccionar un predio.';}
     if (!form.mes) {errs.mes ='Debe seleccionar un mes.';}
     if (!form.monto) {errs.monto ='Debe ingresar un monto.';}
+    //if (!form.doeRespuestaB5) {errs.doeRespuestaB5 = 'Debe ingresar DOE.';}
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -456,6 +458,24 @@ const handleSubmit = async (e: React.FormEvent) => {
                   }
                 />
               </Field>
+
+              {/*<Field
+                label="DOE DE RESPUESTA B.5"
+                error={errors.doeRespuestaB5}
+              >
+                <FInput
+                  value={form.doeRespuestaB5}
+                  onChange={(e) =>
+                    set(
+                      'doeRespuestaB5',
+                      e.target.value
+                    )
+                  }
+                />
+              </Field>*/}
+
+
+
             </div>
           </Section>
 

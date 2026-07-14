@@ -1,7 +1,7 @@
 // components/layout/Sidebar.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Children } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [borradoresCount, setBorradoresCount] = useState(0);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
   const { user, isAdmin, loading } = useAuth();
 
 // ─────────────────────────────────────────────
@@ -28,96 +29,145 @@ export default function Sidebar() {
 // ─────────────────────────────────────────────
 
 
-  const navGroups = [
-    {
-      group: 'Principal',
-      adminOnly: false,
-      items: [
-        {
-          href: '/dashboard', label: 'Dashboard', icon: 'home',
-        },
-      ],
-    },
-    {
-      group:'Gestión de Predio Agrícola',
-      adminOnly: false,
-      items: [
-        {
-          href:'/predio/insumosproductos', label: 'Adquisición de insumos y productos', icon: 'package',
-        },
-        {
-          href:'/predio/parquevehicular', label: 'Parque Vehicular', icon: 'car',
-        },
-        {
-          href:'/predio/recursoshumanos',  label: 'Recursos Humanos', icon: 'users',
-        },
-        {
-          href:'/predio/factura/luz', label: 'Factura Luz', icon: 'report',
-        },
-        {
-          href: '/predio/factura/agua', label: 'Factura Agua', icon: 'report',
-        },
-        {
-          href: '/predio/anticipo', label: 'Anticipo Rendir Cuenta', icon: 'report',
-        },
+ const navGroups = [
+  {
+    group: 'Principal',
+    adminOnly: false,
+    items: [
+      {
+        href: '/dashboard',
+        label: 'Dashboard',
+        icon: 'home',
+      },
+    ],
+  },
+  {
+    group: 'Gestión de Predio Agrícola',
+    adminOnly: false,
+    items: [
+      // SUBMENÚ COMPRAS
+      {
+        label: 'Compras / Gastos',
+        icon: 'package',
+        children: [
+          {
+            href: '/predio/insumosproductos',
+            label: 'Adquisición de Insumos y Productos',
+          },
+          {
+            href: '/predio/compra3utm',
+            label: 'Compras 3 UTM',
+          },
+          {
+            href: '/predio/rendicionmensual',
+            label: 'Rendicion Mensual',
+          },
+          {
+            href: '/predio/boletashonorarios',
+            label: 'Boletas Honorarios',
+          },
+        ],
+      },
+      {
+        label: 'Ingresos',
+        icon: 'package',
+        children: [
+          {
+            href:'/predio/ingresosextras',
+            label: 'Ingresos Extras',
+          },
+        ],
+      },
 
-        // ─────────────────────────────
-        // COMBUSTIBLE SEGÚN ROL
-        // ─────────────────────────────
+      {
+        href: '/predio/parquevehicular',
+        label: 'Parque Vehicular',
+        icon: 'car',
+      },
+      {
+        href: '/predio/recursoshumanos',
+        label: 'Recursos Humanos',
+        icon: 'users',
+      },
 
-        ...(isAdmin
+      // SUBMENÚ FACTURAS
+      {
+        label: 'Facturas',
+        icon: 'report',
+        children: [
+          {
+            href: '/predio/factura/luz',
+            label: 'Factura Luz',
+          },
+          {
+            href: '/predio/factura/agua',
+            label: 'Factura Agua',
+          },
+        ],
+      },
+
+      {
+        href: '/predio/anticipo',
+        label: 'Anticipo Rendir Cuenta',
+        icon: 'report',
+      },
+
+      // SUBMENÚ COMBUSTIBLE
+      {
+        label: 'Combustible',
+        icon: 'fuel',
+        children: isAdmin
           ? [
               {
                 href: '/predio/combustible/asignacion',
-                label:'Asignación Combustible',
-                icon: 'fuel',
+                label: 'Asignación Combustible',
               },
             ]
           : [
               {
-                href:'/predio/combustible/ingreso',
-                label:'Ingreso Combustible',
-                icon: 'fuel',
+                href: '/predio/combustible/ingreso',
+                label: 'Ingreso Combustible',
               },
-            ]),
+            ],
+      },
 
-        {
-          href:'/predio/contratos',
-          label:'Contratos efectuados',
-          icon: 'report',
-        },
-      ],
-    },
+      {
+        href: '/predio/contratos',
+        label: 'Contratos efectuados',
+        icon: 'report',
+      },
+    ],
+  },
 
-    {
-      group: 'Reportes',
-      adminOnly: false,
-      items: [
-        {
-          href:'/reportes/Definir',
-          label: 'Por Definir',
-          icon: 'report',
-        },
-      ],
-    },
+  {
+    group: 'Reportes',
+    adminOnly: false,
+    items: [
+      {
+        href: '/reportes/Definir',
+        label: 'Por Definir',
+        icon: 'report',
+      },
+    ],
+  },
 
-    {
-      group: 'Administración',
-      adminOnly: true,
-      items: [
-        {
-          href: '/usuarios',
-          label: 'Usuarios',
-          icon: 'users',
-        },
-        {
-          href: '/configuracion',
-          label:'Configuración',
-          icon: 'config',
-        },
-      ],
-    },
-  ];
+  {
+    group: 'Administración',
+    adminOnly: true,
+    items: [
+      {
+        href: '/usuarios',
+        label: 'Usuarios',
+        icon: 'users',
+      },
+      {
+        href: '/configuracion',
+        label: 'Configuración',
+        icon: 'config',
+      },
+    ],
+  },
+];
 // ─────────────────────────────────────────────
 // ICONOS
 // ─────────────────────────────────────────────
@@ -175,18 +225,19 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
     if (saved === 'collapsed') setCollapsed(true);
   }, []);
 
-  /*const cargarBorradores = useCallback(async () => {
-    try {
-      const { data } = await api.get('/api/bienes-borradores');
-      setBorradoresCount((data.data ?? data).length);
-    } catch {}
-  }, []);
-
   useEffect(() => {
-    cargarBorradores();
-    const interval = setInterval(cargarBorradores, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [cargarBorradores]);*/
+    setOpenMenus({});
+  }, [pathname]);
+
+  const toggleMenu = (menu: string) => {
+    setOpenMenus(prev => {
+      const isCurrentlyOpen = prev[menu];
+
+      return isCurrentlyOpen
+        ? {}
+        : { [menu]: true };
+    });
+  };
 
   const toggle = () => {
     const next = !collapsed;
@@ -310,29 +361,189 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
                     {group.group}
                   </p>
                 )}
-                {items.map((item) => {
-                  const isActive = pathname === item.href; // determino que menu esta activo
+                {items.map((item: any) => {
+
+                  // SUBMENÚS
+                  if (item.children) {
+
+                  /*const hasActiveChild = item.children.some(
+                    (child: any) => pathname === child.href
+                  );*/
+                  const hasActiveChild = item.children.some(
+                    (child: any) => pathname.startsWith(child.href)
+                  );  
+
+                  const isOpen =
+                    openMenus[item.label] ?? hasActiveChild;
+
+                    return (
+                      <div key={item.label}>
+                        <button
+                          onClick={() => toggleMenu(item.label)}
+                          style={{
+                            display:'flex',
+                            alignItems:'center',
+                            gap:10,
+                            width:'calc(100% - 16px)',
+                            margin:'1px 8px',
+                            padding:'8px 12px',
+                            borderRadius:7,
+                            background:hasActiveChild
+                              ? 'rgba(255,255,255,.15)'
+                              : 'transparent',
+                            border:`1px solid ${
+                              hasActiveChild
+                                ? 'rgba(255,255,255,.25)'
+                                : 'transparent'
+                            }`,
+                            color:hasActiveChild
+                              ? '#fff'
+                              : 'rgba(255,255,255,.75)',
+                            cursor:'pointer',
+                            fontSize:'.8rem',
+                            textAlign:'left',
+                          }}
+                        >
+                          <NavIcon name={item.icon} />
+
+                          {!collapsed && (
+                            <>
+                              <span
+                                style={{
+                                  flex:1,
+                                  textAlign:'left',
+                                }}
+                              >
+                                {item.label}
+                              </span>
+
+                              <svg
+                                style={{
+                                  width:14,
+                                  height:14,
+                                  marginLeft:'auto',
+                                  transform:isOpen
+                                    ? 'rotate(90deg)'
+                                    : 'rotate(0deg)',
+                                  transition:'0.2s',
+                                }}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </>
+                          )}
+                        </button>
+
+                        {!collapsed && isOpen && (
+                          <div
+                            style={{
+                              marginLeft: 20,
+                              marginRight: 8,
+                              marginTop: 2,
+                              marginBottom: 6,
+                              overflow: 'hidden',
+                              transition: 'all .25s ease',
+                            }}
+                          >
+                            {item.children.map((child: any) => {
+
+                              const active = pathname.startsWith(child.href);
+
+                              return (
+                                <Link
+                                    key={child.href}
+                                    href={child.href}
+                                    style={{
+                                      display:'flex',
+                                      alignItems:'center',
+                                      padding:'7px 12px',
+                                      margin:'3px 0',
+                                      borderRadius:6,
+                                      textDecoration:'none',
+                                      fontSize:'.75rem',
+                                      color:active
+                                        ? '#fff'
+                                        : 'rgba(255,255,255,.65)',
+                                      background:active
+                                        ? 'rgba(255,255,255,.12)'
+                                        : 'transparent',
+                                      borderLeft: active
+                                        ? '3px solid #4cca84'
+                                        : '3px solid transparent',
+                                    }}
+                                 >
+                                  {child.label}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // MENÚ NORMAL
+                  const isActive = pathname === item.href;
+
                   return (
-                    <Link key={item.href} href={item.href}
+                    <Link
+                      key={item.href}
+                      href={item.href}
                       title={collapsed ? item.label : undefined}
                       style={{
-                        display: 'flex', alignItems: 'center',
-                        gap: collapsed ? 0 : 10,
-                        justifyContent: collapsed ? 'center' : 'flex-start',
-                        padding: collapsed ? '9px 0' : '8px 12px',
-                        margin: '1px 8px', borderRadius: 7,
-                        color: isActive ? '#fff' : 'rgba(255,255,255,.75)',
-                        fontSize: '.8rem', fontWeight: isActive ? 600 : 400,
-                        letterSpacing: '.02em', textDecoration: 'none',
-                        background: isActive ? 'rgba(255,255,255,.15)' : 'transparent',
-                        border: `1px solid ${isActive ? 'rgba(255,255,255,.25)' : 'transparent'}`,
-                        transition: 'background .15s,color .15s',
-                        width: 'calc(100% - 16px)',
-                      }}>
+                        display:'flex',
+                        alignItems:'center',
+                        gap:collapsed ? 0 : 10,
+                        justifyContent:collapsed
+                          ? 'center'
+                          : 'flex-start',
+                        padding:collapsed
+                          ? '9px 0'
+                          : '8px 12px',
+                        margin:'1px 8px',
+                        borderRadius:7,
+                        color:isActive
+                          ? '#fff'
+                          : 'rgba(255,255,255,.75)',
+                        fontSize:'.8rem',
+                        fontWeight:isActive ? 600 : 400,
+                        textDecoration:'none',
+                        background:isActive
+                          ? 'rgba(255,255,255,.15)'
+                          : 'transparent',
+                        border:`1px solid ${
+                          isActive
+                            ? 'rgba(255,255,255,.25)'
+                            : 'transparent'
+                        }`,
+                        width:'calc(100% - 16px)',
+                      }}
+                    >
                       <NavIcon name={item.icon} />
-                      {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+
+                      {!collapsed && (
+                        <span style={{ flex:1 }}>
+                          {item.label}
+                        </span>
+                      )}
+
                       {!collapsed && isActive && (
-                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#4cca84', flexShrink: 0 }} />
+                        <div
+                          style={{
+                            width:4,
+                            height:4,
+                            borderRadius:'50%',
+                            background:'#4cca84',
+                          }}
+                        />
                       )}
                     </Link>
                   );
