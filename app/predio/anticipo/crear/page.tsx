@@ -1,4 +1,4 @@
-// app/predio/anticipo/crear/page.tsx
+// app/predio/compra3utm/crear/page.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -9,7 +9,7 @@ import { useAdministrador }    from '@/hooks/useAdministrador';
 import { useUso }              from '@/hooks/useUso';
 import { toast } from 'sonner';
 
-
+import { usePredio } from '@/hooks/usePredio';
 
 // ESTILOS REUTILIZABLES
 const inputStyle: React.CSSProperties = {
@@ -18,20 +18,17 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', fontFamily: '"Barlow",sans-serif', appearance: 'none',
   transition: 'border-color .18s, box-shadow .18s',
 };
-
-const labelStyle: React.CSSProperties = {
+const lblStyle: React.CSSProperties = {
   display: 'block', fontSize: '.58rem', fontWeight: 600, color: '#9ab8a2',
-  textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5,
-  fontFamily: 'monospace',
+  textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 5, fontFamily: 'monospace',
 };
-
 // SUBCOMPONENTES
 function Field({ label, required, error, children }: {
   label: string; required?: boolean; error?: string; children: React.ReactNode;
 }) {
   return (
     <div data-field={label}>
-      <label style={labelStyle}>
+      <label style={lblStyle}>
         {label}
         {required && <span style={{ color: '#fca5a5', marginLeft: 2 }}>*</span>}
       </label>
@@ -50,7 +47,6 @@ function Field({ label, required, error, children }: {
     </div>
   );
 }
-
 function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input {...props} style={inputStyle}
@@ -59,7 +55,6 @@ function FInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
     />
   );
 }
-
 function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraStyle }: {
   readOnly?: boolean;
   value: string | number;
@@ -89,7 +84,6 @@ function FInputMoney({ readOnly: ro, value, onChange, placeholder, style: extraS
     </div>
   );
 }
-
 function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select {...props} style={{
@@ -104,7 +98,6 @@ function FSelect({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEl
     </select>
   );
 }
-
 function SecTitle({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -118,7 +111,6 @@ function SecTitle({ label }: { label: string }) {
     </div>
   );
 }
-
 function Section({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)', ...style }}>
@@ -129,7 +121,7 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
 
 // COMPONENTE PRINCIPAL
 
-export default function CrearAnticipoRendirPage() {
+export default function CrearAnticipoRendirCuentaPage() {
   const router      = useRouter();
   const mapRef       = useRef<HTMLDivElement>(null);
   const leaflet      = useRef<any>(null);
@@ -138,26 +130,24 @@ export default function CrearAnticipoRendirPage() {
   const geoTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState({
-
-      id: '',
-      orden: '',
-      predio: '',
-      nroCuenta: '',
-      nombreCuenta: '',
-      monto: '',
-      compra: '',
-      fecha: '',
-      doeRespuestaB5: '',
-      observaciones: '',
-
+    predio_id: '',
+    numero_cuenta: '',
+    nombre_cuenta: '',
+    monto: '',
+    compra: '',
+    fecha: '',
+    doe_respuesta_b5: '',
+    observaciones: '',
+    uuid: '',
   });
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
-
-  const { administrador, loading: loadingAdministrador } = useAdministrador();
-  const { uso, loading: loadingUso } = useUso();
   const [errors,  setErrors]  = useState<Record<string, string>>({});
+  const { uso, loading: loadingUso } = useUso();
   const [loading, setLoading] = useState(false);
+
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+
 
   //  Submit 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -165,17 +155,23 @@ export default function CrearAnticipoRendirPage() {
 
     const errsFront: Record<string, string> = {};
 
-  // ─────  PERSONAL ─────
-  if (!form.orden) errsFront.orden = 'El orden es obligatorio.';
-  if (!form.predio) errsFront.predio = 'Debe seleccionar un predio.';
-  if (!form.nroCuenta) errsFront.nroCuenta = 'El número de cuenta es obligatorio.';
-  if (!form.nombreCuenta) errsFront.nombreCuenta = 'El nombre de la cuenta es obligatorio.';
-  if (!form.monto) errsFront.monto = 'El monto es obligatorio.';
-  if (!form.compra) errsFront.compra = 'El campo compra es obligatorio.';
-  if (!form.fecha) errsFront.fecha = 'Debe seleccionar el estado de la factura.';
-  if (!form.doeRespuestaB5) errsFront.doeRespuestaB5 = 'Debe ingresar el DOE de respuesta B.5.';
-  if (!form.observaciones) errsFront.observaciones = 'Debe ingresar observaciones.';
+      if (!form.predio_id)
+          errsFront.predio_id = 'Debe seleccionar el predio.';
 
+      if (!form.numero_cuenta)
+          errsFront.numero_cuenta = 'Debe ingresar el número de cuenta.';
+
+      if (!form.nombre_cuenta)
+          errsFront.nombre_cuenta = 'Debe ingresar el nombre de la cuenta.';
+
+      if (!form.monto)
+          errsFront.monto = 'Debe ingresar el monto.';
+
+      if (!form.compra)
+          errsFront.compra = 'Debe ingresar la compra.';
+
+      if (!form.fecha)
+          errsFront.fecha = 'Debe ingresar la fecha.';
    
     // ───── VALIDACIÓN FINAL ─────
     if (Object.keys(errsFront).length > 0) {
@@ -192,6 +188,27 @@ export default function CrearAnticipoRendirPage() {
         return;
     }
 
+    try{
+      const fd = new FormData();
+        
+      Object.entries(form).forEach(([key, value]) => {
+        fd.append(key, value ?? '');
+      });
+
+      await api.post('/api/anticiporendircuenta/insert', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast.success('Guardado correctamente');
+      setTimeout(() => {
+        router.push('/predio/anticipo'); 
+      }, 1000);
+      
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Error al guardar', {
+        duration:5000,
+      });
+    }
 }; 
 return (
     <>
@@ -216,11 +233,10 @@ return (
             <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem',
                           fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase',
                           letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-              Nuevo Anticipo Rendir Cuenta
+              Nuevo Ingreso Extra 
             </h2>
             <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>
-              Complete la información de la ficha de anticipo rendir cuenta
-            </p>
+              Complete la información del anticipo a rendir cuenta.            </p>
           </div>
           <Link href="/predio/anticipo"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px',
@@ -239,9 +255,6 @@ return (
             Volver
           </Link>
         </div>
-
-        {/* FORMULARIO */}
-
         {/* FORMULARIO */}
         <form onSubmit={handleSubmit}>
             <div style={{
@@ -251,73 +264,105 @@ return (
                 overflow: 'hidden',
                 boxShadow: '0 4px 24px rgba(0,0,0,.1)'
             }}>
+            <Section>
+                <SecTitle label="Información General" />
 
-          <Section>
-            <SecTitle label="Información General" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-              
-              <Field label="Orden" error={errors.orden}>
-                <FInput value={form.orden} onChange={e => set('orden', e.target.value)} />
-              </Field>
-
-              <Field label="Predio" error={errors.predio}>
-                <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
-                  <option value="">Seleccione predio</option>
-                  <option value="centinela">Centinela</option>
-                  <option value="curacavi">Curacaví</option>
-                  <option value="san_simon">San Simón</option>
-                </FSelect>
-              </Field>
-
-              <Field label="N° de Cuenta" error={errors.nroCuenta}>
-                <FInput value={form.nroCuenta} onChange={e => set('nroCuenta', e.target.value)} />
-              </Field>
-
-              <Field label="Nombre Cuenta" error={errors.nombreCuenta}>
-                <FInput value={form.nombreCuenta} onChange={e => set('nombreCuenta', e.target.value)} />
-              </Field>
-
-              <Field label="Monto ($)" error={errors.monto}>
-                <FInput 
-                  type="number"
-                  value={form.monto}
-                  onChange={e => set('monto', e.target.value)}
-                />
-              </Field>
-
-              <Field label="Compra" error={errors.compra}>
-                <FInput value={form.compra} onChange={e => set('compra', e.target.value)} />
-              </Field>
-
-              {/* 👇 AQUÍ el cambio que te pidieron */}
-              <Field label="Estado Factura" error={errors.fecha}>
-                <FSelect
-                  value={form.fecha}
-                  onChange={e => set('fecha', e.target.value)}
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))',
+                        gap: 16
+                    }}
                 >
-                  <option value="">Seleccione</option>
-                  <option value="pagada">Pagada</option>
-                  <option value="pendiente">Pendiente</option>
-                </FSelect>
-              </Field>
 
-              <Field label="DOE Respuesta B.5" error={errors.doeRespuestaB5}>
-                <FInput 
-                  value={form.doeRespuestaB5}
-                  onChange={e => set('doeRespuestaB5', e.target.value)}
-                />
-              </Field>
+                  <Field label="Predio" error={errors.predio_id}>
+                      <FSelect
+                          value={form.predio_id}
+                          onChange={e => set('predio_id', e.target.value)}
+                      >
+                          <option value="">Seleccione</option>
 
-              <Field label="Observaciones" error={errors.observaciones}>
-                <FInput 
-                  value={form.observaciones}
-                  onChange={e => set('observaciones', e.target.value)}
-                />
-              </Field>
+                          {predios.map(p => (
+                              <option key={p.id} value={p.id}>
+                                  {p.nombre}
+                              </option>
+                          ))}
+                      </FSelect>
+                  </Field>
 
-            </div>
-          </Section>
-                      
+                  <Field label="N° Cuenta" error={errors.numero_cuenta}>
+                      <FInput
+                          value={form.numero_cuenta}
+                          onChange={e => set('numero_cuenta', e.target.value)}
+                      />
+                  </Field>
+
+                  <Field label="Nombre Cuenta" error={errors.nombre_cuenta}>
+                      <FInput
+                          value={form.nombre_cuenta}
+                          onChange={e => set('nombre_cuenta', e.target.value)}
+                      />
+                  </Field>
+
+                  <Field label="Monto" error={errors.monto}>
+                      <FInputMoney
+                          value={form.monto}
+                          onChange={e => set('monto', e.target.value)}
+                      />
+                  </Field>
+
+                  <Field label="Compra" error={errors.compra}>
+                      <FInput
+                          value={form.compra}
+                          onChange={e => set('compra', e.target.value)}
+                      />
+                  </Field>
+
+                  <Field label="Fecha" error={errors.fecha}>
+                      <FInput
+                          type="date"
+                          value={form.fecha}
+                          onChange={e => set('fecha', e.target.value)}
+                      />
+                  </Field>
+
+                </div>
+            </Section>
+
+            <Section>
+                <SecTitle label="Otros" />
+
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))',
+                        gap: 16
+                    }}
+                >
+
+                  <Field
+                      label="DOE Respuesta B.5"
+                      error={errors.doe_respuesta_b5}
+                  >
+                      <FInput
+                          value={form.doe_respuesta_b5}
+                          onChange={e => set('doe_respuesta_b5', e.target.value)}
+                      />
+                  </Field>
+
+                  <Field label="Observaciones">
+                      <textarea
+                          value={form.observaciones}
+                          onChange={e => set('observaciones', e.target.value)}
+                          style={{
+                              ...inputStyle,
+                              minHeight: 90
+                          }}
+                      />
+                  </Field>
+
+                </div>
+            </Section>
 
             {/* BOTÓN GUARDAR (DERECHA) */}
             <div style={{
@@ -355,12 +400,10 @@ return (
                 e.currentTarget.style.filter = '';
                 }}
             >
-                {loading ? 'Guardando...' : 'Guardar anticipo rendir cuenta'}
+                {loading ? 'Guardando...' : 'Guardar Anticipo'}
             </button>
             </div>
-
             </div>
-            
         </form>
       </div>
     </>

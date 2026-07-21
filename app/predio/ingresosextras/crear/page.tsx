@@ -1,4 +1,4 @@
-// app/predio/compra3utm/crear/page.tsx
+// app/predio/ingresosextras/crear/page.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';

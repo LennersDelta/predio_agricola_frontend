@@ -1,4 +1,3 @@
-// app/predio/anticipo/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
@@ -7,22 +6,31 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-// TIPOS — alineados con campos del backend
+import { usePredio } from '@/hooks/usePredio';
+import { useEstados } from '@/hooks/useEstado';
 
-interface AnticipoRendir{
-  
-  id: number;
-  orden: string;
-  predio: string;
-  nroCuenta: string;
-  nombreCuenta: string;
-  monto: number;
-  compra: string;
-  fechaAnticipo: string;
-  doeRespuestaB5: string;
-  observaciones: string;
-  
+interface AnticipoRendirCuenta  {
+    orden: number;
+    predio_id: number;
+    predio_nombre: string;
+    numero_cuenta: string;
+    nombre_cuenta: string;
+    monto: number;
+    compra: string;
+    fecha: string;
+    doe_respuesta_b5: string;
+    observaciones: string;
+    uuid: string;
 }
+
+// FORMATEO DE FECHAS //
+const formatearFecha = (fecha?: string) => {
+  if (!fecha) return '';
+
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+};
+
 // MODAL ELIMINAR
 function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
@@ -38,7 +46,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />El anticipo rendir cuenta eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -86,22 +94,22 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
   );
 }
 const PAGE_SIZES = [10, 25, 50, 100];
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 
 // COMPONENTE PRINCIPAL
-function AnticipoRendirPageInner() {
+function AnticipoRendirCuentaPageInner() {
   const searchParams = useSearchParams();
   const [tab,          setTab]          = useState<'predio'|'borradores'>(searchParams.get('tab') === 'borradores' ? 'borradores' : 'predio');
-  const [data,         setData]         = useState<AnticipoRendir[]>([]);
-  const [borradores,   setBorradores]   = useState<any[]>([]);
+  const [data,         setData]         = useState<AnticipoRendirCuenta[]>([]);
   const [loading,      setLoading]      = useState(true);
-  const [loadingBorr,  setLoadingBorr]  = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-// Filtros
-  const [fOrden, setFOrden] = useState('');
+  // Filtros
   const [fPredio, setFPredio] = useState('');
-  const [ffechaAnticipo, setFFechaAnticipo] = useState('');
-  const [applied, setApplied] = useState({ orden: '',  predio: '',  fechaAnticipo: ''});
+
+  //  Aplicar filtros 
+  const [applied, setApplied] = useState({predio:''});
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
 // Tabla
   const [search,   setSearch]   = useState('');
@@ -110,58 +118,80 @@ function AnticipoRendirPageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
-  //  Cargar datos 
-  const cargaAnticipoRendir = useCallback(() => {
-    setLoading(true);
-    api.get('/api/predio')
-      .then(({ data: r }) => setData(r.data ?? r))
-      .catch(() => toast.error('Error al cargar anticipo rendir cuenta'))
-      .finally(() => setLoading(false));
-  }, []);  
 
-  useEffect(() => {
-    cargaAnticipoRendir();
-  }, []);
+  // ── Cargar datos ──────────────────────────────────────────────────────────
+const cargaAnticipoRendirCuenta  = useCallback(() => {
+  setLoading(true);
 
-  //  Opciones dinámicas para filtros 
-  const opOrdenes = [...new Set(data.map(b => b.orden).filter(Boolean))].sort();
-  const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
-  const opFechaAnticipo = [...new Set(data.map(b => b.fechaAnticipo).filter(Boolean))].sort();
-
-    //  Aplicar filtros 
-  const aplicar = () => {
-    setApplied({orden: fOrden, predio: fPredio, fechaAnticipo: ffechaAnticipo});
-    setPage(1);
-  };
-    const limpiar = () => {setFOrden(''); setFPredio(''); setFFechaAnticipo(''); 
-    setApplied({orden: '', predio: '', fechaAnticipo: '' });
-
-    setSearch('');
-    setPage(1);
-  };
-   const filtrosActivos = Object.values(applied).filter(Boolean).length;
-
-       const filtered = useMemo(() => {
-  return data
-    .filter(b => {
-      const orden = b.orden ?? '';
-      const predio = b.predio ?? '';
-      const fechaAnticipo = b.fechaAnticipo ?? '';
-      //const annio = b.annio ?? 0;
-
-      return (
-        (!applied.orden || orden.toLowerCase().includes(applied.orden.toLowerCase())) &&
-        (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-        (!applied.fechaAnticipo || predio.toLowerCase().includes(applied.fechaAnticipo.toLowerCase())) 
-      );
+  api.get('/api/listaAnticipoRendirCuenta ')
+    .then(({ data }) => {
+      let datos = [];
+      if (Array.isArray(data)) {
+        datos = data;
+      } else if (Array.isArray(data?.data)) {
+        datos = data.data;
+      } else {
+        console.warn('Formato inesperado del backend:', data);
+      }
+      setData(datos);
     })
-    .sort((a, b) => {
-      const av = String((a as any)[sortCol] ?? '');
-      const bv = String((b as any)[sortCol] ?? '');
-      const cmp = av.localeCompare(bv, 'es', { numeric: true });
-      return sortDir === 'asc' ? cmp : -cmp;
+    .catch((err) => {
+      console.error(err);
+      toast.error('Error al cargar anticipos a rendir cuenta');
+      setData([]);
+    })
+    .finally(() => {
+      setLoading(false);
     });
-    }, [data, applied, search, sortCol, sortDir]);
+}, []);
+
+useEffect(() => {
+  cargaAnticipoRendirCuenta();
+}, [cargaAnticipoRendirCuenta]);
+
+
+    //  Opciones dinámicas para filtros 
+    const opPredios = [...new Set(data.map(b => b.predio_nombre).filter(Boolean))].sort();
+    
+   const aplicar = () => {
+        setApplied({predio: fPredio});
+        setPage(1);
+    };
+
+    const limpiar = () => {
+        setFPredio('');
+
+        setApplied({
+            predio:''
+        });
+
+        setSearch('');
+        setPage(1);
+    };
+    const filtrosActivos = Object.values(applied).filter(Boolean).length;
+
+    const filtered = useMemo(() => {
+    return data.filter(b => {
+        return (
+            (!applied.predio || Number(b.predio_id) === Number(applied.predio)) &&
+            (!search ||
+                [
+                    b.orden,
+                    b.predio_nombre,
+                    b.numero_cuenta,
+                    b.nombre_cuenta,
+                    b.monto,
+                    b.compra,
+                    b.fecha,
+                    b.doe_respuesta_b5,
+                    b.observaciones,
+                ]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(search.toLowerCase()))
+        );
+    });
+    }, [data, applied, search]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -172,19 +202,28 @@ function AnticipoRendirPageInner() {
     };
 
     // ── Eliminar 
-    const handleDelete = async () => {
-      if (deleteId === null) return;
-      const toastId = toast.loading('Eliminando...');
-      try {
-        await api.delete(`/api/anticipo/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
-        toast.success('Anticipo eliminado correctamente', { id: toastId, duration: 3000 });
-      } catch (err: any) {
-        toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
-      } finally {
-        setDeleteId(null);
-      }
-    };
+  const handleDelete = async () => {
+    if (deleteId === null) return;
+    const toastId = toast.loading('Eliminando...');
+    try {
+      await api.delete(`/api/deleteAnticipoRendirCuenta/${deleteId}`);
+      setData(prev => prev.filter(b => b.orden !== deleteId));
+      toast.success('Anticipo a rendir cuenta eliminado correctamente', {
+        id: toastId,
+        duration: 3000,
+      });
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ?? 'Error al eliminar el anticipo a rendir cuenta',
+        {
+          id: toastId,
+          duration: 5000,
+        }
+      );
+    } finally {
+      setDeleteId(null);
+    }
+  };
 
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
@@ -203,6 +242,7 @@ function AnticipoRendirPageInner() {
   return (
     <div style={{ fontFamily: '"Barlow",sans-serif' }}>
 
+      {/* PAGE HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24, padding: '0 4px' }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: '3px 10px 3px 8px', borderRadius: 999, background: 'rgba(58,153,86,.1)', border: '1px solid rgba(58,153,86,.25)' }}>
@@ -210,7 +250,7 @@ function AnticipoRendirPageInner() {
             <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Anticipo Rendir Cuenta</span>
           </div>
           <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>
-            Anticipo Rendir Cuenta
+          Anticipo Rendir Cuenta
           </h2>
           <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Anticipo Rendir Cuenta</p>
         </div>
@@ -222,7 +262,7 @@ function AnticipoRendirPageInner() {
           <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo anticipo rendir cuenta
+          Nuevo Anticipo Rendir Cuenta
         </Link>
       </div>    
 
@@ -248,28 +288,22 @@ function AnticipoRendirPageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FI 
-                label="Orden"
-                placeholder="111125"
-                value={fOrden}
-                onChange={e => setFOrden(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && aplicar()}
-              />
+              {/* Predio desde hook */}
+              <div>
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => { setFPredio(e.target.value); }}
+                  style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                >
+                  <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
+                  {predios.map(p => (
+                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-              <FS             
-                label="Predio"
-                options={opPredios}
-                value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
-              />
-
-              <FS 
-                label="Mes Consumo"
-                options={opFechaAnticipo}
-                value={ffechaAnticipo}
-                onChange={e => { setFFechaAnticipo(e.target.value); aplicar(); }}
-              />
-            
+                        
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
                 <button
@@ -332,7 +366,7 @@ function AnticipoRendirPageInner() {
             {/* Header tabla */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '13px 20px', borderBottom: '1px solid rgba(0,0,0,.06)', background: 'rgba(0,0,0,.02)' }}>
               <div>
-                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado de Predio</p>
+                <p style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.9rem', fontWeight: 700, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Listado Ingresos Extras</p>
                 <p style={{ fontSize: '.65rem', color: '#6b8f75', marginTop: 2, fontFamily: 'monospace' }}>
                   <span style={{ fontWeight: 600, color: '#2e7d46' }}>{filtered.length.toLocaleString('es-CL')}</span> registros encontrados
                 </p>
@@ -371,16 +405,15 @@ function AnticipoRendirPageInner() {
                   <thead>
                     <tr>
                       {([
-                            ['id', 'ID', 'left'],
-                            ['orden', 'N° Orden', 'left'],
-                            ['predio', 'Predio', 'left'],
-                            ['nroCuenta', 'N° de Cuenta', 'left'],
-                            ['nombreCuenta', 'Nombre Cuenta', 'left'],
-                            ['monto', 'Monto', 'right'],
-                            ['compra', 'Compra', 'left'],
-                            ['fecha', 'Fecha', 'center'],
-                            ['doeRespuestaB5', 'DOE Resp. B.5 Pago Factura', 'center'],
-                            ['observaciones', 'Observaciones', 'left'],
+                          ['orden', 'Orden', 'center'],
+                          ['predio_nombre', 'Predio', 'left'],
+                          ['numero_cuenta', 'N° Cuenta', 'left'],
+                          ['nombre_cuenta', 'Nombre Cuenta', 'left'],
+                          ['monto', 'Monto', 'right'],
+                          ['compra', 'Compra', 'left'],
+                          ['fecha', 'Fecha', 'center'],
+                          ['doe_respuesta_b5', 'DOE Resp. B.5', 'center'],
+                          ['observaciones', 'Observaciones', 'left']
                       ] as [string, string, string][]).map(([col, label, align]) => (
                         <th key={col} style={thS(align)} onClick={() => handleSort(col)}>
                           {label}
@@ -406,12 +439,97 @@ function AnticipoRendirPageInner() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>{b.predio}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', color: '#2e7d46', fontWeight: 600 }}>
+                                #{b.orden}
+                            </span>
                         </td>
+
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>{b.fechaAnticipo}</span>
-                        </td> 
-                      </tr>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.predio_nombre}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.numero_cuenta}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.nombre_cuenta}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'right' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700 }}>
+                                ${Number(b.monto).toLocaleString('es-CL')}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.compra}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.fecha ? formatearFecha(b.fecha) : ''}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.doe_respuesta_b5 || '-'}
+                            </span>
+                        </td>
+
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
+                                {b.observaciones || '-'}
+                            </span>
+                        </td>                                              
+
+                        {/* ACCIONES */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <Link href={`/predio/anticipo/${b.uuid}/ver`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                              title="Ver detalle"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </Link>
+
+                            <Link href={`/predio/anticipo/${b.uuid}/edit`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                              title="Editar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </Link>
+                            <button onClick={() => setDeleteId(b.orden)}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                              title="Eliminar"
+                            >
+                              <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                    </tr>
                     ))}
                   </tbody>
                 </table>
@@ -458,7 +576,7 @@ function AnticipoRendirPageInner() {
 export default function PredioPage() {
   return (
     <Suspense>
-      <AnticipoRendirPageInner />
+      <AnticipoRendirCuentaPageInner />
     </Suspense>
   );
 }

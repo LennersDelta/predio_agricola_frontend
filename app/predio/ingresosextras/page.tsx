@@ -524,9 +524,6 @@ useEffect(() => {
                             </div>
                         </td>
 
-
-
-
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                             <span style={{ fontFamily: 'monospace', fontSize: '.72rem', fontWeight: 600 }}>
                                 {b.doe_informa_ab5}
@@ -542,7 +539,7 @@ useEffect(() => {
                         {/* ACCIONES */}
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <Link href={`/predio/compra3utm/${b.uuid}/ver`}
+                            <Link href={`/predio/ingresosextras/${b.uuid}/ver`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
@@ -554,7 +551,7 @@ useEffect(() => {
                               </svg>
                             </Link>
 
-                            <Link href={`/predio/compra3utm/${b.uuid}/edit`}
+                            <Link href={`/predio/ingresosextras/${b.uuid}/edit`}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}

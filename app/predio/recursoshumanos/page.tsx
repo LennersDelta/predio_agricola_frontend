@@ -185,7 +185,7 @@ useEffect(() => {
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
   const opTipoContrato = [...new Set(data.map(b => b.tipo_contrato).filter(Boolean))].sort();
 
-    //  Aplicar filtros 
+  //  Aplicar filtros 
   const aplicar = () => {
     setApplied({predio: fPredio, grado:fGrado, contrato: fContrato});
     setPage(1);
@@ -314,7 +314,7 @@ useEffect(() => {
                 <label style={lblStyle}>Predio</label>
                 <select
                   value={fPredio}
-                  onChange={e => { setFPredio(e.target.value); aplicar(); }}
+                  onChange={e => { setFPredio(e.target.value);}}
                   style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
                 >
                   <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
