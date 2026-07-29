@@ -179,8 +179,6 @@ function EditarParqueVehicularPageInner() {
       ]);
     }
 
-
-
       } catch (error) {
         console.error(error);
         toast.error('No se pudo cargar el registro');
@@ -196,6 +194,7 @@ function EditarParqueVehicularPageInner() {
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+
 
   try {
     setLoading(true);
@@ -220,19 +219,26 @@ const handleSubmit = async (e: React.FormEvent) => {
     formData.append('ultima_mantencion', form.ultima_mantencion);
 
 
-    // Archivos nuevos
-    if (docsLocalPermiso?.length > 0 && docsLocalPermiso[0]?.archivo) {
-      formData.append(
-        'permiso[0][archivo]',
-        docsLocalPermiso[0].archivo
-      );
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+    // Archivo permiso circulación
+    if (docsLocalPermiso?.length > 0 && docsLocalPermiso[0]?.archivo ){
+        const archivoPermiso = docsLocalPermiso[0].archivo;
+      if (archivoPermiso.size > MAX_FILE_SIZE) {
+        toast.error('El permiso de circulación no puede superar los 2 MB');
+        return;
+      }
+      formData.append('permiso[0][archivo]',archivoPermiso);
     }
 
-    if (docsLocalSeguro?.length > 0 && docsLocalSeguro[0]?.archivo) {
-      formData.append(
-        'seguro[0][archivo]',
-        docsLocalSeguro[0].archivo
-      );
+    // Archivo seguro obligatorio
+    if (docsLocalSeguro?.length > 0 && docsLocalSeguro[0]?.archivo){
+        const archivoSeguro = docsLocalSeguro[0].archivo;
+      if (archivoSeguro.size > MAX_FILE_SIZE) {
+        toast.error('El seguro obligatorio no puede superar los 2 MB');
+        return;
+      }
+      formData.append('seguro[0][archivo]', archivoSeguro);
     }
 
 

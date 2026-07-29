@@ -173,7 +173,9 @@ export default function CrearParqueVehicularPage() {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       const errsFront: Record<string, string> = {};
-
+      
+      const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+      
       // VALIDACIONES
       if (!form.predio) errsFront.predio = 'Debe seleccionar predio.';
       if (!form.tipo_vehicular) errsFront.tipo_vehiculo = 'Debe seleccionar tipo de vehículo.';
@@ -184,18 +186,38 @@ export default function CrearParqueVehicularPage() {
       if (!form.anio) errsFront.anio = 'El año es obligatorio.';
       if (!form.fecha_adquisicion) errsFront.fecha_adquisicion = 'La fecha adquisición es obligatoria.';
       if (!form.fondo_adquisicion) errsFront.fondo_adquisicion = 'Debe ingresar el fondo de aquisición.'
-      if (!docsPermiso.length) errsFront.docsPermiso = 'Debe adjuntar permiso.';
-      if (!docsSeguro.length) errsFront.docsSeguro = 'Debe adjuntar seguro.';
+      
+      // PERMISO
+      if (!docsPermiso.length) {
+        errsFront.docsPermiso = 'Debe adjuntar permiso.';
+      } else {
+        const archivoGrande = docsPermiso.find(
+          d => d.archivo.size > MAX_FILE_SIZE
+        );
 
+        if (archivoGrande) {
+          errsFront.docsPermiso = `El archivo "${archivoGrande.archivo.name}" supera el tamaño máximo permitido de 2 MB. Permiso Circulación`;
+        }
+      }
 
-    // ───── VALIDACIÓN FINAL ─────
+      // SEGURO
+      if (!docsSeguro.length) {
+        errsFront.docsSeguro = 'Debe adjuntar seguro.';
+      } else {
+        const archivoGrande = docsSeguro.find(
+          d => d.archivo.size > MAX_FILE_SIZE
+        );
+
+        if (archivoGrande) {
+          errsFront.docsSeguro = `El archivo "${archivoGrande.archivo.name}" supera el tamaño máximo permitido de 2 MB. Seguro Obligatorio`;
+        }
+      }
+
+      // ───── VALIDACIÓN FINAL ─────
       if (Object.keys(errsFront).length > 0) {
           setErrors(errsFront);
-
           toast.error(Object.values(errsFront)[0]);
-
           const primerCampo = Object.keys(errsFront)[0];
-
           document
           .querySelector(`[data-field="${primerCampo}"]`)
           ?.scrollIntoView({ behavior: 'smooth', block: 'center' });

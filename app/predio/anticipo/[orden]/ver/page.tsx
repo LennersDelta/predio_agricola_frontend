@@ -422,7 +422,7 @@ function VerAnticipoRendirCuentaPageInner() {
                 <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
               </p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <Link href="/predio/ingresosextras"
+                <Link href="/predio/anticipo"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
                             padding: '10px 20px', borderRadius: 9,
                             fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',

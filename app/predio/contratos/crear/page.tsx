@@ -471,15 +471,23 @@ return (
             <Section>
                 <SecTitle label="Otros" />
                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="DOE DE RESPUESTA B.5 POR PAGO" required error={errors.doe_respuesta_b5}>
-                      <FInput value={form.doe_respuesta_b5} onChange={e => set('doerespuesta', e.target.value)} required /></Field>
-                        <Field label="observaciones">
-                        <textarea
-                            value={form.observaciones}
-                            onChange={e => set('observaciones', e.target.value)}
-                            style={{ ...inputStyle, minHeight: 80 }}
-                        />
-                        </Field>
+                   <Field
+                          label="DOE DE RESPUESTA B.5 POR PAGO"
+                          error={errors.doe_respuesta_b5}
+                      >
+                          <FInput
+                              value={form.doe_respuesta_b5}
+                              onChange={e => set('doe_respuesta_b5', e.target.value)}
+                              required
+                          />
+                      </Field>
+                      <Field label="observaciones">
+                      <textarea
+                          value={form.observaciones}
+                          onChange={e => set('observaciones', e.target.value)}
+                          style={{ ...inputStyle, minHeight: 80 }}
+                      />
+                      </Field>
                   </div>             
             </Section>
 
