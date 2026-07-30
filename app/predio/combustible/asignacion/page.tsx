@@ -44,7 +44,7 @@ function ModalEliminar({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           ¿Eliminar registro?
         </h3>
         <p style={{ fontSize: '.78rem', color: '#6b8f75', lineHeight: 1.6, marginBottom: 24 }}>
-          Esta acción no se puede deshacer.<br />El bien inmueble será eliminado permanentemente.
+          Esta acción no se puede deshacer.<br />El detalle del combustible será eliminado permanentemente.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(0,0,0,.1)', background: '#eaf3ec', color: '#3d5c47', fontFamily: '"Barlow Condensed",sans-serif', fontWeight: 700, fontSize: '.82rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
@@ -93,18 +93,23 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
 }
 const PAGE_SIZES = [10, 25, 50, 100];
 
-/* MODAL */
+/* MODAL DETALLE DE COMBUSTIBLE */
 
 function ModalDetalleCombustible({
   open,
   onClose,
   data,
+  setData,
   loading,
   info,
+  deleteId,
+  setDeleteId,
+  onDelete,
 }: {
   open: boolean;
   onClose: () => void;
   data: IngresoCombustible[];
+  setData: React.Dispatch<React.SetStateAction<IngresoCombustible[]>>;
   loading: boolean;
   info: {
     predio: string;
@@ -113,9 +118,11 @@ function ModalDetalleCombustible({
     monto_utilizado: number;
     saldo: number;
   };
-}) {
+  deleteId: number | null;
+  setDeleteId: React.Dispatch<React.SetStateAction<number | null>>;
+  onDelete: () => void;
+})  {
   if (!open) return null;
-
   return (
     <div
       onClick={(e) => {
@@ -231,7 +238,7 @@ function ModalDetalleCombustible({
                       'Saldo Disponible',
                       'Estado',
                       'DOE',
-                      'Comprobante',
+                      'Acciones'
                     ].map((h) => (
                       <th
                         key={h}
@@ -352,41 +359,57 @@ function ModalDetalleCombustible({
                                 </span>
                               </td>
                               <td style={{ padding: 12 }}>
-                              {item.comprobante ? (
-                                <a
-                                  href={item.comprobante}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  title="Ver archivo"
+                                <div
                                   style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: 34,
-                                    height: 34,
-                                    borderRadius: 8,
-                                    background: 'rgba(46,125,70,.1)',
-                                    color: '#2e7d46',
-                                    border: '1px solid rgba(46,125,70,.2)',
-                                    textDecoration: 'none',
+                                    display: "flex",
+                                    gap: 6,
+                                    alignItems: "center",
                                   }}
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
+
+                                  {item.comprobante && (
+                                    <a
+                                      href={item.comprobante}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Ver archivo"
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 34,
+                                        height: 34,
+                                        borderRadius: 8,
+                                        background: "rgba(46,125,70,.1)",
+                                        color: "#2e7d46",
+                                        border: "1px solid rgba(46,125,70,.2)",
+                                        textDecoration: "none",
+                                      }}
+                                    >
+                                      👁
+                                    </a>
+                                  )}
+
+                                  <button
+                                    title="Eliminar"
+                                    onClick={() => setDeleteId(item.id)}
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      width: 34,
+                                      height: 34,
+                                      borderRadius: 8,
+                                      cursor: "pointer",
+                                      border: "1px solid rgba(220,38,38,.2)",
+                                      background: "rgba(220,38,38,.08)",
+                                      color: "#dc2626",
+                                    }}
                                   >
-                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                  </svg>
-                                </a>
-                              ) : (
-                                '-'
-                              )}
+                                    🗑
+                                  </button>
+
+                                </div>
                               </td>
                             </tr>
                           );
@@ -400,10 +423,191 @@ function ModalDetalleCombustible({
           )}
         </div>
       </div>
+        {deleteId !== null && (
+          <ModalEliminar
+            onCancel={() => setDeleteId(null)}
+            onConfirm={onDelete}
+          />
+        )}
     </div>
   );
 }
 
+
+/* MODAL UPDATE ASIGNACION COMBUSTIBLE */
+
+function ModalEditarAsignacion({
+    open,
+    onClose,
+    form,
+    setForm,
+    onSave,
+}: {
+    open: boolean;
+    onClose: () => void;
+    form: any;
+    setForm: any;
+    onSave: () => void;
+}) {
+
+    if (!open) return null;
+
+    return (
+        <div
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+            style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,.65)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 99999,
+                padding: 20,
+            }}
+        >
+            <div
+                style={{
+                    width: "100%",
+                    maxWidth: 520,
+                    background: "#fff",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    boxShadow: "0 20px 60px rgba(0,0,0,.25)",
+                }}
+            >
+                {/* HEADER */}
+
+                <div
+                    style={{
+                        padding: "20px 24px",
+                        borderBottom: "1px solid rgba(0,0,0,.08)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <div>
+                        <h2
+                            style={{
+                                margin: 0,
+                                fontFamily: '"Barlow Condensed",sans-serif',
+                                fontSize: "1.35rem",
+                                fontWeight: 700,
+                                color: "#1a2e22",
+                            }}
+                        >
+                            Actualizar Asignación
+                        </h2>
+                        <p
+                            style={{
+                                marginTop: 6,
+                                fontSize: ".75rem",
+                                color: "#6b8f75",
+                                fontFamily: "monospace",
+                                lineHeight: 1.7,
+                            }}
+                        >
+                            <b style={{ color: "#2b3831" }}>Predio:</b>{" "}
+                            <b>{form.predio}</b>
+
+                            {" | "}
+
+                            <b style={{ color: "#2b3831" }}>Mes:</b>{" "}
+                            {new Date(form.mes)
+                                .toLocaleString("es-CL", {
+                                    month: "long",
+                                })
+                                .replace(/^./, c => c.toUpperCase())}
+                        </p>
+
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 8,
+                            border: "1px solid rgba(0,0,0,.1)",
+                            background: "#fff",
+                            cursor: "pointer",
+                        }}
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                {/* BODY */}
+
+                <div
+                    style={{
+                        padding: 24,
+                    }}
+                >
+                    <div>
+                        <label style={lblStyle}>
+                            Monto Asignado
+                        </label>
+                        <input
+                            type="number"
+                            value={form.monto_asignado}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    monto_asignado: e.target.value,
+                                })
+                            }
+                            style={siStyle}
+                        />
+                    </div>
+                </div>
+
+                {/* FOOTER */}
+                <div
+                    style={{
+                        padding: 20,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 10,
+                        borderTop: "1px solid rgba(0,0,0,.08)",
+                    }}
+                >
+                    <button
+                        onClick={onClose}
+                        style={{
+                            padding: "10px 18px",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            border: "1px solid rgba(0,0,0,.1)",
+                            background: "#fff",
+                            color: "#3d5c47",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={onSave}
+                        style={{
+                            padding: "10px 18px",
+                            border: "none",
+                            cursor: "pointer",
+                            borderRadius: 8,
+                            background:
+                                "linear-gradient(135deg,#2563eb,#60a5fa)",
+                            color: "#fff",
+                            fontWeight: 700,
+                        }}
+                    >
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // COMPONENTE PRINCIPAL
 function CombustiblePageInner() {
@@ -475,6 +679,34 @@ function CombustiblePageInner() {
       setDetalleLoading(false);
     }
   };
+
+  const [modalEditar, setModalEditar] = useState(false);
+  const [formEditar, setFormEditar] = useState({id: 0, predio: '', mes: '', monto_asignado: '',});
+
+  const abrirEditar = (item: Combustible) => {
+  setFormEditar({
+      id: item.id,
+      predio: item.predio,
+      mes: item.mes,
+      monto_asignado: String(item.monto_asignado),
+    });
+
+    setModalEditar(true);
+  };
+
+  const actualizarAsignacion = async () => {
+    try {
+      await api.put(`/api/combustible/asignacion/${formEditar.id}`, 
+        { monto_asignado: Number(formEditar.monto_asignado), }
+      );
+      toast.success("Asignación actualizada");
+      setModalEditar(false);
+      cargaCombustible();
+    } catch {
+      toast.error("No fue posible actualizar la asignación");
+    }
+  };
+
 
 
   //  Opciones dinámicas para filtros 
@@ -569,20 +801,35 @@ function CombustiblePageInner() {
       }
     };
 
-    // ── Eliminar 
-    const handleDelete = async () => {
+    // ELIMINAR DETALLE DE COMBUSTIBLE //
+  const handleDelete = async () => {
       if (deleteId === null) return;
-      const toastId = toast.loading('Eliminando...');
+      const toastId = toast.loading("Eliminando...");
+
       try {
-        await api.delete(`/api/combustible/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
-        toast.success('Combustible eliminado correctamente', { id: toastId, duration: 3000 });
+          await api.delete(`/api/combustible/deleteDetalleCombustible/${deleteId}`);
+          // eliminar del detalle
+          setDetalleData(prev =>
+              prev.filter(x => x.id !== deleteId)
+          );
+          // recargar la tabla principal
+          await cargaCombustible();
+          toast.success("Registro eliminado correctamente", {
+              id: toastId,
+              duration: 3000,
+          });
       } catch (err: any) {
-        toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
+          toast.error(
+              err.response?.data?.message ?? "Error al eliminar",
+              {
+                  id: toastId,
+                  duration: 4000,
+              }
+          );
       } finally {
-        setDeleteId(null);
+          setDeleteId(null);
       }
-    };
+  };
 
     const SortIcon = ({ col }: { col: string }) => (
       <span style={{ marginLeft: 4, fontSize: '.65rem', color: sortCol === col ? '#3a9956' : '#9ab8a2', opacity: sortCol === col ? 1 : .5 }}>
@@ -866,23 +1113,99 @@ function CombustiblePageInner() {
                           <span style={{ fontFamily: 'monospace', fontSize: '.82rem', fontWeight: 700, color: '#1a2e22' }}>${Number(b.saldo).toLocaleString('es-CL')}</span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                          <button
-                              onClick={() => abrirDetalle(b)}
-                              style={{
-                                border: 'none',
-                                cursor: 'pointer',
-                                borderRadius: 8,
-                                padding: '7px 12px',
-                                background:
-                                  'linear-gradient(135deg,#3aaf64,#7dd494)',
-                                color: '#0d2318',
-                                fontWeight: 700,
-                                fontSize: '.72rem',
-                              }}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 6,
+                                }}
                             >
-                              Ver detalle
-                            </button>
+                                {/* EDITAR */}
+                                <button
+                                    onClick={() => abrirEditar(b)}
+                                    title="Editar"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 6,
+                                        background: 'rgba(147,197,253,.1)',
+                                        color: '#93c5fd',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'background .15s',
+                                    }}
+                                    onMouseEnter={e => (
+                                        e.currentTarget.style.background = 'rgba(147,197,253,.22)'
+                                    )}
+                                    onMouseLeave={e => (
+                                        e.currentTarget.style.background = 'rgba(147,197,253,.1)'
+                                    )}
+                                >
+                                    <svg
+                                        style={{ width: 13, height: 13 }}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                        />
+                                    </svg>
+                                </button>
+
+                                {/* VER DETALLE */}
+                                <button
+                                    onClick={() => abrirDetalle(b)}
+                                    title="Ver detalle"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 6,
+                                        background: 'rgba(58,153,86,.1)',
+                                        color: '#3a9956',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'background .15s',
+                                    }}
+                                    onMouseEnter={e => (
+                                        e.currentTarget.style.background = 'rgba(76,202,122,.22)'
+                                    )}
+                                    onMouseLeave={e => (
+                                        e.currentTarget.style.background = 'rgba(58,153,86,.1)'
+                                    )}
+                                >
+                                    <svg
+                                        style={{ width: 13, height: 13 }}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
                         </td>
+                        
                       </tr>
                     ))}
                   </tbody>
@@ -918,17 +1241,24 @@ function CombustiblePageInner() {
           </div>
 
           </> }
-
-      {deleteId !== null && (
-        <ModalEliminar onCancel={() => setDeleteId(null)} onConfirm={handleDelete} />
-      )}
         <ModalDetalleCombustible
-        open={modalDetalle}
-        onClose={() => setModalDetalle(false)}
-        data={detalleData}
-        loading={detalleLoading}
-        info={detalleInfo}
-      />
+            open={modalDetalle}
+            onClose={() => setModalDetalle(false)}
+            data={detalleData}
+            setData={setDetalleData}
+            loading={detalleLoading}
+            info={detalleInfo}
+            deleteId={deleteId}
+            setDeleteId={setDeleteId}
+            onDelete={handleDelete}
+        />
+        <ModalEditarAsignacion
+            open={modalEditar}
+            onClose={() => setModalEditar(false)}
+            form={formEditar}
+            setForm={setFormEditar}
+            onSave={actualizarAsignacion}
+        />
     </div>
 
 
