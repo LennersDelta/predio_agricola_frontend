@@ -240,13 +240,6 @@ export default function UsuarioForm({
           <div style={{ display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
 
-            {/*<Field label="Grado" error={errors.grado}>
-              <FSelect value={form.grado} onChange={e => set('grado', e.target.value)}>
-                <option value="">Seleccione grado</option>
-                {GRADOS.map(g => <option key={g} value={g}>{g}</option>)}
-              </FSelect>
-            </Field>*/}
-
             <Field label="Grado" error={errors.grado_id}>
               <FSelect
                 value={form.grado_id}

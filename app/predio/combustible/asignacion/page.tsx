@@ -454,9 +454,9 @@ function ModalEditarAsignacion({
 
     return (
         <div
-            onClick={(e) => {
+            /*onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
+            }}*/
             style={{
                 position: "fixed",
                 inset: 0,
@@ -567,23 +567,29 @@ function ModalEditarAsignacion({
                 {/* FOOTER */}
                 <div
                     style={{
-                        padding: 20,
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: 10,
-                        borderTop: "1px solid rgba(0,0,0,.08)",
+                      padding: 20,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: 10,
+                      borderTop: "1px solid rgba(0,0,0,.08)",
                     }}
                 >
                     <button
                         onClick={onClose}
                         style={{
-                            padding: "10px 18px",
-                            borderRadius: 8,
+                            flex: 1,
+                            height: 41,
+                            padding: "10px 0",
+                            borderRadius: 9,
                             cursor: "pointer",
                             border: "1px solid rgba(0,0,0,.1)",
-                            background: "#fff",
-                            color: "#3d5c47",
-                            fontWeight: 600,
+                            background: "#eaf3ec",
+                            color: "#6b8f75",
+                            fontFamily: '"Barlow Condensed",sans-serif',
+                            fontWeight: 700,
+                            fontSize: ".85rem",
+                            textTransform: "uppercase",
+                            letterSpacing: ".07em",
                         }}
                     >
                         Cancelar
@@ -591,14 +597,35 @@ function ModalEditarAsignacion({
                     <button
                         onClick={onSave}
                         style={{
-                            padding: "10px 18px",
-                            border: "none",
-                            cursor: "pointer",
-                            borderRadius: 8,
-                            background:
-                                "linear-gradient(135deg,#2563eb,#60a5fa)",
-                            color: "#fff",
-                            fontWeight: 700,
+                          flex: 1,
+                          height: 41,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 7,
+                          padding: "10px 0",
+                          borderRadius: 9,
+                          border: "none",
+                          cursor: "pointer",
+                          fontFamily: '"Barlow Condensed",sans-serif',
+                          fontSize: ".85rem",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: ".07em",
+                          color: "#0d2318",
+                          background: "linear-gradient(135deg,#3aaf64,#7dd494)",
+                          boxShadow: "0 4px 14px rgba(76,202,122,.28)",
+                          transition: "all .2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                            e.currentTarget.style.boxShadow =
+                                "0 8px 20px rgba(76,202,122,.35)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow =
+                                "0 4px 14px rgba(76,202,122,.28)";
                         }}
                     >
                         Guardar Cambios
@@ -608,6 +635,10 @@ function ModalEditarAsignacion({
         </div>
     );
 }
+
+
+
+              
 
 // COMPONENTE PRINCIPAL
 function CombustiblePageInner() {

@@ -55,6 +55,8 @@ const breadcrumbs: Record<string, string> = {
   '/usuarios/crear':     'Nuevo Usuario',
   '/configuracion':      'Configuración',
 
+  '/perfil' : 'Perfil',
+
   
 };
 

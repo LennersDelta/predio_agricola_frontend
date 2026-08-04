@@ -167,6 +167,7 @@ export default function Sidebar() {
       },
     ],
   },
+ 
 ];
 // ─────────────────────────────────────────────
 // ICONOS
@@ -557,7 +558,7 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
 
         {/* ── FOOTER ── */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', padding: '8px 8px 12px', flexShrink: 0 }}>
-          <Link href="/dashboard/perfil"
+          <Link href="/perfil"
             style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '9px 0' : '8px 12px', margin: '1px 0', borderRadius: 7, color: 'rgba(255,255,255,.7)', fontSize: '.8rem', textDecoration: 'none', width: '100%', border: '1px solid transparent', transition: 'background .15s' }}>
             <NavIcon name="user" />
             {!collapsed && <span>Mi Perfil</span>}

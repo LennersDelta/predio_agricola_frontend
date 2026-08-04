@@ -139,7 +139,7 @@ export default function EditarUsuarioPage() {
           apellido_ap:       usuario.apellido_ap       ?? '',
           apellido_mat:      usuario.apellido_mat      ?? '',
           email:             usuario.email             ?? '',
-          grado:             usuario.grado             ?? '',
+          grado_id:          String(usuario.grado_id ?? ''),
           tipo_contratacion: usuario.tipo_contratacion ?? '',
           telefono:          usuario.telefono          ?? '',
           area_id:           String(usuario.area_id    ?? ''),

@@ -12,7 +12,10 @@ export interface Usuario {
   rut: string;
   rut_formateado: string;
   email: string | null;
+  
+  grado_id: number;
   grado: string;
+
   tipo_contratacion: string;
   telefono: string;
   area_id: number | null;
