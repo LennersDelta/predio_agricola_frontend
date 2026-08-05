@@ -188,7 +188,7 @@ export default function CrearParqueVehicularPage() {
       if (!form.fondo_adquisicion) errsFront.fondo_adquisicion = 'Debe ingresar el fondo de aquisición.'
       
       // PERMISO
-      if (!docsPermiso.length) {
+      /*if (!docsPermiso.length) {
         errsFront.docsPermiso = 'Debe adjuntar permiso.';
       } else {
         const archivoGrande = docsPermiso.find(
@@ -210,6 +210,28 @@ export default function CrearParqueVehicularPage() {
 
         if (archivoGrande) {
           errsFront.docsSeguro = `El archivo "${archivoGrande.archivo.name}" supera el tamaño máximo permitido de 2 MB. Seguro Obligatorio`;
+        }
+      }*/
+
+      // PERMISO (Opcional)
+      if (docsPermiso.length) {
+        const archivoGrande = docsPermiso.find(
+          d => d.archivo.size > MAX_FILE_SIZE
+        );
+
+        if (archivoGrande) {
+          errsFront.docsPermiso = `El archivo "${archivoGrande.archivo.name}" supera el tamaño máximo permitido de 2 MB. Permiso de Circulación.`;
+        }
+      }
+
+      // SEGURO OBLIGATORIO (Opcional)
+      if (docsSeguro.length) {
+        const archivoGrande = docsSeguro.find(
+          d => d.archivo.size > MAX_FILE_SIZE
+        );
+
+        if (archivoGrande) {
+          errsFront.docsSeguro = `El archivo "${archivoGrande.archivo.name}" supera el tamaño máximo permitido de 2 MB. Seguro Obligatorio.`;
         }
       }
 
