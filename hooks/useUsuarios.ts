@@ -21,6 +21,8 @@ export interface Usuario {
   area_id: number | null;
   role: string;
   roles: string[];
+
+  predio_id: string;
 }
 
 export function useUsuarios() {

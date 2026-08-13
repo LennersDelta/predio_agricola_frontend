@@ -312,7 +312,7 @@ const set = (k: string, v: string) => {
               <SecTitle label="Información General" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
               
-                {/* hook PREDIO */}
+                {/* Hook PREDIO */}
                 <Field label="Predio" error={errors.predio_id}>
                   <FSelect
                     value={form.predio_id}

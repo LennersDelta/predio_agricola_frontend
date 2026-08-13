@@ -9,6 +9,7 @@ import { Usuario } from '@/hooks/useUsuarios';
 import { useTipoGrado } from '@/hooks/useTipoGrado';
 import { useTipoContrato} from '@/hooks/useTipoContrato';
 import { useTipoRol} from  '@/hooks/useTipoRol';
+import { usePredio } from '@/hooks/usePredio';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS
@@ -26,6 +27,7 @@ export interface UsuarioFormData {
   role: string;
   password: string;
   password_confirmation: string;
+  predio_id: string;
 }
 
 interface Props {
@@ -155,6 +157,7 @@ const EMPTY: UsuarioFormData = {
   role: 'usuario',
   password: '',
   password_confirmation: '',
+  predio_id: '', 
 };
 
 
@@ -177,12 +180,17 @@ export default function UsuarioForm({
   const { tipoGrado, loading: loadingTipoGrado, error: errorTipoGrado } = useTipoGrado();
   const { tipoContrato, loading: loadingTipoContrato, error: errorTipoContrato } = useTipoContrato();
   const { tipoRol, loading: loadingTipoRol, error: errorTipoRol } = useTipoRol();
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
   const set = (k: keyof UsuarioFormData, v: string) =>
     setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
+    const data = {
+      ...form,
+      predio_id: Number(form.predio_id),
+    };
     console.log(form);
     onSubmit(form);
   };
@@ -240,6 +248,20 @@ export default function UsuarioForm({
           <div style={{ display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
 
+            <Field label="Predio" required error={errors.predio_id}>
+                <FSelect
+                    value={form.predio_id}
+                    onChange={e => set('predio_id', e.target.value)}
+                >
+                    <option value="">Seleccione</option>
+
+                    {predios.map(p => (
+                        <option key={p.id} value={p.id}>
+                            {p.nombre}
+                        </option>
+                    ))}
+                </FSelect>
+            </Field>
             <Field label="Grado" error={errors.grado_id}>
               <FSelect
                 value={form.grado_id}

@@ -263,21 +263,27 @@ function EditarAnticipoRendirCuentaPageInner() {
                         gap: 16,
                     }}
                 >
-                    <Field label="Predio" error={errors.predio_id}>
-                        <FSelect
-                            disabled
-                            value={form.predio_id}
-                            onChange={e => set('predio_id', e.target.value)}
-                        >
-                            <option value="">Seleccione</option>
+                {/* Hook PREDIO */}
+                <Field label="Predio" error={errors.predio_id}>
+                  <FSelect
+                    value={form.predio_id}
+                    onChange={e => set('predio_id', e.target.value)}
+                  >
+                    <option value="">
+                      {loadingPredios
+                        ? 'Cargando...'
+                        : errorPredios
+                        ? errorPredios
+                        : 'Seleccione'}
+                    </option>
 
-                            {predios.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.nombre}
-                                </option>
-                            ))}
-                        </FSelect>
-                    </Field>
+                    {predios.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </FSelect>
+                </Field>
 
                     <Field label="N° Cuenta" error={errors.numero_cuenta}>
                         <FInput

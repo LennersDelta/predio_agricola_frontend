@@ -146,6 +146,7 @@ export default function EditarUsuarioPage() {
           role:              usuario.role              ?? 'usuario',
           password:          '',
           password_confirmation: '',
+          predio_id:         String(usuario.predio_id ?? ''), // Predio asociado al usuario
         }}
         errors={errors}
         loading={loading}

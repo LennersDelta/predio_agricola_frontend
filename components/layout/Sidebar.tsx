@@ -196,7 +196,7 @@ function NavIcon({ name }: { name: string }) {
   );
 }
 
-function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
+/*function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
   const isAdmin = role === 'administrador';
   if (collapsed) return null;
   return (
@@ -214,11 +214,23 @@ function RoleBadge({ role, collapsed }: { role: string; collapsed: boolean }) {
           {icons.shield}
         </svg>
       )}
-      {isAdmin ? 'Administrador' : 'Usuario'}
+      {isAdmin ? 'Administrador' : 'Supervisor / Usuario '}
     </span>
   );
-}
-
+}*/
+type Role = | 'super_administrador' | 'administrador' | 'supervisor' | 'usuario_consulta';
+function RoleBadge({ role, collapsed, }: { role: Role; collapsed: boolean; }) { 
+  if (collapsed) return null; 
+  const isAdmin = role === 'administrador'; 
+  const roleLabel: Record<Role, string> = { super_administrador: 'Super Administrador', administrador: 'Administrador', supervisor: 'Supervisor', usuario_consulta: 'Usuario Consulta', }; 
+  return ( 
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 999, marginTop: 2, 
+      background: isAdmin ? 'rgba(212,168,50,.2)' : 'rgba(255,255,255,.1)', border: `1px solid 
+      ${ isAdmin ? 'rgba(212,168,50,.4)' : 'rgba(255,255,255,.2)' }`, fontFamily: 'monospace', 
+      fontSize: '.54rem', fontWeight: 600, color: isAdmin ? '#d4a832' : 'rgba(255,255,255,.7)', 
+      letterSpacing: '.1em', textTransform: 'uppercase', }} > {isAdmin && ( <svg style={{ width: 9, height: 9 }} 
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} > {icons.shield} </svg> )} {roleLabel[role]} </span> ); 
+      }
 
 
   useEffect(() => {

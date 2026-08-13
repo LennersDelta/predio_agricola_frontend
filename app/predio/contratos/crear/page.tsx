@@ -119,6 +119,14 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
     </div>
   );
 }
+const siStyle: React.CSSProperties = {
+  appearance: 'none', width: '100%', background: '#fff',
+  border: '1px solid rgba(0,0,0,.1)', color: '#1a2e22', fontSize: '.8rem',
+  borderRadius: 7, padding: '8px 12px', outline: 'none',
+  fontFamily: '"Barlow",sans-serif', transition: 'border-color .18s, box-shadow .18s',
+};
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
+
 /* SETEA RUT CON FORMATO CHILENO CON PUNTOS Y GUION */
 const formatearRut = (rut: string) => {
   // limpiar todo lo inválido
@@ -216,16 +224,22 @@ export default function CrearContratoEfectuadosPage() {
   const [errors,  setErrors]  = useState<Record<string, string>>({});
   const { estados: TipoRenta, loading: loadingTipoRenta, error: errorTipoRenta } = useEstados('rentaContrato');
   const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+  const [fPredio, setFPredio] = useState('');
 
   const { administrador, loading: loadingAdministrador } = useAdministrador();
   const { uso, loading: loadingUso } = useUso();
   const [loading, setLoading] = useState(false);
 
+
+
+  
   //  Submit 
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errsFront: Record<string, string> = {};
+
+
 
 // ─────  PERSONAL ─────
     if (!form.predio_id) errsFront.predio_id = 'Debe ingresar el predio.';
@@ -342,27 +356,36 @@ return (
               <SecTitle label="Información General" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
               
-                {/* hook PREDIO */}
-                <Field label="Predio" error={errors.predio_id}>
-                  <FSelect
-                    value={form.predio_id}
-                    onChange={e => set('predio_id', e.target.value)}
+                {/* Hook PREDIO */}
+                <div>
+                    <label style={lblStyle}>Predio</label>
+                    <select
+                      value={fPredio}
+                      onChange={e => setFPredio(e.target.value)}
+                      disabled={loadingPredios || predios.length === 0}
+                      style={{
+                          ...siStyle,
+                          paddingRight: 32,
+                          cursor: loadingPredios ? 'wait' : 'pointer',
+                          backgroundImage: selectArrow,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 10px center',
+                          opacity: loadingPredios ? 0.7 : 1
+                      }}
                   >
-                    <option value="">
-                      {loadingPredios
-                        ? 'Cargando...'
-                        : errorPredios
-                        ? errorPredios
-                        : 'Seleccione'}
-                    </option>
+                      {loadingPredios ? (
+                          <option value="">Cargando...</option>
+                      ) : predios.length > 1 ? (
+                          <option value="">Todos</option>
+                      ) : null}
 
-                    {predios.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
-                    ))}
-                  </FSelect>
-                </Field>
+                      {predios.map(p => (
+                          <option key={p.id} value={p.nombre}>
+                              {p.nombre}
+                          </option>
+                      ))}
+                  </select>
+                </div>
 
                 <Field label="Contrato" error={errors.contrato}>
                   <FInput
