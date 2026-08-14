@@ -23,6 +23,13 @@ const inputStyle: React.CSSProperties = {
   appearance: 'none',
   transition: 'border-color .18s, box-shadow .18s',
 };
+const readOnlyStyle: React.CSSProperties = {
+  ...inputStyle,
+  background: 'rgba(58,153,86,.04)',
+  border: '1px solid rgba(58,153,86,.15)',
+  color: '#2e4938',
+  cursor: 'default',
+};
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '.58rem',
@@ -35,38 +42,15 @@ const labelStyle: React.CSSProperties = {
 };
 function Field({
   label,
-  required,
-  error,
-  children
+  children,
 }: {
   label: string;
-  required?: boolean;
-  error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div data-field={label}>
-      <label style={labelStyle}>
-        {label}
-        {required && (
-          <span style={{ color: '#fca5a5', marginLeft: 2 }}>
-            *
-          </span>
-        )}
-      </label>
+      <label style={labelStyle}>{label}</label>
       {children}
-      {error && (
-        <p
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '.6rem',
-            color: '#ef4444',
-            marginTop: 4
-          }}
-        >
-          {error}
-        </p>
-      )}
     </div>
   );
 }
@@ -76,8 +60,47 @@ function FInput({
   return (
     <input
       {...props}
-      style={inputStyle}
+      readOnly
+      style={readOnlyStyle}
     />
+  );
+}
+function FInputMoney({
+  value,
+}: {
+  value: string | number;
+}) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <span
+        style={{
+          position: 'absolute',
+          left: 11,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '.78rem',
+          color: '#6b8f75',
+          fontFamily: 'monospace',
+          fontWeight: 600,
+          pointerEvents: 'none',
+          zIndex: 1,
+          lineHeight: 1,
+        }}
+      >
+        $
+      </span>
+
+      <input
+        type="text"
+        value={value}
+        readOnly
+        style={{
+          ...readOnlyStyle,
+          paddingLeft: 22,
+          fontWeight: 600,
+        }}
+      />
+    </div>
   );
 }
 function FSelect({
@@ -87,9 +110,16 @@ function FSelect({
   return (
     <select
       {...props}
+      disabled
       style={{
-        ...inputStyle,
-        paddingRight: 34
+        ...readOnlyStyle,
+        paddingRight: 34,
+        cursor: 'default',
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 11px center',
+        opacity: 1,
       }}
     >
       {children}
@@ -103,7 +133,7 @@ function SecTitle({ label }: { label: string }) {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        marginBottom: 20
+        marginBottom: 20,
       }}
     >
       <div
@@ -111,7 +141,8 @@ function SecTitle({ label }: { label: string }) {
           width: 3,
           height: 16,
           borderRadius: 2,
-          background: 'linear-gradient(180deg,#3aaf64,#3a9956)'
+          background: 'linear-gradient(180deg,#3aaf64,#3a9956)',
+          flexShrink: 0,
         }}
       />
 
@@ -122,7 +153,7 @@ function SecTitle({ label }: { label: string }) {
           fontWeight: 700,
           color: '#2e7d46',
           textTransform: 'uppercase',
-          letterSpacing: '.12em'
+          letterSpacing: '.12em',
         }}
       >
         {label}
@@ -130,9 +161,18 @@ function SecTitle({ label }: { label: string }) {
     </div>
   );
 }
-function Section({ children }: { children: React.ReactNode }) {
+function Section({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)' }} >
+    <div
+      style={{
+        padding: '26px 28px',
+        borderBottom: '1px solid rgba(0,0,0,.06)',
+      }}
+    >
       {children}
     </div>
   );
@@ -294,24 +334,45 @@ function VerCompra3utmPageInner() {
         </div>
 
         <Link
-          href={`/predio/compra3utm/`}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 7,
-            padding: '9px 18px',
-            borderRadius: 8,
-            fontFamily: '"Barlow Condensed",sans-serif',
-            fontSize: '.8rem',
-            fontWeight: 700,
-            letterSpacing: '.07em',
-            textTransform: 'uppercase',
-            color: '#1a2e22',
-            textDecoration: 'none',
-            background: 'linear-gradient(135deg,#8a6a18,#d4a832)'
-          }}
-        >
-          Volver
+            href="/predio/compra3utm"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 7,
+              padding: '9px 18px',
+              borderRadius: 8,
+              fontFamily:
+                '"Barlow Condensed",sans-serif',
+              fontSize: '.8rem',
+              fontWeight: 700,
+              letterSpacing: '.07em',
+              textTransform: 'uppercase',
+              color: '#1a2e22',
+              textDecoration: 'none',
+              background:
+                'linear-gradient(135deg,#8a6a18,#d4a832)',
+              boxShadow:
+                '0 4px 14px rgba(201,168,76,.3)',
+            }}
+          >
+            <svg
+              style={{
+                width: 13,
+                height: 13,
+              }}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+
+            Volver
         </Link>
 
       </div>
@@ -442,7 +503,7 @@ function VerCompra3utmPageInner() {
                     readOnly
                     value={form.observaciones}
                     style={{
-                    ...inputStyle,
+                    ...readOnlyStyle,
                     minHeight: 80
                     }}
                 />

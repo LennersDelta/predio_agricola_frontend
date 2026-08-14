@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { useEstados } from '@/hooks/useEstado';
 import { usePredio } from '@/hooks/usePredio';
 
+import { useAuth } from '@/hooks/useAuth';
+
 // TIPOS — alineados con campos del backend
 interface InsumosProductos {
   // INFORMACIÓN GENERAL
@@ -141,6 +143,7 @@ function FS({
   );
 }
 const PAGE_SIZES = [10, 25, 50, 100];
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 
 
 // COMPONENTE PRINCIPAL
@@ -162,6 +165,9 @@ function InsumosProductoPageInner() {
   const [fEstadoFactura, setFEstadoFactura] = useState('');
   const [applied, setApplied] = useState({ orden: '',  predio: '',  tipoCompra: '',  estadoOrdenCompra: '',  estadoFactura: ''});
 
+
+ 
+
   // Tabla
   const [search,   setSearch]   = useState('');
   const [pageSize, setPageSize] = useState(10);
@@ -174,6 +180,16 @@ function InsumosProductoPageInner() {
   const { estados: EstadoFactura, loading: loadingEstadosFactura, error: errorEstadosFactura } = useEstados('estadoFactura');
   const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
+  // PERMISOS SEGUN EL ROL //
+  
+   const {
+     puede,
+     loading: loadingAuth,
+     puedeConsultar,
+     puedeCrear,
+     puedeEditar,
+     puedeEliminar,
+   } = useAuth();  
 
 const cargaInsumosProducto = useCallback(() => {
   setLoading(true);
@@ -315,16 +331,18 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
           </h2>
           <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión insumos y productos</p>
         </div>
-        <Link href="/predio/insumosproductos/crear"
-          style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
-          onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
-          onMouseLeave={e => (e.currentTarget.style.filter = '')}
-        >
-          <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo insumos y productos
-        </Link>
+        {!loadingAuth && puedeCrear && (
+          <Link href="/predio/insumosproductos/crear"
+            style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
+            onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.filter = '')}
+          >
+            <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nuevo insumos y productos
+          </Link>
+        )}  
       </div>    
 
       {tab === 'predio' && <>
@@ -349,12 +367,36 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
       <div style={{ padding: '16px 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-          <FS
-            label="Predio"
-            options={predios} 
-            value={fPredio}
-            onChange={e => setFPredio(e.target.value)}
-          /> 
+          {/* Predio desde Hook */}
+          <div>
+              <label style={lblStyle}>Predio</label>
+              <select
+                value={fPredio}
+                onChange={e => setFPredio(e.target.value)}
+                disabled={loadingPredios || predios.length === 0}
+                style={{
+                    ...siStyle,
+                    paddingRight: 32,
+                    cursor: loadingPredios ? 'wait' : 'pointer',
+                    backgroundImage: selectArrow,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    opacity: loadingPredios ? 0.7 : 1
+                }}
+            >
+                {loadingPredios ? (
+                    <option value="">Cargando...</option>
+                ) : predios.length > 1 ? (
+                    <option value="">Todos</option>
+                ) : null}
+
+                {predios.map(p => (
+                    <option key={p.id} value={p.nombre}>
+                        {p.nombre}
+                    </option>
+                ))}
+            </select>
+          </div>
 
 
           <FS
@@ -611,27 +653,44 @@ const opEstadosFactura = [...new Set(data.map(b => b.estado_factura).filter(Bool
                     {/* ACCIONES */}
                     <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-
-                        <Link href={`/predio/insumosproductos/${b.uuid}/edit`}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
-                          title="Editar"
-                        >
-                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </Link>
-                        <button onClick={() => setDeleteId(b.orden)}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
-                          title="Eliminar"
-                        >
-                          <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        
+                        {!loadingAuth && puedeConsultar && (
+                          <Link href={`/predio/insumosproductos/${b.uuid}/ver`}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                            title="Ver detalle"
+                          >
+                            <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </Link>
+                        )}
+                        {!loadingAuth && puedeEditar && (    
+                          <Link href={`/predio/insumosproductos/${b.uuid}/edit`}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                            title="Editar"
+                          >
+                            <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </Link>
+                        )}
+                        {!loadingAuth && puedeEliminar && (   
+                          <button onClick={() => setDeleteId(b.orden)}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.1)')}
+                            title="Eliminar"
+                          >
+                            <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </td>
 

@@ -309,7 +309,7 @@ useEffect(() => {
 
       {tab === 'predio' && <>
 
-          {/* FILTROS */}
+        {/* FILTROS */}
         <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,.1)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.08)', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '13px 20px', borderBottom: '1px solid rgba(0,0,0,.06)' }}>
             <svg style={{ width: 13, height: 13, color: '#2e7d46', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
