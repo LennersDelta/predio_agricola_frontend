@@ -132,6 +132,14 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
     </div>
   );
 }
+const siStyle: React.CSSProperties = {
+  appearance: 'none', width: '100%', background: '#fff',
+  border: '1px solid rgba(0,0,0,.1)', color: '#1a2e22', fontSize: '.8rem',
+  borderRadius: 7, padding: '8px 12px', outline: 'none',
+  fontFamily: '"Barlow",sans-serif', transition: 'border-color .18s, box-shadow .18s',
+};
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
+
 /* SETEA RUT CON FORMATO CHILENO CON PUNTOS Y GUION */
 
 const formatearRut = (rut: string) => {
@@ -227,6 +235,20 @@ export default function CrearRecursoHumanoPage() {
   const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
   const { tipoGrado, loading: loadingTipoGrado, error: errorTipoGrado } = useTipoGrado();
   const { tipoContrato, loading: loadingTipoContrato, error: errorTipoContrato } = useTipoContrato();
+
+  /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO */
+  useEffect(() => {
+    if (loadingPredios || predios.length === 0) return;
+
+    // Si solamente tiene un predio, se selecciona automáticamente
+    if (predios.length === 1) {
+        setForm(prev => ({
+            ...prev,
+            predio_id: String(predios[0].id),
+            predio_nombre: predios[0].nombre,
+        }));
+    }
+  }, [predios, loadingPredios]);
 
   //  Submit 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -351,15 +373,71 @@ return (
               <Section>
                 <SecTitle label="Información General" />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>   
-                  {/* Predio desde hook */}
-                    <Field label="Predio" error={errors.predio}>
-                      <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
-                        <option value="">
-                          {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
-                        </option>
-                        {predios.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                      </FSelect>
-                    </Field>    
+
+                    {/* Hook PREDIO */}
+                    <div>
+                        <label style={lblStyle}>Predio</label>
+                        <select
+                            value={form.predio}
+                            onChange={e => {
+                                const predio = predios.find(
+                                    p => String(p.id) === e.target.value
+                                );
+                                setForm(prev => ({
+                                    ...prev,
+                                    predio: e.target.value,
+                                    predio_nombre: predio?.nombre ?? '',
+                                }));
+                            }}
+                            disabled={loadingPredios || predios.length === 0 || predios.length === 1}
+                            style={{
+                                ...siStyle,
+                                paddingRight: 32,
+                                cursor: loadingPredios
+                                    ? 'wait'
+                                    : predios.length === 1
+                                    ? 'not-allowed'
+                                    : 'pointer',
+                                backgroundImage: selectArrow,
+                                backgroundRepeat: 'no-repeat',
+                                backgroundPosition: 'right 10px center',
+                                opacity: loadingPredios ? 0.7 : 1,
+                            }}
+                        >
+                            {loadingPredios ? (
+                                <option value="">Cargando...</option>
+                            ) : predios.length === 1 ? (
+                                // Usuario normal: muestra directamente su predio
+                                <option value={String(predios[0].id)}>
+                                    {predios[0].nombre}
+                                </option>
+                            ) : (
+                                // Administrador / Super Administrador
+                                <>
+                                    <option value="">Seleccione</option>
+
+                                    {predios.map(p => (
+                                        <option key={p.id} value={String(p.id)}>
+                                            {p.nombre}
+                                        </option>
+                                    ))}
+                                </>
+                            )}
+                        </select>
+
+                        {errors.predio && (
+                            <p
+                                style={{
+                                    fontFamily: 'monospace',
+                                    fontSize: '.6rem',
+                                    color: '#ef4444',
+                                    marginTop: 4,
+                                }}
+                            >
+                                {errors.predio}
+                            </p>
+                        )}
+                    </div>  
                 </div>
               </Section>
               {/* SECCIÓN 2 — PERSONAL */}
@@ -482,45 +560,54 @@ return (
                 </Section>
             
 
-            {/* BOTÓN GUARDAR (DERECHA) */}
-            <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: 20,
-            marginBottom: 20,
-            paddingRight: 20 
-            }}>
-            <button
-                type="submit"
-                disabled={loading}
-                style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '10px 24px',
-                borderRadius: 9,
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: '"Barlow Condensed",sans-serif',
-                fontSize: '.85rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '.07em',
-                color: '#0d2318',
-                background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
-                boxShadow: '0 4px 14px rgba(76,202,122,.28)',
-                opacity: loading ? .7 : 1
-                }}
-                onMouseEnter={e => {
-                if (!loading) e.currentTarget.style.filter = 'brightness(1.08)';
-                }}
-                onMouseLeave={e => {
-                e.currentTarget.style.filter = '';
-                }}
-            >
-                {loading ? 'Guardando...' : 'Guardar recurso humano'}
-            </button>
-            </div>
+              {/* BOTÓN GUARDAR (DERECHA) */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                            background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+                <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+                  <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+                </p>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <Link href="/predio/compra3utm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                              padding: '10px 20px', borderRadius: 9,
+                              fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                              fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                              color: '#6b8f75', background: '#eaf3ec',
+                              border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                    Cancelar
+                  </Link>
+                  
+                  <button type="submit" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                              padding: '10px 24px', borderRadius: 9, border: 'none',
+                              cursor: loading ? 'not-allowed' : 'pointer',
+                              fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                              fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                              color: '#0d2318',
+                              background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
+                              boxShadow: '0 4px 14px rgba(76,202,122,.28)',
+                              opacity: loading ? .7 : 1 }}
+                    onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
+                  >
+                    {loading ? (
+                      <svg className="animate-spin" style={{ width: 14, height: 14 }}
+                        fill="none" viewBox="0 0 24 24">
+                        <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
+                          stroke="currentColor" strokeWidth="4" />
+                        <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                    ) : (
+                      <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {loading ? 'Guardando...' : 'Guardar recurso humano'}
+                  </button>
+                </div>
+              </div>
             </div>
         </form>
       </div>

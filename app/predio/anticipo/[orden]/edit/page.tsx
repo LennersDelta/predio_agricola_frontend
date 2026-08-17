@@ -67,6 +67,17 @@ function EditarAnticipoRendirCuentaPageInner() {
 
     const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
+    /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO */
+    useEffect(() => {
+        if (loadingPredios || predios.length !== 1) return;
+
+        // Usuario normal: asignar automáticamente su único predio
+        setForm(prev => ({
+            ...prev,
+            predio_id: String(predios[0].id),
+            predio_nombre: predios[0].nombre,
+        }));
+    }, [predios, loadingPredios]);
 
     const [form, setForm] = useState({
         orden: '',
@@ -236,7 +247,7 @@ function EditarAnticipoRendirCuentaPageInner() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3a9956', flexShrink: 0 }} />
               <span style={{ fontFamily: 'monospace', fontSize: '.58rem', fontWeight: 500, color: '#2e7d46', letterSpacing: '.12em', textTransform: 'uppercase' }}>Gestión Predio Agrícola</span>
             </div>
-            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar anticipo rendir cuenta</h2>
+            <h2 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1a2e22', textTransform: 'uppercase', letterSpacing: '.06em', lineHeight: 1, marginBottom: 6 }}>Editar contratos</h2>
           </div>
           <Link href={`/predio/anticipo/`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 8, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#1a2e22', textDecoration: 'none', background: 'linear-gradient(135deg,#8a6a18,#d4a832)', boxShadow: '0 4px 14px rgba(201,168,76,.3)' }} onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')} onMouseLeave={e => (e.currentTarget.style.filter = '')}>
             <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -263,27 +274,35 @@ function EditarAnticipoRendirCuentaPageInner() {
                         gap: 16,
                     }}
                 >
-                {/* Hook PREDIO */}
-                <Field label="Predio" error={errors.predio_id}>
-                  <FSelect
-                    value={form.predio_id}
-                    onChange={e => set('predio_id', e.target.value)}
-                  >
-                    <option value="">
-                      {loadingPredios
-                        ? 'Cargando...'
-                        : errorPredios
-                        ? errorPredios
-                        : 'Seleccione'}
-                    </option>
-
-                    {predios.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
-                    ))}
-                  </FSelect>
-                </Field>
+                    {/* Hook PREDIO */}
+                    <Field label="Predio" error={errors.predio_id}>
+                    <FSelect
+                        value={form.predio_id}
+                        onChange={e => set('predio_id', e.target.value)}
+                        disabled={loadingPredios || predios.length === 1}
+                    >
+                        {loadingPredios ? (
+                            <option value="">Cargando...</option>
+                        ) : errorPredios ? (
+                            <option value="">Error al cargar</option>
+                        ) : predios.length === 1 ? (
+                            // Usuario normal
+                            <option value={String(predios[0].id)}>
+                                {predios[0].nombre}
+                            </option>
+                        ) : (
+                            // Administrador / Super Administrador
+                            <>
+                                <option value="">Seleccione</option>
+                                {predios.map(p => (
+                                    <option key={p.id} value={String(p.id)}>
+                                        {p.nombre}
+                                    </option>
+                                ))}
+                            </>
+                            )}
+                        </FSelect>
+                    </Field>
 
                     <Field label="N° Cuenta" error={errors.numero_cuenta}>
                         <FInput
@@ -359,45 +378,54 @@ function EditarAnticipoRendirCuentaPageInner() {
                 </div>
             </Section>
             {/* BOTÓN GUARDAR (DERECHA) */}
-            <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: 20,
-            marginBottom: 20,
-            paddingRight: 20 
-            }}>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    padding: '10px 24px',
-                    borderRadius: 9,
-                    border: 'none',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: '"Barlow Condensed",sans-serif',
-                    fontSize: '.85rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '.07em',
-                    color: '#0d2318',
-                    background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
-                    boxShadow: '0 4px 14px rgba(76,202,122,.28)',
-                    opacity: loading ? .7 : 1
-                    }}
-                    onMouseEnter={e => {
-                    if (!loading) e.currentTarget.style.filter = 'brightness(1.08)';
-                    }}
-                    onMouseLeave={e => {
-                    e.currentTarget.style.filter = '';
-                    }}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                          background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+              <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+                <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Link href="/predio/anticipo"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 20px', borderRadius: 9,
+                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                            color: '#6b8f75', background: '#eaf3ec',
+                            border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                  Cancelar
+                </Link>
+                
+                <button type="submit" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '10px 24px', borderRadius: 9, border: 'none',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                            color: '#0d2318',
+                            background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
+                            boxShadow: '0 4px 14px rgba(76,202,122,.28)',
+                            opacity: loading ? .7 : 1 }}
+                  onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
                 >
-                    {loading ? 'Guardando...' : 'Guardar anticipo rendir cuenta'}
+                  {loading ? (
+                    <svg className="animate-spin" style={{ width: 14, height: 14 }}
+                      fill="none" viewBox="0 0 24 24">
+                      <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
+                        stroke="currentColor" strokeWidth="4" />
+                      <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  ) : (
+                    <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  {loading ? 'Guardando...' : 'Guardar cambios'}
                 </button>
+              </div>
             </div>
-            </div>
+        </div>
         </form>
       </div>
     </>

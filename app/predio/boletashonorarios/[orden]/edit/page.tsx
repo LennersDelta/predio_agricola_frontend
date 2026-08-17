@@ -50,7 +50,6 @@ function SecTitle({ label }: { label: string }) {
 function Section({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: '26px 28px', borderBottom: '1px solid rgba(0,0,0,.06)' }}>{children}</div>;
 }
-
 function ModalMensaje({
   mensaje,
   predio,
@@ -174,6 +173,19 @@ function EditarBoletaHonorarioPageInner() {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
     const [modalData, setModalData] = useState({predio: '',  mes: ''});
+
+
+    /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO */
+    useEffect(() => {
+        if (loadingPredios || predios.length !== 1) return;
+
+        // Usuario normal: asignar automáticamente su único predio
+        setForm(prev => ({
+            ...prev,
+            predio_id: String(predios[0].id),
+            predio_nombre: predios[0].nombre,
+        }));
+    }, [predios, loadingPredios]);
 
     const [form, setForm] = useState({
         orden: '',
@@ -396,20 +408,34 @@ function EditarBoletaHonorarioPageInner() {
                 gap: 16
                 }}
             >
+                {/* Hook PREDIO */}
                 <Field label="Predio" error={errors.predio_id}>
-                <FSelect
-                    disabled
-                    value={form.predio_id}
-                    onChange={e => set('predio_id', e.target.value)}
-                >
-                    <option value="">Seleccione</option>
-
-                    {predios.map(p => (
-                    <option key={p.id} value={p.id}>
-                        {p.nombre}
-                    </option>
-                    ))}
-                </FSelect>
+                  <FSelect
+                      value={form.predio_id}
+                      onChange={e => set('predio_id', e.target.value)}
+                      disabled={loadingPredios || predios.length === 1}
+                  >
+                      {loadingPredios ? (
+                          <option value="">Cargando...</option>
+                      ) : errorPredios ? (
+                          <option value="">Error al cargar</option>
+                      ) : predios.length === 1 ? (
+                          // Usuario normal
+                          <option value={String(predios[0].id)}>
+                              {predios[0].nombre}
+                          </option>
+                      ) : (
+                          // Administrador / Super Administrador
+                          <>
+                              <option value="">Seleccione</option>
+                              {predios.map(p => (
+                                  <option key={p.id} value={String(p.id)}>
+                                      {p.nombre}
+                                  </option>
+                              ))}
+                          </>
+                        )}
+                    </FSelect>
                 </Field>
 
                 <Field label="Mes" error={errors.mes}>
@@ -524,7 +550,7 @@ function EditarBoletaHonorarioPageInner() {
                     e.currentTarget.style.filter = '';
                     }}
                 >
-                    {loading ? 'Guardando...' : 'Guardar boleta de honorario'}
+                    {loading ? 'Guardando...' : 'Guardar cambios'}
                 </button>
             </div>
             </div>

@@ -287,8 +287,8 @@ const set = (k: string, v: string) => {
                 gap: 16
                 }}
             >
-              {/* Hook PREDIO */}
-              <Field label="Predio" error={errors.predio_id}>
+                {/* Hook PREDIO */}
+                <Field label="Predio" error={errors.predio_id}>
                   <FSelect
                       value={form.predio_id}
                       onChange={e => set('predio_id', e.target.value)}
@@ -413,7 +413,7 @@ const set = (k: string, v: string) => {
             </Section>          
             
 
-            {/* FOOTER */}
+            {/* BOTÓN GUARDAR (DERECHA) */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           flexWrap: 'wrap', gap: 12, padding: '20px 28px',
                           background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
@@ -462,8 +462,7 @@ const set = (k: string, v: string) => {
               </div>
             </div>  
 
-            </div>
-            
+          </div>            
         </form>
       </div>
     </>

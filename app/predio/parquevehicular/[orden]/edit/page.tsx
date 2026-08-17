@@ -84,11 +84,23 @@ function EditarParqueVehicularPageInner() {
     const [docsLocalPermiso, setDocsLocalPermiso] = useState<DocAdjunto[]>([]);
     const [docsLocalSeguro, setDocsLocalSeguro] = useState<DocAdjunto[]>([]);
 
+    /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO */
+    useEffect(() => {
+        if (loadingPredios || predios.length !== 1) return;
+
+        // Usuario normal: asignar automáticamente su único predio
+        setForm(prev => ({
+            ...prev,
+            predio: String(predios[0].id),
+            predio_nombre: predios[0].nombre,
+        }));
+    }, [predios, loadingPredios]);
 
     const [form, setForm] = useState({
 
       orden:  '',
       predio: '',
+      predio_nombre: '',      
       tipo_vehicular: '',
       ppu: '',
       sigla_institucional: '',
@@ -124,7 +136,8 @@ function EditarParqueVehicularPageInner() {
 
         setForm({
           orden: String(b.orden ?? ''),
-          predio: String(b.predio ?? ''),
+          predio: String(data.data.predio ?? ''),
+          predio_nombre: data.data.predio_nombre ?? '',
           tipo_vehicular: String(b.tipo_vehicular_id ?? ''),
           ppu: b.ppu ?? '',
           sigla_institucional: b.sigla_institucional ?? '',
@@ -302,21 +315,34 @@ const handleSubmit = async (e: React.FormEvent) => {
             <Section>
               <SecTitle label="Información General" />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="Predio" required error={errors.predio}>
-                        <FSelect
-                            value={form.predio}
-                            onChange={(e) => set('predio', e.target.value)}
-                            disabled={loadingPredios}
-                        >
-                            <option value="" disabled>
-                            {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
-                            </option>
-
-                            {predios.map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.nombre}
-                            </option>
-                            ))}
+                
+                    {/* Hook PREDIO */}
+                    <Field label="Predio" error={errors.predio}>
+                      <FSelect
+                          value={form.predio}
+                          onChange={e => set('predio', e.target.value)}
+                          disabled={loadingPredios || predios.length === 1}
+                      >
+                          {loadingPredios ? (
+                              <option value="">Cargando...</option>
+                          ) : errorPredios ? (
+                              <option value="">Error al cargar</option>
+                          ) : predios.length === 1 ? (
+                              // Usuario normal
+                              <option value={String(predios[0].id)}>
+                                  {predios[0].nombre}
+                              </option>
+                          ) : (
+                              // Administrador / Super Administrador
+                              <>
+                                  <option value="">Seleccione</option>
+                                  {predios.map(p => (
+                                      <option key={p.id} value={String(p.id)}>
+                                          {p.nombre}
+                                      </option>
+                                  ))}
+                              </>
+                            )}
                         </FSelect>
                     </Field>
 
