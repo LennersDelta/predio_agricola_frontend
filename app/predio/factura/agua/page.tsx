@@ -2,10 +2,13 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { usePredio } from '@/hooks/usePredio';
+
+import { useAuth } from '@/hooks/useAuth';
 
 // ── Tipos alineados con el response del backend ────────────────────────────
 interface FacturaAgua {
@@ -98,6 +101,17 @@ function FacturaAguaPageInner() {
   const [page,     setPage]     = useState(1);
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
+
+  // PERMISOS SEGUN EL ROL //
+
+   const {
+     puede,
+     loading: loadingAuth,
+     puedeConsultar,
+     puedeCrear,
+     puedeEditar,
+     puedeEliminar,
+   } = useAuth(); 
 
   // Carga datos
   const cargar = useCallback(() => {
@@ -201,16 +215,18 @@ function FacturaAguaPageInner() {
           </h2>
           <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión de facturas de agua</p>
         </div>
-        <Link href="/predio/factura/agua/crear"
-          style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
-          onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
-          onMouseLeave={e => (e.currentTarget.style.filter = '')}
-        >
-          <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nueva Factura Agua
-        </Link>
+        {!loadingAuth && puedeCrear && (
+          <Link href="/predio/factura/agua/crear"
+            style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
+            onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.filter = '')}
+          >
+            <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva Factura Agua
+          </Link>
+        )}
       </div>
 
       {/* ── Filtros ── */}
@@ -231,16 +247,32 @@ function FacturaAguaPageInner() {
 
             {/* Predio desde hook */}
             <div>
-              <label style={lblStyle}>Predio</label>
-              <select
-                value={fPredio}
-                onChange={e => { setFPredio(e.target.value); aplicar(); }}
-                style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => setFPredio(e.target.value)}
+                  disabled={loadingPredios || predios.length === 0}
+                  style={{
+                      ...siStyle,
+                      paddingRight: 32,
+                      cursor: loadingPredios ? 'wait' : 'pointer',
+                      backgroundImage: selectArrow,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 10px center',
+                      opacity: loadingPredios ? 0.7 : 1
+                  }}
               >
-                <option value="">{loadingPredios ? 'Cargando...' : 'Todos'}</option>
-                {predios.map(p => (
-                  <option key={p.id} value={p.nombre}>{p.nombre}</option>
-                ))}
+                  {loadingPredios ? (
+                      <option value="">Cargando...</option>
+                  ) : predios.length > 1 ? (
+                      <option value="">Todos</option>
+                  ) : null}
+
+                  {predios.map(p => (
+                      <option key={p.id} value={p.nombre}>
+                          {p.nombre}
+                      </option>
+                  ))}
               </select>
             </div>
 
@@ -363,11 +395,56 @@ function FacturaAguaPageInner() {
                       <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                         <span style={{ fontSize: '.82rem', color: '#3d5c47' }}>{b.proveedor || '—'}</span>
                       </td>
-                      <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, fontSize: '.66rem', fontFamily: 'monospace', fontWeight: 700, background: pagada ? 'rgba(58,153,86,.1)' : 'rgba(252,165,165,.1)', border: pagada ? '1px solid rgba(58,153,86,.25)' : '1px solid rgba(252,165,165,.3)', color: pagada ? '#2e7d46' : '#dc2626' }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: pagada ? '#3a9956' : '#dc2626' }} />
-                          {b.estado || '—'}
-                        </span>
+                      {/* Estado */}
+                      <td
+                        style={{
+                          padding: '10px 14px',
+                          verticalAlign: 'middle',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {(() => {
+                          const impaga = String(b.estado ?? '').trim().toLowerCase() === 'impaga';
+
+                          return (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                padding: '3px 10px',
+                                borderRadius: 999,
+                                fontSize: '.66rem',
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+
+                                background: impaga
+                                  ? 'rgba(252,165,165,.15)'
+                                  : 'rgba(58,153,86,.1)',
+
+                                border: impaga
+                                  ? '1px solid rgba(252,165,165,.4)'
+                                  : '1px solid rgba(58,153,86,.25)',
+
+                                color: impaga
+                                  ? '#dc2626'
+                                  : '#2e7d46',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 5,
+                                  height: 5,
+                                  borderRadius: '50%',
+                                  flexShrink: 0,
+                                  background: impaga ? '#dc2626' : '#3a9956',
+                                }}
+                              />
+
+                              {b.estado || '—'}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                         <span style={{ fontFamily: 'monospace', fontSize: '.78rem', color: '#3d5c47' }}>{b.doe || '—'}</span>
@@ -377,18 +454,45 @@ function FacturaAguaPageInner() {
                           {b.consumo ? `${Number(b.consumo).toLocaleString('es-CL')} kg` : '—'}
                         </span>
                       </td>
+                      {/* Acciones */}
                       <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                          <button onClick={() => setDeleteId(b.id)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 6, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', cursor: 'pointer', background: 'rgba(252,165,165,.08)', border: '1px solid rgba(252,165,165,.3)', color: '#dc2626' }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.18)')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.08)')}
-                          >
-                            <svg style={{ width: 11, height: 11 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Eliminar
-                          </button>
+                            {!loadingAuth && puedeConsultar && (
+                              <Link href={`/predio/factura/agua/${b.uuid}/ver`}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(58,153,86,.1)', color: '#3a9956', transition: 'background .15s' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(76,202,122,.22)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(58,153,86,.1)')}
+                                title="Ver detalle"
+                              >
+                                <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </Link>
+                            )}
+                            {!loadingAuth && puedeEditar && ( 
+                              <Link href={`/predio/factura/agua/${b.uuid}/edit`}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(147,197,253,.1)', color: '#93c5fd', transition: 'background .15s' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(147,197,253,.22)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(147,197,253,.1)')}
+                                title="Editar"
+                              >
+                                <svg style={{ width: 13, height: 13 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </Link>
+                            )}
+                            {!loadingAuth && puedeEliminar && (                          
+                              <button onClick={() => setDeleteId(b.id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 6, fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', cursor: 'pointer', background: 'rgba(252,165,165,.08)', border: '1px solid rgba(252,165,165,.3)', color: '#dc2626' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.18)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(252,165,165,.08)')}
+                              >
+                                <svg style={{ width: 11, height: 11 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )}  
                         </div>
                       </td>
                     </tr>

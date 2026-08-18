@@ -1,7 +1,7 @@
 // app/predio/factura/agua/crear/page.tsx
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
@@ -112,6 +112,20 @@ export default function CrearFacturaAguaPage() {
   const [errors,  setErrors]  = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+    /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO SE MODIFICA PARA QUE
+    SE CUMPLA CON LA REGLA FROM.PREDIO */
+    useEffect(() => {
+      if (loadingPredios || predios.length === 0) return;
+  
+      // Usuario con un solo predio asignado
+      if (predios.length === 1) {
+        setForm(prev => ({
+          ...prev,
+          predio: String(predios[0].id),
+        }));
+      }
+    }, [predios, loadingPredios]);
+
   // ── Submit ─────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,14 +227,45 @@ export default function CrearFacturaAguaPage() {
             <SecTitle label="Información General" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
 
+              {/* HOOK PREDIO */}
               <Field label="Predio" error={errors.predio}>
-                <FSelect value={form.predio} onChange={e => set('predio', e.target.value)}>
-                  <option value="">
-                    {loadingPredios ? 'Cargando...' : errorPredios ? errorPredios : 'Seleccione'}
-                  </option>
-                  {predios.map(p => (
-                    <option key={p.id} value={p.id}>{p.nombre}</option>
-                  ))}
+                <FSelect
+                  value={form.predio}
+                  onChange={e => {
+                    setForm(prev => ({
+                      ...prev,
+                      predio: e.target.value,
+                    }));
+
+                    // Limpiar error al seleccionar
+                    setErrors(prev => ({
+                      ...prev,
+                      predio: '',
+                    }));
+                  }}
+                  disabled={
+                    loadingPredios ||
+                    predios.length === 0 ||
+                    predios.length === 1
+                  }
+                >
+                  {loadingPredios ? (
+                    <option value="">Cargando...</option>
+                  ) : predios.length === 1 ? (
+                    <option value={String(predios[0].id)}>
+                      {predios[0].nombre}
+                    </option>
+                  ) : (
+                    <>
+                      <option value="">Seleccione</option>
+
+                      {predios.map(p => (
+                        <option key={p.id} value={String(p.id)}>
+                          {p.nombre}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </FSelect>
               </Field>
 
@@ -277,25 +322,53 @@ export default function CrearFacturaAguaPage() {
             </div>
           </Section>
 
-          {/* BOTÓN GUARDAR */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, marginBottom: 20, paddingRight: 20 }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '10px 24px', borderRadius: 9, border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
-                fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
-                color: '#0d2318', background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
-                boxShadow: '0 4px 14px rgba(76,202,122,.28)', opacity: loading ? .7 : 1,
-              }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
-            >
-              {loading ? 'Guardando...' : 'Guardar factura agua'}
-            </button>
+          {/* BOTÓN GUARDAR (DERECHA) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                        background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+            <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+              <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+            </p>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <Link href="/predio/factura/agua"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '10px 20px', borderRadius: 9,
+                          fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                          color: '#6b8f75', background: '#eaf3ec',
+                          border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                Cancelar
+              </Link>
+              
+              <button type="submit" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '10px 24px', borderRadius: 9, border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                          color: '#0d2318',
+                          background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
+                          boxShadow: '0 4px 14px rgba(76,202,122,.28)',
+                          opacity: loading ? .7 : 1 }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
+              >
+                {loading ? (
+                  <svg className="animate-spin" style={{ width: 14, height: 14 }}
+                    fill="none" viewBox="0 0 24 24">
+                    <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
+                      stroke="currentColor" strokeWidth="4" />
+                    <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                ) : (
+                  <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {loading ? 'Guardando...' : 'Guardar factura agua'}
+              </button>
+            </div>
           </div>
 
         </div>

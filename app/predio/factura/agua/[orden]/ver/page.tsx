@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { toast } from 'sonner';
 
-import { usePredio } from '@/hooks/usePredio';
+import { toast } from 'sonner';
 import { useEstados } from '@/hooks/useEstado';
+import { usePredio } from '@/hooks/usePredio';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -177,72 +177,78 @@ function Section({
     </div>
   );
 }
+function VerAguaPageInner() {
 
-function VerContratosPageInner() {
-
-  const router = useRouter();
   const params = useParams();
 
   const uuid = Array.isArray(params?.orden)
     ? params.orden[0]
     : params?.orden;
 
+  /* SETEO LA FECHA EN MM/YYYY */
+  const formatearMesInput = (fecha: string) => {
+    if (!fecha) return '';
+    return fecha.substring(0, 7);
+  };  
   const [errors] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
-  const {predios, loading: loadingPredios, error: errorPredios} = usePredio();
-  const {estados: TipoRenta, loading: loadingTipoRenta,error: errorTipoRenta } = useEstados('rentaContrato');
+  const { estados, loading: loadingEstados, error: errorEstados } = useEstados('factura_consumo');
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
 
   const [form, setForm] = useState({
-    orden: '',
+    id: '',
     predio_id: '',
     predio_nombre: '',
-    contrato: '',
-    fecha: '',
-    empresa_persona: '',
-    rut: '',
-    valor_renta: '',
-    renta_id: '',
-    renta_nombre: '',
-    fecha_vencimiento: '',
-    vigencia_contrato: '',
-    doe_respuesta_b5: '',
-    observaciones: '',
-    uuid: ''
-  });
+    n_factura: '',
+    mes_consumo: '',
+    valor: '',
+    proveedor: '',
+    uuid: '',
+    doe: '',
+    consumo: '',
+    estado_id: '',
+    estado_nombre: '',
+    user_id: '',
+    created_at: '',
+    updated_at: '',
+});
 
-  useEffect(() => {
+useEffect(() => {
     if (!uuid) return;
+
     const cargar = async () => {
-      try {
-        const { data } = await api.get(`/api/contratos/${uuid}`);
-        const b = data.data ?? data;
-        setForm({
+        try {
+            const { data } = await api.get(`/api/factura/agua/${uuid}`);
+            const b = data.data ?? data;
 
-          orden: String(b.orden ?? ''),
-          predio_id: String(b.predio_id ?? ''),
-          predio_nombre: String(b.predio_nombre ?? ''),
-          contrato: b.contrato ?? '',
-          fecha: b.fecha ?? '',
-          empresa_persona: b.empresa_persona ?? '',
-          rut: b.rut ?? '',
-          valor_renta: String(b.valor_renta ?? ''),
-          renta_id: String(b.renta_id ?? ''),
-          renta_nombre: String(b.renta_nombre ?? ''),
-          fecha_vencimiento: b.fecha_vencimiento ?? '',
-          vigencia_contrato: b.vigencia_contrato ?? '',
-          doe_respuesta_b5: b.doe_respuesta_b5 ?? '',
-          observaciones: b.observaciones ?? '',
-          uuid: b.uuid ?? ''
-        });
+            setForm({
+                id: String(b.id ?? ''),
+                predio_id: String(b.predio_id ?? ''),
+                predio_nombre: b.predio_nombre ?? '',
+                n_factura: b.n_factura ?? '',
+                mes_consumo: formatearMesInput(b.mes_consumo),
+                valor: String(b.valor ?? ''),
+                proveedor: b.proveedor ?? '',
+                uuid: b.uuid ?? '',
+                doe: b.doe ?? '',
+                consumo: String(b.consumo ?? ''),
+                estado_id: String(b.estado_id ?? ''),
+                estado_nombre: b.estado_nombre ?? '',
+                user_id: String(b.user_id ?? ''),
+                created_at: b.created_at ?? '',
+                updated_at: b.updated_at ?? '',
+            });
 
-      } catch (error) {
-        console.error(error);
-        toast.error('No se pudo cargar el contrato');
-      } finally {
-        setCargando(false);
-      }
-    };cargar();
-  }, [uuid]);
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudo cargar la factura agua');
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    cargar();
+}, [uuid]);
 
   if (cargando) {
     return (
@@ -257,7 +263,7 @@ function VerContratosPageInner() {
           color: '#9ab8a2'
         }}
       >
-        Cargando contrato...
+        Cargando Factura Agua...
       </div>
     );
   }
@@ -326,13 +332,13 @@ function VerContratosPageInner() {
               letterSpacing: '.06em'
             }}
           >
-            Ver contrato
+            Ver factura Agua
           </h2>
 
         </div>
 
         <Link
-            href="/predio/contratos"
+            href="/predio/factura/agua"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -369,41 +375,42 @@ function VerContratosPageInner() {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-
             Volver
         </Link>
-
       </div>
 
       {/* FORM */}
       <form>
-
         <div
-          style={{
+            style={{
             background: '#fff',
             border: '1px solid rgba(0,0,0,.1)',
             borderRadius: 14,
             overflow: 'hidden',
-            boxShadow: '0 4px 24px rgba(0,0,0,.1)'
-          }}
+            boxShadow: '0 4px 24px rgba(0,0,0,.1)',
+            }}
         >
-            <Section>
-              <SecTitle label="Información General" />
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))',
-                  gap: 16
-                }}
-              >
 
+            {/* INFORMACIÓN GENERAL */}
+            <Section>
+            <SecTitle label="Información General" />
+
+            <div
+                style={{
+                display: 'grid',
+                gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',
+                gap: 16,
+                }}
+            >
+
+                {/* PREDIO */}
                 <Field label="Predio">
-                  <FSelect
+                <FSelect
                     disabled
                     value={form.predio_id}
-                  >
+                >
                     <option value="">
-                      {loadingPredios
+                    {loadingPredios
                         ? 'Cargando...'
                         : errorPredios
                         ? errorPredios
@@ -411,112 +418,104 @@ function VerContratosPageInner() {
                     </option>
 
                     {predios.map(p => (
-                      <option key={p.id} value={p.id}>
+                    <option
+                        key={p.id}
+                        value={String(p.id)}
+                    >
                         {p.nombre}
-                      </option>
+                    </option>
                     ))}
-                  </FSelect>
+                </FSelect>
                 </Field>
 
-                <Field label="Contrato">
-                  <FInput
+                {/* N° FACTURA */}
+                <Field label="N° de Factura">
+                <FInput
                     readOnly
-                    value={form.contrato}
-                  />
+                    value={form.n_factura}
+                />
                 </Field>
 
-                <Field label="Fecha">
-                  <FInput
+                {/* MES DE CONSUMO */}
+                <Field label="Mes de Consumo">
+                <FInput
                     readOnly
-                    type="date"
-                    value={form.fecha}
-                  />
+                    type="month"
+                    value={form.mes_consumo}
+                />
                 </Field>
 
-                <Field label="Empresa o Persona">
-                  <FInput
+                {/* VALOR */}
+                <Field label="Valor Total ($)">
+                <FInput
                     readOnly
-                    value={form.empresa_persona}
-                  />
+                    value={Number(
+                    form.valor || 0
+                    ).toLocaleString('es-CL')}
+                />
                 </Field>
 
-                <Field label="RUT">
-                  <FInput
+                {/* PROVEEDOR */}
+                <Field label="Proveedor">
+                <FInput
                     readOnly
-                    value={form.rut}
-                  />
+                    value={form.proveedor}
+                />
                 </Field>
 
-                <Field label="Valor Renta ($)">
-                  <FInput
-                    readOnly
-                    value={form.valor_renta}
-                  />
-                </Field>
-
-                <Field label="Tipo Renta">
-                  <FSelect
+                {/* ESTADO */}
+                <Field label="Estado Factura">
+                <FSelect
                     disabled
-                    value={form.renta_id}
-                  >
+                    value={form.estado_id}
+                >
                     <option value="">
-                      {loadingTipoRenta
+                    {loadingEstados
                         ? 'Cargando...'
-                        : errorTipoRenta
-                        ? errorTipoRenta
+                        : errorEstados
+                        ? errorEstados
                         : 'Seleccione'}
                     </option>
 
-                    {TipoRenta.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
+                    {estados.map(e => (
+                    <option
+                        key={e.id}
+                        value={String(e.id)}
+                    >
+                        {e.nombre}
+                    </option>
                     ))}
-                  </FSelect>
+                </FSelect>
                 </Field>
 
-                <Field label="Fecha Vencimiento">
-                  <FInput
+                {/* CONSUMO */}
+                <Field label="Consumo (Kilos)">
+                <FInput
                     readOnly
-                    type="date"
-                    value={form.fecha_vencimiento}
-                  />
+                    type="number"
+                    value={form.consumo}
+                />
                 </Field>
 
-                <Field label="Vigencia Contrato">
-                  <FInput
+                {/* DOE */}
+                <Field label="DOE">
+                <FInput
                     readOnly
-                    value={form.vigencia_contrato}
-                  />
+                    value={form.doe}
+                />
                 </Field>
-              </div>
+            </div>
             </Section>
-
-            <Section>
-                <SecTitle label="Otros" />
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-                    <Field label="DOE DE RESPUESTA B.5 POR PAGO"  >
-                      <FInput readOnly value={form.doe_respuesta_b5} /></Field>
-                        <Field label="observaciones">
-                        <textarea
-                            readOnly
-                            value={form.observaciones}                           
-                            style={{ ...readOnlyStyle, minHeight: 80 }}
-                        />
-                        </Field>
-                  </div>             
-            </Section>
-
 
             {/* FOOTER */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           flexWrap: 'wrap', gap: 12, padding: '20px 28px',
-                          background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+                          background: 'rgba(73, 49, 49, 0.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
               <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
                 <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
               </p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <Link href="/predio/contratos"
+                <Link href="/predio/factura/agua"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
                             padding: '10px 20px', borderRadius: 9,
                             fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
@@ -533,10 +532,10 @@ function VerContratosPageInner() {
   );
 }
 
-export default function VerContratosPage() {
+export default function VerAguaPage() {
   return (
     <Suspense>
-      <VerContratosPageInner />
+      <VerAguaPageInner />
     </Suspense>
   );
 }

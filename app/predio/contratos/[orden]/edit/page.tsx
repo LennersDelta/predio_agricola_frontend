@@ -122,6 +122,18 @@ function EditarContratosPageInner() {
 
     const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
     const {estados: TipoRenta, loading: loadingTipoRenta,error: errorTipoRenta } = useEstados('rentaContrato');
+   
+    /* PARA LOS USUARIO CON UN PREDIO YA SELECCIONADO */
+    useEffect(() => {
+        if (loadingPredios || predios.length !== 1) return;
+
+        // Usuario normal: asignar automáticamente su único predio
+        setForm(prev => ({
+            ...prev,
+            predio_id: String(predios[0].id),
+            predio_nombre: predios[0].nombre,
+        }));
+    }, [predios, loadingPredios]);
 
     const [form, setForm] = useState({
 
@@ -315,23 +327,31 @@ const set = (k: string, v: string) => {
                 {/* Hook PREDIO */}
                 <Field label="Predio" error={errors.predio_id}>
                   <FSelect
-                    value={form.predio_id}
-                    onChange={e => set('predio_id', e.target.value)}
+                      value={form.predio_id}
+                      onChange={e => set('predio_id', e.target.value)}
+                      disabled={loadingPredios || predios.length === 1}
                   >
-                    <option value="">
-                      {loadingPredios
-                        ? 'Cargando...'
-                        : errorPredios
-                        ? errorPredios
-                        : 'Seleccione'}
-                    </option>
-
-                    {predios.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
-                    ))}
-                  </FSelect>
+                      {loadingPredios ? (
+                          <option value="">Cargando...</option>
+                      ) : errorPredios ? (
+                          <option value="">Error al cargar</option>
+                      ) : predios.length === 1 ? (
+                          // Usuario normal
+                          <option value={String(predios[0].id)}>
+                              {predios[0].nombre}
+                          </option>
+                      ) : (
+                          // Administrador / Super Administrador
+                          <>
+                              <option value="">Seleccione</option>
+                              {predios.map(p => (
+                                  <option key={p.id} value={String(p.id)}>
+                                      {p.nombre}
+                                  </option>
+                              ))}
+                          </>
+                        )}
+                    </FSelect>
                 </Field>
 
                 <Field label="Contrato" error={errors.contrato}>

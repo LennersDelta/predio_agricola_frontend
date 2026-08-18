@@ -139,6 +139,7 @@ function ContratosEfectuadosPageInner() {
     puedeEditar,
     puedeEliminar,
   } = useAuth();  
+  
   // Tabla
   const [search,   setSearch]   = useState('');
   const [pageSize, setPageSize] = useState(10);

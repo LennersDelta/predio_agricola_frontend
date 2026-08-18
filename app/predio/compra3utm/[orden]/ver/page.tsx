@@ -511,9 +511,7 @@ function VerCompra3utmPageInner() {
 
             </div>
             </Section>
-          
-
-
+            
             {/* FOOTER */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           flexWrap: 'wrap', gap: 12, padding: '20px 28px',
