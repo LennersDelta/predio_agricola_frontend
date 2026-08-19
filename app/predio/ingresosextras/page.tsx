@@ -313,36 +313,36 @@ useEffect(() => {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              {/* Predio desde hook */}
-              <div>
-                 <label style={lblStyle}>Predio</label>
-                  <select
-                    value={fPredio}
-                    onChange={e => setFPredio(e.target.value)}
-                    disabled={loadingPredios || predios.length === 0}
-                    style={{
-                        ...siStyle,
-                        paddingRight: 32,
-                        cursor: loadingPredios ? 'wait' : 'pointer',
-                        backgroundImage: selectArrow,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 10px center',
-                        opacity: loadingPredios ? 0.7 : 1
-                    }}
-                >
-                    {loadingPredios ? (
-                        <option value="">Cargando...</option>
-                    ) : predios.length > 1 ? (
-                        <option value="">Todos</option>
-                    ) : null}
+            {/* Predio desde hook */}
+            <div>
+                <label style={lblStyle}>Predio</label>
+                <select
+                  value={fPredio}
+                  onChange={e => setFPredio(e.target.value)}
+                  disabled={loadingPredios || predios.length === 0}
+                  style={{
+                      ...siStyle,
+                      paddingRight: 32,
+                      cursor: loadingPredios ? 'wait' : 'pointer',
+                      backgroundImage: selectArrow,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 10px center',
+                      opacity: loadingPredios ? 0.7 : 1
+                  }}
+              >
+                  {loadingPredios ? (
+                      <option value="">Cargando...</option>
+                  ) : predios.length > 1 ? (
+                      <option value="">Todos</option>
+                  ) : null}
 
-                    {predios.map(p => (
-                        <option key={p.id} value={p.id}>
-                            {p.nombre}
-                        </option>
-                    ))}
-                </select>
-              </div>
+                  {predios.map(p => (
+                      <option key={p.id} value={p.id}>
+                          {p.nombre}
+                      </option>
+                  ))}
+              </select>
+            </div>
 
             {/* Estado pago  */}
             <div>

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
+import { usePredio } from '@/hooks/usePredio';
+
 // TIPOS — alineados con campos del backend
 
 interface Combustible{
@@ -85,7 +87,34 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
     </div>
   );
 }
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 const PAGE_SIZES = [10, 25, 50, 100];
+
+/* SETEO DE FECHAS MES-YYYY */
+
+const formatearMes = (mes: string | null | undefined) => {
+  if (!mes) return '';
+  const [anio, numeroMes] = mes.substring(0, 7).split('-');
+  const nombresMeses = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+  ];
+  const indice = Number(numeroMes) - 1;
+  if (!nombresMeses[indice]) {
+    return mes;
+  }
+  return `${nombresMeses[indice]} ${anio}`;
+};
 
 // COMPONENTE PRINCIPAL
 function CombustiblePageInner() {
@@ -109,6 +138,8 @@ function CombustiblePageInner() {
   const [sortCol,  setSortCol]  = useState('created_at');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
 
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+  
   //  Cargar datos 
   const cargaCombustible = useCallback(() => {
     setLoading(true);
@@ -127,13 +158,7 @@ function CombustiblePageInner() {
   const opMesConsumo = [
     ...new Set(
       data
-        .map(b =>
-          b.mes
-            ? new Date(b.mes)
-                .toLocaleString('es-CL', { month: 'long' })
-                .replace(/^./, c => c.toUpperCase())
-            : ''
-        )
+        .map(b => formatearMes(b.mes))
         .filter(Boolean)
     )
   ].sort();
@@ -149,19 +174,27 @@ function CombustiblePageInner() {
     setPage(1);
   };
     const filtrosActivos = Object.values(applied).filter(Boolean).length;
+
     const filtered = useMemo(() => {
       return data
         .filter(b => {
+
           const predio = b.predio ?? '';
-          const mesConsumo = b.mes
-          ? new Date(b.mes)
-              .toLocaleString('es-CL', { month: 'long' })
-              .replace(/^./, c => c.toUpperCase())
-          : '';
+
+          const mesConsumo = formatearMes(b.mes);
+
           const matchFiltros =
-            (!applied.predio || predio.toLowerCase().includes(applied.predio.toLowerCase())) &&
-            (!applied.mesConsumo || mesConsumo.toLowerCase().includes(applied.mesConsumo.toLowerCase()));
+            (!applied.predio ||
+              predio.toLowerCase().includes(
+                applied.predio.toLowerCase()
+              )) &&
+            (!applied.mesConsumo ||
+              mesConsumo.toLowerCase().includes(
+                applied.mesConsumo.toLowerCase()
+              ));
+
           const txt = search.toLowerCase();
+
           const matchSearch =
             !txt ||
             b.predio?.toLowerCase().includes(txt) ||
@@ -175,11 +208,13 @@ function CombustiblePageInner() {
         .sort((a, b) => {
           const av = String((a as any)[sortCol] ?? '');
           const bv = String((b as any)[sortCol] ?? '');
+
           const cmp = av.localeCompare(
             bv,
             'es',
             { numeric: true }
           );
+
           return sortDir === 'asc'
             ? cmp
             : -cmp;
@@ -195,20 +230,6 @@ function CombustiblePageInner() {
       else { setSortCol(col); setSortDir('asc'); }
     };
 
-    // ── Eliminar 
-    /*const handleDelete = async () => {
-      if (deleteId === null) return;
-      const toastId = toast.loading('Eliminando...');
-      try {
-        await api.delete(`/api/deleteIngresoCombustible/${deleteId}`);
-        setData(prev => prev.filter(b => b.id !== deleteId));
-        toast.success('Combustible eliminado correctamente', { id: toastId, duration: 3000 });
-      } catch (err: any) {
-        toast.error(err.response?.data?.message ?? 'Error al eliminar', { id: toastId, duration: 5000 });
-      } finally {
-        setDeleteId(null);
-      }
-    };*/
 
     const handleDelete = async () => {
       if (deleteId === null) return;
@@ -285,18 +306,36 @@ function CombustiblePageInner() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
 
-              <FS             
-                label="Predio"
-                options={opPredios}
-                value={fPredio}
-                onChange={e => {const value = e.target.value; setFPredio(value);
-                  setApplied(prev => ({
-                    ...prev,
-                    predio: value
-                  }));
-                  setPage(1);
-                }}
-              />
+              {/* Predio desde hook */}
+              <div>
+                  <label style={lblStyle}>Predio</label>
+                  <select
+                    value={fPredio}
+                    onChange={e => setFPredio(e.target.value)}
+                    disabled={loadingPredios || predios.length === 0}
+                    style={{
+                        ...siStyle,
+                        paddingRight: 32,
+                        cursor: loadingPredios ? 'wait' : 'pointer',
+                        backgroundImage: selectArrow,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 10px center',
+                        opacity: loadingPredios ? 0.7 : 1
+                    }}
+                >
+                    {loadingPredios ? (
+                        <option value="">Cargando...</option>
+                    ) : predios.length > 1 ? (
+                        <option value="">Todos</option>
+                    ) : null}
+
+                    {predios.map(p => (
+                        <option key={p.id} value={p.id}>
+                            {p.nombre}
+                        </option>
+                    ))}
+                </select>
+              </div>
 
               <FS 
                 label="Mes Consumo"
@@ -465,9 +504,7 @@ function CombustiblePageInner() {
                               color: '#1a2e22'
                             }}
                           >
-                            {new Date(b.mes)
-                            .toLocaleString('es-CL', { month: 'long' })
-                            .replace(/^./, c => c.toUpperCase())}
+                              {formatearMes(b.mes)}
                           </span>
                         </td>
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>

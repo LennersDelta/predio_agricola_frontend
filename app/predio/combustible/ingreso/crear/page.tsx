@@ -223,6 +223,8 @@ export default function CrearIngresoPage() {
     cantidadConsumoLitros: '',
     monto: '',
     patente: '',
+    predio_id: '',
+    predio: '',
   });
 
   // MODAL
@@ -239,11 +241,20 @@ export default function CrearIngresoPage() {
       const { data } = await api.get(
         '/api/combustible/asignacion/disponibles'
       );
-
       setAsignaciones(data);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      if (error?.response?.status === 403) {
+        toast.error(
+          error?.response?.data?.message ??
+          'No tiene permisos para acceder a esta sección.'
+        );
+
+        router.push('/predio/combustible/ingreso');
+        return;
+      }
+
+      toast.error('Error al cargar las asignaciones.');
     }
   };
  
@@ -569,44 +580,6 @@ export default function CrearIngresoPage() {
                 gap: 16,
               }}
             >
-              {/* ASIGNACIÓN ESTO SOLO MUESTRA EL PREDIO | FECHA --> CENTINELA | 2026-01-25 */}
-
-             {/* <Field
-                label="Asignación"
-                error={
-                  errors.asignacion_id
-                }
-              >
-                <FSelect
-                  value={
-                    form.asignacion_id
-                  }
-                  onChange={(e) =>
-                    set(
-                      'asignacion_id',
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">
-                    Seleccione
-                  </option>
-
-                  {asignaciones.map(
-                    (a) => (
-                      <option
-                        key={a.id}
-                        value={a.id}
-                      >
-                        {a.predio} |{' '}
-                        {a.mes}
-                      </option>
-                    )
-                  )}
-                </FSelect>
-              </Field>
-            */}
-
               {/* ASIGNACIÓN */}
               <Field
                 label="Asignación"
@@ -615,25 +588,16 @@ export default function CrearIngresoPage() {
                 <FSelect
                   value={form.asignacion_id}
                   onChange={(e) => {
-
-                    const value =
-                      e.target.value;
-
+                    const value = e.target.value;
                     // guardar asignación
                     set(
                       'asignacion_id',
                       value
                     );
-
                     // limpiar patente seleccionada
-                    set(
-                      'patente',
-                      ''
-                    );
-
+                    set('patente', '' );
                     // limpiar lista anterior
                     setPatentes([]);
-
                     // cargar nuevas patentes
                     loadPatentes(value);
                   }}
@@ -652,34 +616,6 @@ export default function CrearIngresoPage() {
                   ))}
                 </FSelect>
               </Field>
-              
-              {/*<Field
-                label="Asignación"
-                error={errors.asignacion_id}
-              >
-                <FSelect
-                  value={form.asignacion_id}
-                  onChange={(e) =>
-                    set(
-                      'asignacion_id',
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">
-                    Seleccione
-                  </option>
-
-                  {asignaciones.map((a) => (
-                    <option
-                      key={a.id}
-                      value={a.id}
-                    >
-                      {a.nombre}
-                    </option>
-                  ))}
-                </FSelect>
-              </Field>*/}
 
               {/* PRESUPUESTO */}
 
@@ -1008,56 +944,57 @@ export default function CrearIngresoPage() {
             </div>
           </Section>
 
-          {/* BOTÓN */}
-
-          <div
-            style={{
-              display: 'flex',
-              justifyContent:
-                'flex-end',
-              marginTop: 20,
-              marginBottom: 20,
-              paddingRight: 20,
-            }}
-          >
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                display:
-                  'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                padding:
-                  '10px 24px',
-                borderRadius: 9,
-                border: 'none',
-                cursor: loading
-                  ? 'not-allowed'
-                  : 'pointer',
-                fontFamily:
-                  '"Barlow Condensed",sans-serif',
-                fontSize: '.85rem',
-                fontWeight: 700,
-                textTransform:
-                  'uppercase',
-                letterSpacing:
-                  '.07em',
-                color: '#0d2318',
-                background:
-                  'linear-gradient(135deg,#3aaf64,#7dd494)',
-                boxShadow:
-                  '0 4px 14px rgba(76,202,122,.28)',
-                opacity: loading
-                  ? .7
-                  : 1,
-              }}
-            >
-              {loading
-                ? 'Guardando...'
-                : 'Guardar ingreso'}
-            </button>
+          {/* BOTÓN GUARDAR (DERECHA) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        flexWrap: 'wrap', gap: 12, padding: '20px 28px',
+                        background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.06)' }}>
+            <p style={{ fontSize: '.65rem', color: '#9ab8a2', fontFamily: 'monospace' }}>
+              <span style={{ color: '#fca5a5' }}>*</span> Campos obligatorios
+            </p>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <Link href="/predio/combustible/ingreso"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '10px 20px', borderRadius: 9,
+                          fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                          color: '#6b8f75', background: '#eaf3ec',
+                          border: '1px solid rgba(0,0,0,.1)', textDecoration: 'none' }}>
+                Cancelar
+              </Link>
+              
+              <button type="submit" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '10px 24px', borderRadius: 9, border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.85rem',
+                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                          color: '#0d2318',
+                          background: 'linear-gradient(135deg,#3aaf64,#7dd494)',
+                          boxShadow: '0 4px 14px rgba(76,202,122,.28)',
+                          opacity: loading ? .7 : 1 }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
+              >
+                {loading ? (
+                  <svg className="animate-spin" style={{ width: 14, height: 14 }}
+                    fill="none" viewBox="0 0 24 24">
+                    <circle style={{ opacity: .25 }} cx="12" cy="12" r="10"
+                      stroke="currentColor" strokeWidth="4" />
+                    <path style={{ opacity: .75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                ) : (
+                  <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {loading ? 'Guardando...' : 'Guardar ingreso combustible'}
+              </button>
+            </div>
           </div>
+
+
+
         </div>
       </form>
 

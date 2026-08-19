@@ -6,7 +6,8 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
-// TIPOS — alineados con campos del backend
+import { usePredio } from '@/hooks/usePredio';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Combustible{  
   id: number;
@@ -91,10 +92,10 @@ function FS({ label, options, ...p }: { label: string; options: string[] } & Rea
     </div>
   );
 }
+const selectArrow = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.35)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")";
 const PAGE_SIZES = [10, 25, 50, 100];
 
 /* MODAL DETALLE DE COMBUSTIBLE */
-
 function ModalDetalleCombustible({
   open,
   onClose,
@@ -183,7 +184,8 @@ function ModalDetalleCombustible({
               }}
             >
                      <b style={{ color: '#2b3831' }}>Predio:</b> <b>{info.predio}</b>
-              {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {new Date(info.mes) .toLocaleString('es-CL', { month: 'long', }) .replace(/^./, (c) => c.toUpperCase())}
+              {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {formatearMes(info.mes)
+  .replace(/^./, c => c.toUpperCase())}
               {' | '}<b style={{ color: '#2b3831' }}>Asignado:</b> <b  style={{ color: '#000' }}>${Number(info.monto_asignado).toLocaleString('es-CL')}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Utilizado:</b> <b style={{ color: '#991b1b' }}>${Number(info.monto_utilizado).toLocaleString('es-CL')}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Saldo:</b> <b style={{ color: '#000' }}>${Number(info.saldo).toLocaleString('es-CL')}</b>
@@ -433,9 +435,7 @@ function ModalDetalleCombustible({
   );
 }
 
-
 /* MODAL UPDATE ASIGNACION COMBUSTIBLE */
-
 function ModalEditarAsignacion({
     open,
     onClose,
@@ -516,10 +516,7 @@ function ModalEditarAsignacion({
                             {" | "}
 
                             <b style={{ color: "#2b3831" }}>Mes:</b>{" "}
-                            {new Date(form.mes)
-                                .toLocaleString("es-CL", {
-                                    month: "long",
-                                })
+                              {formatearMes(form.mes)
                                 .replace(/^./, c => c.toUpperCase())}
                         </p>
 
@@ -635,19 +632,37 @@ function ModalEditarAsignacion({
         </div>
     );
 }
+/* SETEO DE MES */
+  const formatearMes = (mes: string) => {
+  if (!mes) return '';
+  const [anio, numeroMes] = mes.substring(0, 7).split('-');
+  const meses = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+  ];
 
+  const indice = Number(numeroMes) - 1;
 
-
-              
-
+  if (!anio || indice < 0 || indice > 11) {
+    return mes;
+  }
+  return `${meses[indice]} ${anio}`;
+};  
+       
 // COMPONENTE PRINCIPAL
 function CombustiblePageInner() {
   const searchParams = useSearchParams();
-  const [tab] = useState<'predio' | 'borradores'>(
-    searchParams.get('tab') === 'borradores'
-      ? 'borradores'
-      : 'predio'
-  );
+  const [tab] = useState<'predio' | 'borradores'>(searchParams.get('tab') === 'borradores' ? 'borradores' : 'predio');
   const [data, setData] = useState<Combustible[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -670,6 +685,14 @@ function CombustiblePageInner() {
   const [page,     setPage]     = useState(1);
   const [sortCol, setSortCol]   = useState<keyof Combustible>('id');
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc');
+
+  
+  const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
+
+
+
+
+
 
   //  Cargar datos 
   const cargaCombustible = useCallback(() => {
@@ -738,8 +761,6 @@ function CombustiblePageInner() {
     }
   };
 
-
-
   //  Opciones dinámicas para filtros 
   const opPredios = [
     ...new Set(data.map(b => b.predio).filter(Boolean)),
@@ -747,33 +768,20 @@ function CombustiblePageInner() {
   const opMeses = [
     ...new Set(
       data
-        .map(b =>
-          new Date(b.mes)
-            .toLocaleString('es-CL', { month: 'long' })
-            .replace(/^./, c => c.toUpperCase())
-        )
+        .map(b => formatearMes(b.mes))
         .filter(Boolean)
     ),
-  ].sort();
+  ].sort((a, b) => a.localeCompare(b, 'es'));
 
   //  Aplicar filtros 
   const aplicar = () => {
-    setApplied({
-      predio: fPredio,
-      mes: fMes,
-    });
-
+    setApplied({predio: fPredio, mes: fMes,});
     setPage(1);
   };
 
   const limpiar = () => {
-    setFPredio('');
-    setFMes('');
-
-    setApplied({
-      predio: '',
-      mes: '',
-    });
+    setFPredio(''); setFMes('');
+    setApplied({predio: '', mes: '',});
 
     setSearch('');
     setPage(1);
@@ -784,9 +792,7 @@ function CombustiblePageInner() {
     return data
       .filter(b => {
         const predio = b.predio ?? '';
-        const mes = new Date(b.mes)
-          .toLocaleString('es-CL', { month: 'long' })
-          .replace(/^./, c => c.toUpperCase());
+        const mes = formatearMes(b.mes);
 
         const textSearch = search.toLowerCase();
 
@@ -820,19 +826,19 @@ function CombustiblePageInner() {
       });
   }, [data, applied, search, sortCol, sortDir]);
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-    const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-    const handleSort = (col: keyof Combustible) => {
-      if (sortCol === col) {
-        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-      } else {
-        setSortCol(col);
-        setSortDir('asc');
-      }
-    };
+  const handleSort = (col: keyof Combustible) => {
+    if (sortCol === col) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
 
-    // ELIMINAR DETALLE DE COMBUSTIBLE //
+  // ELIMINAR DETALLE DE COMBUSTIBLE //
   const handleDelete = async () => {
       if (deleteId === null) return;
       const toastId = toast.loading("Eliminando...");
@@ -923,15 +929,36 @@ function CombustiblePageInner() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(145px,1fr))', gap: 12, alignItems: 'end' }}>
 
-              <FS
-                label="Predio"
-                options={opPredios}
-                value={fPredio}
-                onChange={e => {
-                  setFPredio(e.target.value);
-                  aplicar();
-                }}
-              />
+              {/* Predio desde hook */}
+              <div>
+                 <label style={lblStyle}>Predio</label>
+                  <select
+                    value={fPredio}
+                    onChange={e => setFPredio(e.target.value)}
+                    disabled={loadingPredios || predios.length === 0}
+                    style={{
+                        ...siStyle,
+                        paddingRight: 32,
+                        cursor: loadingPredios ? 'wait' : 'pointer',
+                        backgroundImage: selectArrow,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 10px center',
+                        opacity: loadingPredios ? 0.7 : 1
+                    }}
+                >
+                    {loadingPredios ? (
+                        <option value="">Cargando...</option>
+                    ) : predios.length > 1 ? (
+                        <option value="">Todos</option>
+                    ) : null}
+
+                    {predios.map(p => (
+                        <option key={p.id} value={p.nombre}>
+                            {p.nombre}
+                        </option>
+                    ))}
+                </select>
+              </div>
 
               <FS
                 label="Mes"
@@ -1129,8 +1156,7 @@ function CombustiblePageInner() {
                               color: '#1a2e22'
                             }}
                           >
-                            {new Date(b.mes)
-                            .toLocaleString('es-CL', { month: 'long' })
+                            {formatearMes(b.mes)
                             .replace(/^./, c => c.toUpperCase())}
                           </span>
                         </td>
