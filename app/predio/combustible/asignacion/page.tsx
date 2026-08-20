@@ -184,8 +184,7 @@ function ModalDetalleCombustible({
               }}
             >
                      <b style={{ color: '#2b3831' }}>Predio:</b> <b>{info.predio}</b>
-              {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {formatearMes(info.mes)
-  .replace(/^./, c => c.toUpperCase())}
+              {' | '}<b style={{ color: '#2b3831' }}>Mes:</b>  {formatearMes(info.mes).replace(/^./, c => c.toUpperCase())}
               {' | '}<b style={{ color: '#2b3831' }}>Asignado:</b> <b  style={{ color: '#000' }}>${Number(info.monto_asignado).toLocaleString('es-CL')}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Utilizado:</b> <b style={{ color: '#991b1b' }}>${Number(info.monto_utilizado).toLocaleString('es-CL')}</b>
               {' | '}<b style={{ color: '#2b3831' }}>Saldo:</b> <b style={{ color: '#000' }}>${Number(info.saldo).toLocaleString('es-CL')}</b>
@@ -765,13 +764,24 @@ function CombustiblePageInner() {
   const opPredios = [
     ...new Set(data.map(b => b.predio).filter(Boolean)),
   ].sort();
-  const opMeses = [
-    ...new Set(
-      data
-        .map(b => formatearMes(b.mes))
-        .filter(Boolean)
-    ),
-  ].sort((a, b) => a.localeCompare(b, 'es'));
+
+  const opMeses = useMemo(() => {
+    const datosFiltrados = applied.predio
+      ? data.filter(b =>
+          (b.predio ?? '')
+            .toLowerCase()
+            .includes(applied.predio.toLowerCase())
+        )
+      : data;
+
+    return [
+      ...new Set(
+        datosFiltrados
+          .map(b => formatearMes(b.mes))
+          .filter(Boolean)
+      ),
+    ].sort((a, b) => a.localeCompare(b, 'es'));
+  }, [data, applied.predio]);
 
   //  Aplicar filtros 
   const aplicar = () => {
@@ -931,32 +941,36 @@ function CombustiblePageInner() {
 
               {/* Predio desde hook */}
               <div>
-                 <label style={lblStyle}>Predio</label>
-                  <select
-                    value={fPredio}
-                    onChange={e => setFPredio(e.target.value)}
-                    disabled={loadingPredios || predios.length === 0}
-                    style={{
-                        ...siStyle,
-                        paddingRight: 32,
-                        cursor: loadingPredios ? 'wait' : 'pointer',
-                        backgroundImage: selectArrow,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 10px center',
-                        opacity: loadingPredios ? 0.7 : 1
-                    }}
-                >
-                    {loadingPredios ? (
-                        <option value="">Cargando...</option>
-                    ) : predios.length > 1 ? (
-                        <option value="">Todos</option>
-                    ) : null}
+                <label style={lblStyle}>Predio</label>
 
-                    {predios.map(p => (
-                        <option key={p.id} value={p.nombre}>
-                            {p.nombre}
-                        </option>
-                    ))}
+                <select
+                  value={fPredio}
+                  onChange={e => {
+                    setFPredio(e.target.value);
+                    setFMes('');
+                  }}
+                  disabled={loadingPredios || predios.length === 0}
+                  style={{
+                    ...siStyle,
+                    paddingRight: 32,
+                    cursor: loadingPredios ? 'wait' : 'pointer',
+                    backgroundImage: selectArrow,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    opacity: loadingPredios ? 0.7 : 1
+                  }}
+                >
+                  {loadingPredios ? (
+                    <option value="">Cargando...</option>
+                  ) : predios.length > 1 ? (
+                    <option value="">Todos</option>
+                  ) : null}
+
+                  {predios.map(p => (
+                    <option key={p.id} value={p.nombre}>
+                      {p.nombre}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -966,7 +980,6 @@ function CombustiblePageInner() {
                 value={fMes}
                 onChange={e => {
                   setFMes(e.target.value);
-                  aplicar();
                 }}
               />
             
