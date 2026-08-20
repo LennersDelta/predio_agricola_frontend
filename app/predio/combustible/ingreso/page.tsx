@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 
 import { usePredio } from '@/hooks/usePredio';
 
+import { useAuth } from '@/hooks/useAuth';
+
 // TIPOS — alineados con campos del backend
 
 interface Combustible{
@@ -140,6 +142,19 @@ function CombustiblePageInner() {
 
   const { predios, loading: loadingPredios, error: errorPredios } = usePredio();
   
+
+  // PERMISOS SEGUN EL ROL //
+  
+   const {
+     puede,
+     loading: loadingAuth,
+     puedeConsultar,
+     puedeCrear,
+     puedeEditar,
+     puedeEliminar,
+   } = useAuth(); 
+
+
   //  Cargar datos 
   const cargaCombustible = useCallback(() => {
     setLoading(true);
@@ -152,6 +167,8 @@ function CombustiblePageInner() {
   useEffect(() => {
     cargaCombustible();
   }, []);
+
+
 
   //  Opciones dinámicas para filtros 
   const opPredios = [...new Set(data.map(b => b.predio).filter(Boolean))].sort();
@@ -271,16 +288,18 @@ function CombustiblePageInner() {
           </h2>
           <p style={{ fontSize: '.72rem', color: '#3d5c47', fontFamily: 'monospace' }}>Gestión Combustible</p>
         </div>
-        <Link href="/predio/combustible/ingreso/crear"
-          style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
-          onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
-          onMouseLeave={e => (e.currentTarget.style.filter = '')}
-        >
-          <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo ingreso combustible
-        </Link>
+        {!loadingAuth && puedeCrear && (
+          <Link href="/predio/combustible/ingreso/crear"
+            style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#0d2318', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 8, background: 'linear-gradient(135deg,#3aaf64,#7dd494)', boxShadow: '0 4px 16px rgba(76,202,122,.3)' }}
+            onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.filter = '')}
+          >
+            <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nuevo ingreso combustible
+          </Link>
+        )}
       </div>    
 
       {tab === 'predio' && <>
@@ -530,6 +549,7 @@ function CombustiblePageInner() {
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
 
+                          {!loadingAuth && puedeEliminar && (
                             <button onClick={() => setDeleteId(b.id)}
                               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: 'rgba(252,165,165,.1)', color: '#fca5a5', border: 'none', cursor: 'pointer', transition: 'background .15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(252,165,165,.22)')}
@@ -540,6 +560,7 @@ function CombustiblePageInner() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
+                          )}  
                           </div>
                         </td>
                       </tr>
