@@ -357,7 +357,7 @@ useEffect(() => {
                 <label style={lblStyle}>Grado</label>
                 <select
                   value={fGrado}
-                  onChange={e => { setFGrado(e.target.value); aplicar(); }}
+                  onChange={e => { setFGrado(e.target.value); }}
                   style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
                 >
                   <option value="">{loadingGrado ? 'Cargando...' : 'Todos'}</option>
@@ -372,7 +372,7 @@ useEffect(() => {
                 <label style={lblStyle}>Contrato</label>
                 <select
                   value={fContrato}
-                  onChange={e => { setFContrato(e.target.value); aplicar(); }}
+                  onChange={e => { setFContrato(e.target.value);  }}
                   style={{ ...siStyle, paddingRight: 32, cursor: 'pointer', backgroundImage: selectArrow, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
                 >
                   <option value="">{loadingContrato ? 'Cargando...' : 'Todos'}</option>
